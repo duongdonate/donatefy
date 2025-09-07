@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scrollbar-behavior: smooth;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
+    monospace;
+}
+
+@layer base {
+  :root {
+    /* Base */
+    --background: theme(colors.gray.100);
+    --background-hover: theme(colors.gray.200);
+    --foreground: theme(colors.gray.900);
+    --foreground-hover: theme(colors.gray.800);
+
+    /* Surface (card, popover) */
+    --card: theme(colors.gray.100);
+    --card-foreground: theme(colors.gray.900);
+    --popover: theme(colors.white);
+    --popover-foreground: theme(colors.gray.900);
+
+    /* Primary / Secondary */
+    --primary: #1db954;
+    --primary-hover: theme(colors.indigo.700);
+    --primary-foreground: theme(colors.white);
+    --secondary: theme(colors.gray.400);
+    --secondary-foreground: theme(colors.gray.800);
+
+    /* Muted / Accent */
+    --muted: theme(colors.gray.200);
+    --muted-foreground: theme(colors.gray.400);
+    --accent: theme(colors.blue.100);
+    --accent-foreground: theme(colors.blue.800);
+
+    /* States */
+    --destructive: theme(colors.red.600);
+    --destructive-foreground: theme(colors.white);
+    --border: theme(colors.gray.300);
+    --input: theme(colors.white);
+    --ring: theme(colors.gray.800);
+
+    /* Chart / Data colors */
+    --chart-1: theme(colors.blue.500);
+    --chart-2: theme(colors.green.500);
+    --chart-3: theme(colors.yellow.500);
+    --chart-4: theme(colors.purple.500);
+    --chart-5: theme(colors.pink.500);
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Base */
+    --background: theme(colors.gray.900);
+    --background-hover: theme(colors.gray.800);
+    --foreground: theme(colors.gray.100);
+    --foreground-hover: theme(colors.gray.200);
+
+    /* Surface (card, popover) */
+    --card: theme(colors.gray.900);
+    --card-foreground: theme(colors.gray.100);
+    --popover: theme(colors.gray.700);
+    --popover-foreground: theme(colors.gray.200);
+
+    /* Primary / Secondary */
+    --primary: #1db954;
+    --primary-foreground: theme(colors.gray.900);
+    --secondary: theme(colors.gray.600);
+    --secondary-foreground: theme(colors.gray.100);
+
+    /* Muted / Accent */
+    --muted: theme(colors.gray.700);
+    --muted-foreground: theme(colors.gray.500);
+    --accent: theme(colors.blue.700);
+    --accent-foreground: theme(colors.white);
+
+    /* States */
+    --destructive: theme(colors.red.700);
+    --destructive-foreground: theme(colors.white);
+    --border: theme(colors.gray.700);
+    --input: theme(colors.gray.700);
+    --ring: theme(colors.gray.300);
+
+    /* Chart / Data colors */
+    --chart-1: theme(colors.blue.400);
+    --chart-2: theme(colors.green.400);
+    --chart-3: theme(colors.yellow.400);
+    --chart-4: theme(colors.purple.400);
+    --chart-5: theme(colors.pink.400);
+
+    /* Radius */
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes marquee-playing {
+  0% {
+    transform: translateX(0%);
+    padding-left: 0%;
+  }
+  50% {
+    transform: translateX(-100%);
+    padding-right: 100%;
+  }
+  100% {
+    transform: translateX(0%);
+    padding-right: 0;
+  }
+}
+
+@layer utilities {
+  .animation-marquee {
+    animation-name: marquee;
+    animation-timing-function: linear;
+    animation-iteration-count: 2;
+    animation-direction: alternate;
+    animation-duration: var(--marquee-duration, 10s);
+  }
+  .animation-marquee-playing {
+    animation: marquee-playing 15s linear infinite;
+    animation-fill-mode: backwards;
+    animation-delay: 0.5s;
+    padding-left: 100%;
+  }
+}
