@@ -16,9 +16,22 @@ const playlistSlice = createSlice({
     setCurrentPlaylist(state, action) {
       state.currentPlaylist = action.payload;
     },
+    addPlaylist(state, action) {
+      state.playlists.push(action.payload);
+    },
+    removePlaylist(state, action) {
+      state.playlists = state.playlists.filter(
+        (playlist) => playlist._id !== action.payload
+      );
+    },
   },
 });
 
-export const { setAllPlaylists, setCurrentPlaylist } = playlistSlice.actions;
+export const {
+  setAllPlaylists,
+  setCurrentPlaylist,
+  addPlaylist,
+  removePlaylist,
+} = playlistSlice.actions;
 
 export default playlistSlice.reducer;

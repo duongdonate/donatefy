@@ -1,12 +1,13 @@
 import SongContainer from "../components/SongContainer";
+import { useAuth } from "../contexts/AuthContext";
 
-const HomePage = ({ currentSong, songs }) => {
+const HomePage = ({ user }) => {
   return (
-    <SongContainer
-      currentSong={currentSong}
-      songs={songs}
-      className="transition-all"
-    />
+    <SongContainer className="transition-all">
+      <h1 className="text-xl font-semibold text-card-foreground">
+        {`Hello, ${user?.username}!`}
+      </h1>
+    </SongContainer>
   );
 };
 

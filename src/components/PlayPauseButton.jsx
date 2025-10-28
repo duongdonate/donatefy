@@ -1,6 +1,6 @@
 import { Play, Pause } from "lucide-react";
 
-function PlayPauseButton({ className, isPlaying, onClick }) {
+const PlayPauseButton = ({ className, isPlaying, onClick }) => {
   return (
     <button
       onClick={onClick}
@@ -9,6 +9,6 @@ function PlayPauseButton({ className, isPlaying, onClick }) {
       {isPlaying ? <Pause size={24} /> : <Play size={24} className="ml-1" />}
     </button>
   );
-}
+};
 
 export default PlayPauseButton;

@@ -17,7 +17,7 @@ function HomeButton() {
   return (
     <Link to="/">
       <button
-        className={`w-full h-full flex items-center space-x-3 p-2 rounded-full border-2 border-border hover:scale-110 transition-all
+        className={`w-12 h-12 shrink-0 flex justify-center items-center space-x-3 p-2 rounded-full border-2 border-border hover:scale-110 transition-all
         ${
           isActive
             ? "bg-primary text-primary-foreground"

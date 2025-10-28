@@ -10,10 +10,7 @@ import PlaylistButton from "./PlaylistButton";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllPlaylists } from "../../app/selectors";
 import playlistService from "../../services/api/playlistService";
-import {
-  setAllPlaylists,
-  setCurrentPlaylist,
-} from "../../app/slices/playlistSlice";
+import { setAllPlaylists } from "../../app/slices/playlistSlice";
 
 const Sidebar = () => {
   const [width, setWidth] = useState(352); // Initial width of the sidebar
@@ -33,6 +30,23 @@ const Sidebar = () => {
 
   // Redux
   const playlists = useSelector(getAllPlaylists);
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchPlaylists = async () => {
+      try {
+        const { data } = await playlistService.getAll();
+        console.log("Fetched playlists:", data);
+
+        dispatch(setAllPlaylists(data));
+      } catch (error) {
+        console.error("Failed to fetch playlists:", error);
+      }
+    };
+
+    fetchPlaylists();
+    return () => {};
+  }, [playlists.length]);
 
   return (
     <motion.aside
@@ -119,7 +133,7 @@ const Sidebar = () => {
         {/* User Playlists */}
         <div className="mt-6 overflow-y-auto max-h-80">
           <div className="space-y-2">
-            {playlists.map((playlist) => (
+            {playlists?.map((playlist) => (
               <Link key={playlist._id} to={`/playlist/${playlist._id}`}>
                 <PlaylistButton
                   key={playlist._id}

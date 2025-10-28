@@ -30,14 +30,14 @@ export const PopupProvider = ({ children }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed w-full h-full inset-0 flex items-center justify-center z-50 glass"
+            className="fixed w-full h-full inset-0 flex items-center justify-center z-50 glass backdrop-blur-sm"
           >
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="bg-card rounded-lg p-10 shadow-xl relative"
+              className="max-w-screen-md max-h-screen bg-card rounded-xl p-10 shadow-xl relative"
             >
               {popup.content}
               <button

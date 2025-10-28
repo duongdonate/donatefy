@@ -151,7 +151,7 @@ const MusicPlayer = ({
   }
 
   return (
-    <div className="group fixed bottom-0 left-0 right-0 min-w-screen min-h-2 max-h-28 px-6 py-4 shadow-2xl glass z-40">
+    <div className="group fixed bottom-0 left-0 right-0 min-w-screen min-h-2 max-h-28 px-6 py-4 shadow-2xl glass backdrop-blur-md z-40">
       {/* Progress Bar */}
       <ProgressMusicBar
         currentTime={currentTime}

@@ -34,7 +34,9 @@ axiosClient.interceptors.response.use(
     } else {
       console.error("Network Error:", error);
     }
-    return Promise.reject(error);
+    return error.response
+      ? Promise.reject(error.response.data)
+      : Promise.reject(error);
   }
 );
 

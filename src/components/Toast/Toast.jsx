@@ -39,7 +39,7 @@ export default function Toast({ id, message, onRemove }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       id="toast-success"
-      className="flex items-center w-full max-w-sm p-3 mb-4 overflow-hidden text-gray-500 bg-white rounded-lg shadow-xl dark:text-gray-400 dark:bg-gray-800 gap-1.5 relative"
+      className="flex items-center w-full max-w-sm p-3 mb-4 overflow-hidden text-gray-500 bg-white rounded-lg shadow-xl dark:text-gray-400 dark:bg-gray-800 gap-1 relative"
       role="alert"
     >
       <div className="inline-flex items-center justify-center shrink-0 w-8 h-8 text-green-500 bg-green-100 rounded-lg dark:bg-green-800 dark:text-green-200">

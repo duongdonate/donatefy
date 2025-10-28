@@ -9,6 +9,8 @@ import ThemeToggle from "../components/ThemeToggle/ThemeToggle.jsx";
 import { useSelector } from "react-redux";
 import { getIsShowQueue } from "../app/selectors/";
 import SongQueue from "../components/SongQueue/";
+import AvatarButton from "../components/AvatarButton";
+import LogoutButton from "../components/LogoutButton.jsx";
 
 function DefaultLayout({ children }) {
   // Redux
@@ -26,8 +28,10 @@ function DefaultLayout({ children }) {
         <HomeButton />
       </div>
       {/* Profile & Setting */}
-      <div className="px-4 flex justify-end items-center col-span-3">
+      <div className="px-4 flex justify-end items-center space-x-5 col-span-3">
         <ThemeToggle />
+        <LogoutButton />
+        <AvatarButton />
       </div>
       {/* Main Content */}
       <div

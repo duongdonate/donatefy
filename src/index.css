@@ -28,15 +28,15 @@ code {
     /* Surface (card, popover) */
     --card: theme(colors.gray.100);
     --card-foreground: theme(colors.gray.900);
-    --popover: theme(colors.white);
-    --popover-foreground: theme(colors.gray.900);
+    --popover: theme(colors.gray.300);
+    --popover-foreground: theme(colors.gray.800);
 
     /* Primary / Secondary */
     --primary: #1db954;
     --primary-hover: theme(colors.indigo.700);
     --primary-foreground: theme(colors.white);
     --secondary: theme(colors.gray.400);
-    --secondary-foreground: theme(colors.gray.800);
+    --secondary-foreground: theme(colors.gray.700);
 
     /* Muted / Accent */
     --muted: theme(colors.gray.200);
@@ -79,7 +79,7 @@ code {
     --primary: #1db954;
     --primary-foreground: theme(colors.gray.900);
     --secondary: theme(colors.gray.600);
-    --secondary-foreground: theme(colors.gray.100);
+    --secondary-foreground: theme(colors.gray.200);
 
     /* Muted / Accent */
     --muted: theme(colors.gray.700);

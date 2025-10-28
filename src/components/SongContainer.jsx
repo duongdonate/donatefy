@@ -5,7 +5,7 @@ import ViewToggle from "./ViewToggle";
 import HeaderSongTable from "./HeaderSongTable";
 import SongTable from "./SongTable";
 
-function SongContainer({ currentSong, songs }) {
+function SongContainer({ currentSong, songs, children }) {
   const [viewMode, setViewMode] = useState("list");
 
   const handleToggleView = () => {
@@ -18,6 +18,7 @@ function SongContainer({ currentSong, songs }) {
       <div className="flex justify-end items-center pt-2">
         <ViewToggle viewMode={viewMode} onToggle={handleToggleView} />
       </div>
+      {children}
       <div className="flex-1 h-[50rem] w-full"></div>
     </div>
   );

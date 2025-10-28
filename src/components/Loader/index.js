@@ -1,1 +1,2 @@
-export { default as Loader } from "./Loader.jsx";
+export { default as PageLoader } from "./PageLoader/Loader";
+export { default as TypingLoader } from "./TypingLoader/Loader";
