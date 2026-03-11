@@ -32,7 +32,7 @@ code {
     --popover-foreground: theme(colors.gray.800);
 
     /* Primary / Secondary */
-    --primary: #1db954;
+    --primary: theme(colors.orange.500);
     --primary-hover: theme(colors.indigo.700);
     --primary-foreground: theme(colors.white);
     --secondary: theme(colors.gray.400);

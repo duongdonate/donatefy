@@ -36,7 +36,7 @@ const MusicPlayer = ({
   const isPlayingGlobal = useSelector(getIsPlaying);
   const dispatch = useDispatch();
 
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(isPlayingGlobal);
   const [volume, setVolume] = useState(1);
   const [prevVolume, setPrevVolume] = useState(1);
   const [muted, setMuted] = useState(false);
@@ -196,23 +196,21 @@ const MusicPlayer = ({
       </div>
 
       {/* Hidden Player */}
-      {currentSong && (
-        <ReactPlayer
-          key={currentSong?.id}
-          ref={playerRef}
-          url={
-            currentSong
-              ? `https://www.youtube.com/watch?v=${currentSong.id}`
-              : null
-          }
-          playing={isPlaying}
-          volume={muted ? 0 : volume}
-          onDuration={setDuration}
-          onEnded={handleNext}
-          width="0"
-          height="0"
-        />
-      )}
+      <ReactPlayer
+        key={currentSong?.id}
+        ref={playerRef}
+        url={
+          currentSong
+            ? `https://www.youtube.com/watch?v=${currentSong.id}`
+            : null
+        }
+        playing={isPlaying}
+        volume={muted ? 0 : volume}
+        onDuration={setDuration}
+        onEnded={handleNext}
+        width="0"
+        height="0"
+      />
     </div>
   );
 };

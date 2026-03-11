@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { getPlaylistById, getCurrentPlaylist } from "../app/selectors";
 import Container from "../components/Container";
 import SongTable from "../components/SongTable";
@@ -17,6 +17,10 @@ function PlayListPage() {
 
   const [songs, setSongs] = useState([]);
   const playlistRef = useRef(null);
+
+  if (!playlist || !id) {
+    return <Navigate to="/" replace />;
+  }
 
   useEffect(() => {
     const fetchSongs = async () => {
