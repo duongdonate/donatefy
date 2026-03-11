@@ -1,12 +1,61 @@
-# React + Vite
+# DONATEFY
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Giới thiệu
 
-Currently, two official plugins are available:
+Đây là frontend của ứng dụng Spotify Clone, được xây dựng bằng React. Ứng dụng cho phép người dùng duyệt, tìm kiếm và phát nhạc trực tiếp trên trình duyệt. Ứng dụng sử dụng các link YouTube được cung cấp từ backend để phát nhạc.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tính năng
 
-## Expanding the ESLint configuration
+- **Music Player**: Phát, tạm dừng và điều khiển phát nhạc bằng các link YouTube.
+- **Playlist Management**: Tạo, xem và quản lý playlist.
+- **User Authentication**: Đăng ký, đăng nhập và quản lý phiên người dùng.
+- **Theming**: Chuyển đổi giữa chế độ sáng và tối.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Cấu trúc dự án
+
+```
+└── 📁src
+    └── 📁app
+    └── 📁assets
+    └── 📁components
+    └── 📁contexts
+    └── 📁hooks
+    └── 📁layouts
+    └── 📁pages
+        ├── HomePage.jsx
+        ├── PlaylistPage.jsx
+    └── 📁routes
+        ├── AppRouter.jsx
+    └── 📁services
+        └── 📁api
+            ├── playlistService.js
+            ├── songService.js
+            ├── userService.js
+        ├── axiosClient.js
+        ├── axiosUpload.js
+    └── 📁utils
+    ├── App.css
+    ├── App.jsx
+    ├── index.css
+    ├── main.jsx
+```
+
+## Yêu cầu
+
+- Node.js (v16 hoặc cao hơn)
+- npm hoặc yarn
+
+## Công nghệ sử dụng
+
+- React: Xây dựng giao diện người dùng.
+- Redux Toolkit: Quản lý state.
+- Axios: Gửi các yêu cầu API.
+- React Router: Xử lý điều hướng
+
+## Tích hợp Backend
+
+- Frontend giao tiếp với backend để lấy các link YouTube phục vụ phát nhạc.
+- Backend sử dụng Express, Node.js, cơ sở dữ liệu MongoDB
+- Cơ chế giao tiếp: RESTful API
+
+> Link github Backend: https://github.com/duongdonate/donatefy-backend.
