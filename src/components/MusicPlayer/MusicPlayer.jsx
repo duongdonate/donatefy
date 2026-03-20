@@ -46,6 +46,15 @@ const MusicPlayer = ({
   const [marqueeDuration, setMarqueeDuration] = useState(0);
   const playerRef = useRef(null);
 
+  const configPlayer = {
+    youtube: {
+      playerVars: {
+        playsinline: 1,
+        autoplay: 1,
+      },
+    },
+  };
+
   useEffect(() => {
     const interval = setInterval(() => {
       if (playerRef.current && isPlaying) {
@@ -146,6 +155,40 @@ const MusicPlayer = ({
     dispatch(previousSong());
   }, [handleReplay, playerRef]);
 
+  // Hỗ trợ MediaSessionAPI
+  useEffect(() => {
+    if ("mediaSession" in navigator && currentSong) {
+      // 1. Cập nhật thông tin lên màn hình khóa
+      navigator.mediaSession.metadata = new window.MediaMetadata({
+        title: currentSong.name,
+        artist: currentSong.artist || "Unknown Artist",
+        artwork: currentSong.thumbnail
+          ? [
+              {
+                src: currentSong.thumbnail,
+                sizes: "512x512",
+                type: "image/jpeg",
+              },
+            ]
+          : [],
+      });
+
+      // 2. Lắng nghe các nút bấm trên màn hình khóa hoặc tai nghe Bluetooth
+      // Truyền thẳng các hàm đã bọc useCallback của bạn vào
+      navigator.mediaSession.setActionHandler("play", handlePlayPause);
+      navigator.mediaSession.setActionHandler("pause", handlePlayPause);
+      navigator.mediaSession.setActionHandler("nexttrack", handleNext);
+      navigator.mediaSession.setActionHandler("previoustrack", handlePrevious);
+    }
+
+    // Cleanup khi component unmount
+    return () => {
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = null;
+      }
+    };
+  }, [currentSong, handlePlayPause, handleNext, handlePrevious]);
+
   if (!currentSong) {
     return null; // Don't render the player if no song is selected
   }
@@ -197,7 +240,6 @@ const MusicPlayer = ({
 
       {/* Hidden Player */}
       <ReactPlayer
-        key={currentSong?.id}
         ref={playerRef}
         url={
           currentSong
@@ -210,6 +252,8 @@ const MusicPlayer = ({
         onEnded={handleNext}
         width="0"
         height="0"
+        controls={true}
+        config={configPlayer}
       />
     </div>
   );
