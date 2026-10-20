@@ -1,7 +1,4 @@
-import { useState, useEffect } from "react";
 import SongItem from "./SongItem";
-
-import songService from "../services/api/songService";
 
 const SongList = ({ currentSong, songs, viewMode, onSongSelect }) => {
   if (!songs || songs.length === 0) {
@@ -26,13 +23,14 @@ const SongList = ({ currentSong, songs, viewMode, onSongSelect }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2">
-      {songIds.map((songId) => (
+    <div className="grid grid-cols-[repeat(auto-fill,minmax(160px,1fr))] gap-2">
+      {songs.map((song, index) => (
         <SongItem
-          currentSong={currentSong?.id === songId}
-          songId={songId}
+          currentSong={currentSong?._id === song._id}
+          song={song}
           viewMode={viewMode}
-          key={songId}
+          onSelect={() => onSongSelect?.(index)}
+          key={song._id}
         ></SongItem>
       ))}
     </div>

@@ -72,6 +72,12 @@ const playerSlice = createSlice({
       }
       state.isPlaying = true;
     },
+    // Bấm 1 bài trong panel hàng chờ (position = vị trí trong order)
+    playAt(state, action) {
+      if (action.payload < 0 || action.payload >= state.order.length) return;
+      state.position = action.payload;
+      state.isPlaying = true;
+    },
     // Video bị chặn / bị xoá: bỏ qua, nhưng dừng nếu cả queue đều lỗi
     songFailed(state) {
       state.errorStreak++;
@@ -119,6 +125,7 @@ export const {
   setPlaying,
   next,
   previous,
+  playAt,
   songFailed,
   toggleShuffle,
   cycleRepeat,

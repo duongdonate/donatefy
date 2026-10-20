@@ -21,6 +21,7 @@ import {
 import ProgressMusicBar from "./ProgressMusicBar";
 import ControlPlayer from "./ControlPlayer";
 import AdditionalControls from "./AdditionalControls";
+import Marquee from "../Marquee";
 
 // Redux quyết định phát bài nào; component này chỉ nối Redux <-> ReactPlayer.
 // Luồng một chiều: props (url/playing/volume/loop) đi xuống, sự kiện đi lên.
@@ -109,13 +110,14 @@ const MusicPlayer = () => {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="group min-w-0 flex-1 overflow-hidden cursor-pointer flex flex-col mask-to-l justify-center items-start">
-            <span className="font-medium text-foreground text-lg whitespace-nowrap group-hover:animation-marquee-playing">
+          <div className="min-w-0 flex-1 flex flex-col justify-center">
+            {/* Giống thanh Now Playing của Spotify: tên dài thì luôn chạy */}
+            <Marquee className="font-medium text-foreground text-lg">
               {currentSong.name}
-            </span>
-            <span className="flex-none text-sm text-muted-foreground whitespace-nowrap">
+            </Marquee>
+            <Marquee className="text-sm text-muted-foreground">
               {currentSong.artist}
-            </span>
+            </Marquee>
           </div>
         </div>
 

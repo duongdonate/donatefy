@@ -115,42 +115,10 @@ code {
   }
 }
 
-@keyframes marquee {
-  0% {
-    transform: translateX(0%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
-}
-
-@keyframes marquee-playing {
-  0% {
-    transform: translateX(0%);
-    padding-left: 0%;
-  }
-  50% {
-    transform: translateX(-100%);
-    padding-right: 100%;
-  }
-  100% {
-    transform: translateX(0%);
-    padding-right: 0;
-  }
-}
-
 @layer utilities {
-  .animation-marquee {
-    animation-name: marquee;
-    animation-timing-function: linear;
-    animation-iteration-count: 2;
-    animation-direction: alternate;
-    animation-duration: var(--marquee-duration, 10s);
-  }
-  .animation-marquee-playing {
-    animation: marquee-playing 15s linear infinite;
-    animation-fill-mode: backwards;
-    animation-delay: 0.5s;
-    padding-left: 100%;
+  /* Mờ 2 mép khi chữ đang chạy (components/Marquee.jsx) */
+  .marquee-fade {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
   }
 }

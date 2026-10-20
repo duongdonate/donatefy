@@ -5,6 +5,7 @@ import reducer, {
   togglePlay,
   next,
   previous,
+  playAt,
   songFailed,
   toggleShuffle,
   cycleRepeat,
@@ -41,6 +42,12 @@ s = reducer(s, next());
 assert.equal(current(s), "m0");
 s = reducer(s, previous());
 assert.equal(current(s), "m3");
+
+// playAt: nhảy tới vị trí trong order, bỏ qua vị trí không hợp lệ
+s = run(playContext({ songs }), togglePlay(), playAt(3));
+assert.equal(current(s), "m3");
+assert.equal(s.isPlaying, true);
+assert.equal(reducer(s, playAt(9)).position, 3);
 
 // cycleRepeat: off -> all -> one -> off
 assert.equal(run(cycleRepeat(), cycleRepeat()).repeat, "one");

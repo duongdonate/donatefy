@@ -1,30 +1,16 @@
-import { useState, useEffect, useRef } from "react";
-import { Play, Pause, Heart, MoreHorizontal, Clock8 } from "lucide-react";
+import { useState } from "react";
+import { Play, Pause, Heart, MoreHorizontal } from "lucide-react";
 import PlayingIcon from "./PlayingIcon";
 import PlayPauseButton from "./PlayPauseButton";
+import Marquee from "./Marquee";
 
 import formatDuration from "../utils/formatDuration";
 import formatDate from "../utils/formatDate";
-import { useDispatch, useSelector } from "react-redux";
-import { getCurrentSong, getIsPlaying } from "../app/selectors";
+import { useSelector } from "react-redux";
+import { getIsPlaying } from "../app/selectors";
 
 const SongItem = ({ currentSong, song, index, viewMode, onSelect }) => {
-  const hiddenRef = useRef(null);
-  const marqueeRef = useRef(null);
-  const [duration, setDuration] = useState(0);
-
-  useEffect(() => {
-    if (marqueeRef.current && hiddenRef.current) {
-      const textWidth = marqueeRef.current.scrollWidth;
-      const containerWidth = hiddenRef.current.offsetWidth;
-      const distance = textWidth + containerWidth;
-
-      const speed = 180; // px/s (tùy chỉnh)
-      const dur = distance / speed;
-      setDuration(dur);
-    }
-  }, [song?.name]);
-
+  const [hovered, setHovered] = useState(false);
   const isPlaying = useSelector(getIsPlaying);
 
   // Sau mọi hook, tránh lỗi "Rendered fewer hooks" (#300)
@@ -37,6 +23,8 @@ const SongItem = ({ currentSong, song, index, viewMode, onSelect }) => {
       return (
         <div
           onClick={onSelect}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
           className={`group flex items-center space-x-4 p-3 rounded-lg hover:bg-background-hover cursor-pointer ${
             currentSong ? "bg-background-hover" : "bg-card"
           }`}
@@ -69,17 +57,11 @@ const SongItem = ({ currentSong, song, index, viewMode, onSelect }) => {
           </div>
 
           {/* Info Song */}
-          <div
-            ref={hiddenRef}
-            className="group flex-shrink-0 w-2/5 flex flex-col overflow-hidden"
-          >
-            <span
-              ref={marqueeRef}
-              className={`font-medium text-card-foreground truncate group-hover:overflow-visible group-hover:animation-marquee`}
-              style={{ "--marquee-duration": `${duration}s` }}
-            >
+          <div className="flex-shrink-0 w-2/5 flex flex-col overflow-hidden">
+            {/* Giống Spotify: tên dài chỉ chạy khi hover dòng */}
+            <Marquee active={hovered} instant className="font-medium text-card-foreground">
               {song.name}
-            </span>
+            </Marquee>
             <span className="text-sm text-muted-foreground truncate">
               {song.artist}
             </span>
@@ -112,26 +94,34 @@ const SongItem = ({ currentSong, song, index, viewMode, onSelect }) => {
     case "grid": {
       return (
         <div
-          key={song.id}
-          className="group bg-card rounded-lg p-4 transition-colors cursor-pointer shadow-xl"
-          onClick={() => onSongSelect(song)}
+          onClick={onSelect}
+          onMouseEnter={() => setHovered(true)}
+          onMouseLeave={() => setHovered(false)}
+          className={`group rounded-lg p-4 transition-colors cursor-pointer shadow-xl hover:bg-background-hover ${
+            currentSong ? "bg-background-hover" : "bg-card"
+          }`}
         >
           <div className="relative mb-4">
             <img
-              src={song.cover}
-              alt={song.title}
-              className="w-full aspect-square object-cover rounded-lg shadow-lg"
+              src={song.thumbnail}
+              alt={song.name}
+              className="w-full aspect-video object-cover rounded-lg shadow-lg"
             />
+            {/* Click nổi bọt lên card (onSelect), nút chỉ để hiển thị trạng thái */}
             <PlayPauseButton
-              isPlaying={currentSong}
-              className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+              isPlaying={currentSong && isPlaying}
+              className={`absolute bottom-2 right-2 transform transition-all duration-300 ${
+                currentSong
+                  ? "opacity-100"
+                  : "opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0"
+              }`}
             />
           </div>
 
           <div className="space-y-1">
-            <h3 className="font-medium text-card-foreground truncate">
-              {song.title}
-            </h3>
+            <Marquee active={hovered} instant className="font-medium text-card-foreground">
+              {song.name}
+            </Marquee>
             <p className="text-sm text-muted-foreground truncate">
               {song.artist}
             </p>
