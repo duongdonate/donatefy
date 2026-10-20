@@ -9,15 +9,39 @@ const Avatar = ({ onClick }) => {
   const [avatar, setAvatar] = useState(null);
   const { user } = useAuth();
 
-  useEffect(() => {
-    if (user?.avatar) {
-      const urlAvatar = `${import.meta.env.VITE_API_URL}/avatars/${
-        user?.username
-      }`;
-      setAvatar(urlAvatar);
-    } else {
-      setAvatar(defaultAvatar); // Fallback to default avatar if user is not defined
+  const checkImageExists = async (url) => {
+    try {
+      const response = await fetch(url, { method: "HEAD" });
+      return response.ok;
+    } catch (error) {
+      console.error("Error checking image URL:", error);
+      return false;
     }
+  };
+
+  useEffect(() => {
+    const loadAvatar = async () => {
+      if (user?.username) {
+        const baseUrl = `${import.meta.env.VITE_API_URL}/uploads/avatars/${
+          user.username
+        }`;
+        const pngUrl = `${baseUrl}.png`;
+        const jpgUrl = `${baseUrl}.jpg`;
+
+        // Kiểm tra lần lượt cả hai URL
+        if (await checkImageExists(pngUrl)) {
+          setAvatar(pngUrl);
+        } else if (await checkImageExists(jpgUrl)) {
+          setAvatar(jpgUrl);
+        } else {
+          setAvatar(defaultAvatar); // Fallback nếu không tìm thấy ảnh
+        }
+      } else {
+        setAvatar(defaultAvatar); // Fallback nếu user không có username
+      }
+    };
+
+    loadAvatar();
   }, [user]);
 
   return (

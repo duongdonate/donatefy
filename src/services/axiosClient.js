@@ -8,7 +8,7 @@ const axiosClient = axios.create({
   timeout: 10000, // timeout 10s
 });
 
-// // 🛠️ Request interceptor
+// // Request interceptor
 // axiosClient.interceptors.request.use(
 //   (config) => {
 //     const token = localStorage.getItem("token");
@@ -20,7 +20,7 @@ const axiosClient = axios.create({
 //   (error) => Promise.reject(error)
 // );
 
-// 🛠️ Response interceptor
+// Response interceptor
 axiosClient.interceptors.response.use(
   (response) => response.data, // trả về data gọn lẹ
   (error) => {
