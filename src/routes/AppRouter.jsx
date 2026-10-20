@@ -9,7 +9,6 @@ import {
 import DefaultLayout from "../layouts/DefaultLayout";
 import HomePage from "../pages/HomePage";
 import PlayListPage from "../pages/PlaylistPage";
-import { currentSong, mockSongs } from "../mock";
 import { useAuth, AuthFlow } from "../contexts/AuthContext";
 
 function PublicRouter() {

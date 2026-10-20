@@ -37,7 +37,6 @@ export const AuthProvider = ({ children }) => {
 
       // Upload file avatar
       await axiosUpload.post("/upload/avatars", formData);
-      console.log("File uploaded successfully");
     } catch (err) {
       console.error("Error uploading file:", err);
     }
@@ -84,7 +83,6 @@ export const AuthProvider = ({ children }) => {
       });
       if (avatar) {
         await uploadAvatar(username, avatar);
-        console.log("Avatar uploaded successfully");
       }
 
       const { access_token } = res;

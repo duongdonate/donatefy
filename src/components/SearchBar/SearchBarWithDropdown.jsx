@@ -41,10 +41,6 @@ const SearchBarWithDropdown = ({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (query.trim()) {
-      console.log("Dropdown:", showDropdown);
-      console.log("Results:", results);
-    }
   };
 
   const handleChange = (e) => {

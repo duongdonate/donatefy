@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect, memo } from "react";
 import { Library, ChevronLeft, ChevronRight } from "lucide-react";
-import { mockPlaylists } from "../../mock";
 import { Link } from "react-router-dom";
 import LikedSongButton from "./LikedSongButton";
 import CreatePlaylistButton from "./CreatePlaylistButton";
@@ -36,8 +35,6 @@ const Sidebar = () => {
     const fetchPlaylists = async () => {
       try {
         const { data } = await playlistService.getAll();
-        console.log("Fetched playlists:", data);
-
         dispatch(setAllPlaylists(data));
       } catch (error) {
         console.error("Failed to fetch playlists:", error);
@@ -45,8 +42,7 @@ const Sidebar = () => {
     };
 
     fetchPlaylists();
-    return () => {};
-  }, [playlists.length]);
+  }, [dispatch]); // chỉ fetch 1 lần; create/delete tự cập nhật store
 
   return (
     <motion.aside

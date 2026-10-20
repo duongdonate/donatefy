@@ -1,34 +1,28 @@
 import js from "@eslint/js";
 import globals from "globals";
-import pluginReact from "eslint-plugin-react";
-import { defineConfig } from "eslint/config";
-import { ESLint } from "eslint";
+import react from "eslint-plugin-react";
+import reactHooks from "eslint-plugin-react-hooks";
 
 export default [
+  { ignores: ["dist", "graphify-out"] },
   {
-    files: ["**/*.{js,jsx}"], // Áp dụng cho các file JavaScript và JSX
+    files: ["**/*.{js,jsx}"],
     languageOptions: {
-      ecmaVersion: "latest", // Hỗ trợ cú pháp ECMAScript mới nhất
-      sourceType: "module", // Sử dụng module (import/export)
-      parser: "@babel/eslint-parser", // Sử dụng Babel parser để hỗ trợ JSX
-      parserOptions: {
-        ecmaFeatures: {
-          jsx: true, // Kích hoạt hỗ trợ JSX
-        },
-        requireConfigFile: false, // Không yêu cầu file cấu hình Babel riêng
-      },
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: { ...globals.browser, ...globals.node },
+      parserOptions: { ecmaFeatures: { jsx: true } },
     },
-    plugins: {
-      react: require("eslint-plugin-react"), // Plugin React
-    },
+    plugins: { react, "react-hooks": reactHooks },
+    settings: { react: { version: "detect" } },
     rules: {
-      "react/react-in-jsx-scope": "off", // Tắt cảnh báo React trong scope (React 17+)
-      "react/prop-types": "off", // Tắt kiểm tra prop-types (nếu không cần)
-    },
-    settings: {
-      react: {
-        version: "detect", // Tự động phát hiện phiên bản React
-      },
+      ...js.configs.recommended.rules,
+      ...react.configs.recommended.rules,
+      "react/react-in-jsx-scope": "off", // React 17+
+      "react/prop-types": "off",
+      // Bắt được lỗi crash #300 (early return trước hook)
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn",
     },
   },
 ];

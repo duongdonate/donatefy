@@ -4,7 +4,7 @@ import HeaderSongTable from "./HeaderSongTable";
 import { useSelector } from "react-redux";
 import { getCurrentSong } from "../app/selectors";
 
-function SongTable({ songs }) {
+function SongTable({ songs, onSongSelect }) {
   const currentSong = useSelector(getCurrentSong);
 
   if (songs.length == 0) {
@@ -20,7 +20,12 @@ function SongTable({ songs }) {
   return (
     <div className="pb-20 px-2 relative">
       <HeaderSongTable />
-      <SongList songs={songs} viewMode="list" currentSong={currentSong} />
+      <SongList
+        songs={songs}
+        viewMode="list"
+        currentSong={currentSong}
+        onSongSelect={onSongSelect}
+      />
     </div>
   );
 }

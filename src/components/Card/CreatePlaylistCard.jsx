@@ -44,7 +44,6 @@ function CreatePlaylistCard() {
         const data = await playlistService.create({ name });
         dispatch(addPlaylist(data));
         closePopup();
-        console.log("Playlist created:", data);
       } catch (error) {
         console.error("Error creating playlist:", error);
       }

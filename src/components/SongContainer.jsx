@@ -10,7 +10,6 @@ function SongContainer({ currentSong, songs, children }) {
 
   const handleToggleView = () => {
     setViewMode((prevMode) => (prevMode === "grid" ? "list" : "grid"));
-    console.log(viewMode);
   };
 
   return (

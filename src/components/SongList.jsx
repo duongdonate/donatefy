@@ -3,7 +3,7 @@ import SongItem from "./SongItem";
 
 import songService from "../services/api/songService";
 
-const SongList = ({ currentSong, songs, viewMode }) => {
+const SongList = ({ currentSong, songs, viewMode, onSongSelect }) => {
   if (!songs || songs.length === 0) {
     return null;
   }
@@ -13,11 +13,12 @@ const SongList = ({ currentSong, songs, viewMode }) => {
       <div className="space-y-2">
         {songs.map((song, index) => (
           <SongItem
-            currentSong={currentSong?.id === song.id}
+            currentSong={currentSong?._id === song._id}
             index={index + 1}
             song={song}
             viewMode={viewMode}
-            key={song.id}
+            onSelect={() => onSongSelect?.(index)}
+            key={song._id}
           ></SongItem>
         ))}
       </div>

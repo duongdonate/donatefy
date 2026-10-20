@@ -10,14 +10,6 @@ import store from "./app/store";
 import MusicPlayer from "./components/MusicPlayer";
 import App from "./App";
 
-// Mock data for current song and music player state
-import { currentSong } from "./mock";
-
-const shuffle = false;
-const repeat = false;
-const showLyrics = false;
-const showQueue = false;
-
 createRoot(document.getElementById("root")).render(
   <ReduxProvider store={store}>
     <AuthProvider>
@@ -26,12 +18,7 @@ createRoot(document.getElementById("root")).render(
           <PopupProvider>
             <MusicProvider>
               <App />
-              <MusicPlayer
-                shuffle={shuffle}
-                repeat={repeat}
-                showLyrics={showLyrics}
-                showQueue={showQueue}
-              />
+              <MusicPlayer />
             </MusicProvider>
           </PopupProvider>
         </ToastProvider>

@@ -6,14 +6,9 @@ import PlayPauseButton from "./PlayPauseButton";
 import formatDuration from "../utils/formatDuration";
 import formatDate from "../utils/formatDate";
 import { useDispatch, useSelector } from "react-redux";
-import { setCurrentSong } from "../app/slices/playerSlice";
 import { getCurrentSong, getIsPlaying } from "../app/selectors";
 
-const SongItem = ({ currentSong, song, index, viewMode }) => {
-  if (!song) {
-    return null;
-  }
-
+const SongItem = ({ currentSong, song, index, viewMode, onSelect }) => {
   const hiddenRef = useRef(null);
   const marqueeRef = useRef(null);
   const [duration, setDuration] = useState(0);
@@ -32,10 +27,16 @@ const SongItem = ({ currentSong, song, index, viewMode }) => {
 
   const isPlaying = useSelector(getIsPlaying);
 
+  // Sau mọi hook, tránh lỗi "Rendered fewer hooks" (#300)
+  if (!song) {
+    return null;
+  }
+
   switch (viewMode) {
     case "list": {
       return (
         <div
+          onClick={onSelect}
           className={`group flex items-center space-x-4 p-3 rounded-lg hover:bg-background-hover cursor-pointer ${
             currentSong ? "bg-background-hover" : "bg-card"
           }`}
@@ -50,8 +51,11 @@ const SongItem = ({ currentSong, song, index, viewMode }) => {
               </strong>
             )}
 
-            <button className="absolute opacity-0 text-card-foreground group-hover:opacity-100 hover:scale-125">
-              {currentSong ? <Pause size={24} /> : <Play size={24} />}
+            <button
+              aria-label={currentSong && isPlaying ? "Pause" : "Play"}
+              className="absolute opacity-0 text-card-foreground group-hover:opacity-100 hover:scale-125"
+            >
+              {currentSong && isPlaying ? <Pause size={24} /> : <Play size={24} />}
             </button>
           </div>
 
