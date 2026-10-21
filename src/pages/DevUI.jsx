@@ -1,7 +1,7 @@
 // Trang trưng bày component v2, chỉ có khi chạy dev (/dev/ui)
 import { ListMusic, Moon, Shuffle, Sun, Volume2 } from "lucide-react";
 import { useState } from "react";
-import { Button, Glass, IconButton } from "../design";
+import { Button, Glass, IconButton, Vinyl } from "../design";
 import { useTheme } from "../contexts/ThemeContext";
 import { PageLoader } from "../components/Loader";
 import Matcappa from "../mascot/Matcappa";
@@ -119,10 +119,24 @@ export default function DevUI() {
         <TalkingMascot />
       </Section>
 
+      <Section title="Đĩa than">
+        <Vinyl size={160} />
+        <Vinyl size={160} spinning={false} />
+        <Vinyl size={160} label="#e3b6c4" />
+      </Section>
+
       <Section title="Matcappa">
         <div className="text-center text-xs">
           <Matcappa size={240} label="Matcappa, bấm để nhảy" />
           bấm thử
+        </div>
+        <div className="text-center text-xs">
+          <Matcappa size={140} talking />
+          đang nói
+        </div>
+        <div className="text-center text-xs">
+          <Matcappa size={140} look={{ x: 3, y: 2.5 }} bob={false} />
+          nhìn phải-dưới, không nhún
         </div>
         <div className="grid grid-cols-4 gap-3">
           {PROPS.map((p) =>

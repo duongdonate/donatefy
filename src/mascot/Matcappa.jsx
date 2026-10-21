@@ -40,7 +40,7 @@ function Whirl({ grad }) {
   );
 }
 
-function Head({ ids, tilt = 0, dy = 0, closed = false, droop = false }) {
+function Head({ ids, tilt = 0, dy = 0, closed = false, droop = false, look }) {
   return (
     <g transform={`translate(0 ${dy}) rotate(${tilt} 100 150)`}>
       <rect x="97.6" y="27" width="4.8" height="26" rx="2.4" fill="#7d8f4a" />
@@ -58,10 +58,12 @@ function Head({ ids, tilt = 0, dy = 0, closed = false, droop = false }) {
       <circle cx="100" cy="26" r="3.4" fill="#6b7d3e" />
       <rect x="34" y="50" width="132" height="102" rx="48" fill={`url(#${ids.body})`} />
       <ellipse cx="66" cy="72" rx="16" ry="8" fill="#fff" opacity=".35" transform="rotate(-20 66 72)" />
-      <Eyes closed={closed} />
+      <g className="mc-look" style={look ? { transform: `translate(${look.x}px, ${look.y}px)` } : undefined}>
+        <Eyes closed={closed} />
+      </g>
       <ellipse cx="64" cy="120" rx="9" ry="4.5" fill="#f4a6a6" opacity=".45" />
       <ellipse cx="136" cy="120" rx="9" ry="4.5" fill="#f4a6a6" opacity=".45" />
-      <path d="M93 119 Q100 114 107 119 Q100 125 93 119Z" fill="#f2c35b" stroke="#d29a34" strokeWidth="1" />
+      <path className="mc-beak" d="M93 119 Q100 114 107 119 Q100 125 93 119Z" fill="#f2c35b" stroke="#d29a34" strokeWidth="1" />
     </g>
   );
 }
@@ -83,7 +85,7 @@ const Feet = () => (
   </>
 );
 
-function Pose({ pose, ids, droop }) {
+function Pose({ pose, ids, droop, look }) {
   if (pose === "hug-knees")
     return (
       <>
@@ -92,7 +94,7 @@ function Pose({ pose, ids, droop }) {
         <circle cx="109" cy="180" r="10" fill={LIMB_D} />
         <Limb x={100} y={184} rx={22} ry={5.5} rot={0} />
         <Feet />
-        <Head ids={ids} tilt={6} dy={8} droop={droop} />
+        <Head ids={ids} tilt={6} dy={8} droop={droop} look={look} />
       </>
     );
   if (pose === "hug-vinyl")
@@ -108,7 +110,7 @@ function Pose({ pose, ids, droop }) {
         </g>
         <Limb x={82} y={168} rx={5.5} ry={11} rot={-38} />
         <Limb x={118} y={168} rx={5.5} ry={11} rot={38} />
-        <Head ids={ids} droop={droop} />
+        <Head ids={ids} droop={droop} look={look} />
       </>
     );
   if (pose === "doze")
@@ -118,7 +120,7 @@ function Pose({ pose, ids, droop }) {
         <Limb x={76} y={176} rx={5.5} ry={13} rot={26} />
         <Limb x={124} y={176} rx={5.5} ry={13} rot={-26} />
         <Feet />
-        <Head ids={ids} tilt={12} dy={10} closed droop={droop} />
+        <Head ids={ids} tilt={12} dy={10} closed droop={droop} look={look} />
         <text x="160" y="70" fontSize="16" fontWeight="800" fill="#688e31">z</text>
         <text x="172" y="56" fontSize="12" fontWeight="800" fill="#688e31">z</text>
       </>
@@ -129,12 +131,22 @@ function Pose({ pose, ids, droop }) {
       <Body ids={ids} y={144} h={46} />
       <Limb x={74} y={168} rx={5.5} ry={15} rot={14} />
       <Limb x={126} y={168} rx={5.5} ry={15} rot={-14} />
-      <Head ids={ids} tilt={-4} droop={droop} />
+      <Head ids={ids} tilt={-4} droop={droop} look={look} />
     </>
   );
 }
 
-export default function Matcappa({ pose = "stand", propeller, size = 160, label = "Matcappa", onClick, className = "" }) {
+export default function Matcappa({
+  pose = "stand",
+  propeller,
+  size = 160,
+  label = "Matcappa",
+  onClick,
+  className = "",
+  talking = false,
+  look = null,
+  bob = true,
+}) {
   const uid = useId().replace(/:/g, "");
   const ids = { body: `${uid}b`, whirl: `${uid}w` };
   const prop = propeller ?? (pose === "doze" ? "droop" : "still");
@@ -159,7 +171,7 @@ export default function Matcappa({ pose = "stand", propeller, size = 160, label 
       role="img"
       aria-label={label}
       onClick={handleClick}
-      className={`mc ${spinning ? "mc-spinning" : ""} ${hop ? "mc-hop" : ""} ${className}`}
+      className={`mc ${spinning ? "mc-spinning" : ""} ${hop ? "mc-hop" : ""} ${talking ? "mc-talking" : ""} ${className}`}
       style={{ height: size, width: (size * 200) / 216, "--mc-hop": `${HOP_MS}ms` }}
     >
       <defs>
@@ -174,8 +186,8 @@ export default function Matcappa({ pose = "stand", propeller, size = 160, label 
           <stop offset="1" stopColor="#9cbf63" stopOpacity="0" />
         </radialGradient>
       </defs>
-      <g className="mc-bob">
-        <Pose pose={pose} ids={ids} droop={prop === "droop" && !tapSpin} />
+      <g className={bob ? "mc-bob" : undefined}>
+        <Pose pose={pose} ids={ids} droop={prop === "droop" && !tapSpin} look={look} />
       </g>
     </svg>
   );

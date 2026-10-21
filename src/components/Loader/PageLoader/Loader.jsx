@@ -18,12 +18,18 @@ const BUBBLES = [
   { left: 90, top: 122, d: 6, delay: 1.3 },
 ];
 
-function Loader({ size = 120, label = "Đang pha nhạc…" }) {
+// decorative: chỉ để trang trí (landing, lớp chờ có chữ riêng) nên ẩn khỏi trình đọc màn hình
+function Loader({ size = 120, label = "Đang pha nhạc…", decorative = false }) {
   const id = useId().replace(/:/g, "");
   const clay = `${id}clay`, glaze = `${id}glaze`, bam = `${id}bam`;
 
   return (
-    <div role="status" className={styles.wrap} style={{ width: size, height: size }}>
+    <div
+      role={decorative ? undefined : "status"}
+      aria-hidden={decorative || undefined}
+      className={styles.wrap}
+      style={{ width: size, height: size }}
+    >
       <div className={styles.scene} style={{ transform: `scale(${size / 240})` }} aria-hidden="true">
         <svg className={styles.bowl} viewBox="0 0 200 120">
           <defs>
@@ -78,7 +84,7 @@ function Loader({ size = 120, label = "Đang pha nhạc…" }) {
           />
         ))}
       </div>
-      <span className={styles.srOnly}>{label}</span>
+      {!decorative && <span className={styles.srOnly}>{label}</span>}
     </div>
   );
 }

@@ -69,3 +69,20 @@
     transition: none;
   }
 }
+/* Nhìn theo chuột, nhấp mỏ khi nói (landing-mascot.html) */
+.mc-look {
+  transition: transform 0.25s ease-out;
+}
+.mc-talking .mc-beak {
+  animation: mc-talk 0.22s ease-in-out infinite alternate;
+  transform-box: fill-box;
+  transform-origin: 50% 0;
+}
+@keyframes mc-talk {
+  to { transform: scaleY(1.7); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-talking .mc-beak {
+    animation: none;
+  }
+}
