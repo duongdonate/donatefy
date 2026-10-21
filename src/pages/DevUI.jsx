@@ -5,6 +5,22 @@ import { Button, Glass, IconButton } from "../design";
 import { useTheme } from "../contexts/ThemeContext";
 import { PageLoader } from "../components/Loader";
 import Matcappa from "../mascot/Matcappa";
+import MascotSpeech from "../mascot/MascotSpeech";
+import { LANDING_LINES, pickLine } from "../mascot/lines";
+
+function TalkingMascot() {
+  const [say, setSay] = useState({ i: -1, show: false });
+  const lines = LANDING_LINES[0];
+  return (
+    <div
+      className="flex items-center gap-2"
+      onMouseEnter={() => setSay((s) => ({ i: pickLine(lines, s.i), show: true }))}
+    >
+      <Matcappa size={140} label="Matcappa đang nói" />
+      <MascotSpeech text={lines[say.i]} show={say.show} onHide={() => setSay((s) => ({ ...s, show: false }))} />
+    </div>
+  );
+}
 
 const POSES = ["stand", "hug-knees", "hug-vinyl", "doze"];
 const PROPS = ["still", "spin", "droop"];
@@ -76,6 +92,10 @@ export default function DevUI() {
       <Section title="Loader">
         <PageLoader size={80} />
         <PageLoader size={160} />
+      </Section>
+
+      <Section title="Bong bóng nói (rê chuột vào)">
+        <TalkingMascot />
       </Section>
 
       <Section title="Matcappa">
