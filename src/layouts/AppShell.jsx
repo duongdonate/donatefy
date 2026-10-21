@@ -11,11 +11,12 @@ export default function AppShell({ children, right }) {
   const [focusIn, setFocusIn] = useState(false);
   const idle = useIdle(2500, { hold: hover || focusIn });
 
-  // Giữ header/rail khi chuột đang ở trên hoặc focus đang ở bên trong
+  // Giữ header/rail khi chuột đang ở trên hoặc focus bàn phím đang ở bên trong
+  // (bấm chuột cũng để lại focus trên nút, nếu tính thì header không bao giờ ẩn)
   const holdProps = {
     onMouseEnter: () => setHover(true),
     onMouseLeave: () => setHover(false),
-    onFocus: () => setFocusIn(true),
+    onFocus: (e) => setFocusIn(e.target.matches(":focus-visible")),
     onBlur: (e) => {
       if (!e.currentTarget.contains(e.relatedTarget)) setFocusIn(false);
     },
