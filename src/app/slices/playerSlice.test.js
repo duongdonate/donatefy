@@ -6,6 +6,7 @@ import reducer, {
   next,
   previous,
   playAt,
+  reorderUpNext,
   songFailed,
   toggleShuffle,
   cycleRepeat,
@@ -48,6 +49,17 @@ s = run(playContext({ songs }), togglePlay(), playAt(3));
 assert.equal(current(s), "m3");
 assert.equal(s.isPlaying, true);
 assert.equal(reducer(s, playAt(9)).position, 3);
+
+// reorderUpNext: chỉ đổi phần sau bài đang phát, bài hiện tại và lịch sử giữ nguyên
+s = run(playContext({ songs, startIndex: 1 }), reorderUpNext([3, 2]));
+assert.deepEqual(s.order, [0, 1, 3, 2]);
+assert.equal(current(s), "m1");
+s = reducer(s, next());
+assert.equal(current(s), "m3");
+// payload không phải hoán vị của up next (thiếu bài, lẫn bài cũ) => bỏ qua
+s = run(playContext({ songs, startIndex: 1 }));
+assert.deepEqual(reducer(s, reorderUpNext([3])).order, [0, 1, 2, 3]);
+assert.deepEqual(reducer(s, reorderUpNext([0, 3])).order, [0, 1, 2, 3]);
 
 // cycleRepeat: off -> all -> one -> off
 assert.equal(run(cycleRepeat(), cycleRepeat()).repeat, "one");

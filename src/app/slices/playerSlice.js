@@ -78,6 +78,17 @@ const playerSlice = createSlice({
       state.position = action.payload;
       state.isPlaying = true;
     },
+    // Kéo thả trong panel hàng chờ: payload là thứ tự mới (index trong queue)
+    // của các bài sau bài đang phát. Bỏ qua nếu không phải hoán vị của chúng.
+    reorderUpNext(state, action) {
+      const upNext = state.order.slice(state.position + 1);
+      const next = action.payload;
+      const same =
+        next.length === upNext.length &&
+        [...next].sort((a, b) => a - b).join() === [...upNext].sort((a, b) => a - b).join();
+      if (!same) return;
+      state.order = [...state.order.slice(0, state.position + 1), ...next];
+    },
     // Video bị chặn / bị xoá: bỏ qua, nhưng dừng nếu cả queue đều lỗi
     songFailed(state) {
       state.errorStreak++;
@@ -126,6 +137,7 @@ export const {
   next,
   previous,
   playAt,
+  reorderUpNext,
   songFailed,
   toggleShuffle,
   cycleRepeat,
