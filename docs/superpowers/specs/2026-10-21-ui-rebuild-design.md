@@ -100,7 +100,7 @@ Mỗi màn: **bản mẫu là nguồn đúng cho hình**, tài liệu v2 mục 6
 Bản mẫu `landing-mascot.html`. Tài liệu v2 mục 6.1. Không có gì khác.
 
 ### 7.2 Đăng nhập / Đăng ký `/login`, `/register`
-Bản mẫu `auth.html`. Hai route, một component; tab đổi URL. Dùng `login` / `register` của `AuthContext`. Kiểm tra ở client trước khi gửi (FR-01): tên 3–30 ký tự `[A-Za-z0-9_.]`, mật khẩu ≥ 6, nhập lại khớp. Lỗi từ server ánh xạ về câu thân thiện, hiện dưới ô liên quan. Ảnh đại diện lúc đăng ký: jpg/png/gif ≤ 2MB, xem trước. Upload dùng `axiosUpload` có sẵn, sau khi đăng ký thành công.
+**Đổi 22/10:** giữ bố cục v1 (một thẻ giữa màn hình), chỉ đổi component + màu matcha, bỏ khu thẻ tự lướt của `auth.html`, thêm Matcappa bay lượn quanh thẻ. Hai route, một component; link chuyển chế độ đổi URL. Dùng `login` / `register` của `AuthContext`. Kiểm tra ở client trước khi gửi (FR-01): tên 3–30 ký tự `[A-Za-z0-9_.]`, mật khẩu ≥ 6; không có ô nhập lại mật khẩu (giống v1). Lỗi từ server ánh xạ về câu thân thiện, hiện dưới ô liên quan. Ảnh đại diện lúc đăng ký: jpg/png/gif ≤ 2MB, xem trước. Upload dùng `axiosUpload` có sẵn, sau khi đăng ký thành công.
 
 ### 7.3 Now Playing `/listen`
 Bản mẫu `visual-direction-v3.html` cho **trung tâm, dock, header, rail**. Hai khối điều khiển 3D hai bên đĩa trong bản mẫu này **đã bị bỏ**; thay bằng **thanh kính phải phương án C** (`controls-options.html`):

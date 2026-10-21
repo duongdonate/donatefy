@@ -269,15 +269,11 @@ flowchart TD
 
 ### 6.2 Đăng nhập / Đăng ký (`/login`, `/register`)
 
-- **Bên trái:** "menu của quán", 3 bước:
-  1. Dán link YouTube
-  2. Gom thành playlist
-  3. Thả lên đĩa và nghe
-- **Bên phải:** thẻ kính với 2 tab Đăng nhập / Đăng ký.
-- **Đăng ký:** tên tài khoản, mật khẩu, nhập lại mật khẩu, tuỳ chọn ảnh đại diện (xem trước trước khi gửi).
-- **Báo lỗi** ngay dưới ô nhập: tên đã tồn tại, mật khẩu không khớp, sai tài khoản hoặc mật khẩu.
-- **Điện thoại:** phần "menu" thu gọn lên trên thành một dải ngang.
-- **Bản mẫu:** `auth.html`.
+- **Bố cục giữ như v1** *(chốt 22/10)*: một thẻ kính ở giữa màn hình, tiêu đề, các ô nhập xếp dọc, nút gửi, dòng "Chưa có tài khoản? Đăng ký ngay" bên dưới. Chỉ đổi component và màu matcha; bỏ phần "menu của quán" tự lướt của bản mẫu.
+- **Matcappa bay lượn** quanh thẻ, rê chuột lại gần thì nói.
+- **Đăng ký:** tên tài khoản, mật khẩu, tuỳ chọn ảnh đại diện (xem trước trước khi gửi). Không có ô nhập lại mật khẩu *(chốt 22/10, giống v1)*.
+- **Báo lỗi** ngay dưới ô nhập: tên đã tồn tại, mật khẩu quá ngắn; sai tài khoản hoặc mật khẩu báo dưới form.
+- **Bản mẫu:** câu chữ lấy từ `auth.html`, bố cục theo v1.
 
 ### 6.3 Now Playing (`/listen`): giao diện chính
 
