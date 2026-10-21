@@ -7,11 +7,12 @@ import PlayListPage from "../pages/PlaylistPage";
 import ListenPage from "../pages/ListenPage";
 import NotFound from "../pages/NotFound";
 import { PageLoader } from "../components/Loader";
-import { useAuth, AuthFlow } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 
 // Chỉ dev: lazy để không lọt vào bản build production
 const DevUI = import.meta.env.DEV ? lazy(() => import("../pages/DevUI")) : null;
 const LandingPage = lazy(() => import("../features/landing/LandingPage"));
+const AuthPage = lazy(() => import("../features/auth/AuthPage"));
 
 function FullLoader() {
   return (
@@ -71,8 +72,17 @@ export default function AppRouter() {
           }
         />
         <Route element={<GuestOnly />}>
-          <Route path="/login" element={<AuthFlow />} />
-          <Route path="/register" element={<AuthFlow />} />
+          {["login", "register"].map((mode) => (
+            <Route
+              key={mode}
+              path={`/${mode}`}
+              element={
+                <Suspense fallback={<FullLoader />}>
+                  <AuthPage mode={mode} />
+                </Suspense>
+              }
+            />
+          ))}
         </Route>
         <Route element={<RequireAuth />}>
           <Route

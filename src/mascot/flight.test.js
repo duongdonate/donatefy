@@ -27,3 +27,9 @@ test("bay lượn: màn quá chật thì về góc xa nhất", () => {
   const p = pickWanderSpot({ w: 76, h: 82 }, { W: 360, H: 640 }, { x: 0, y: 0, w: 360, h: 640 }, { x: 12, y: 12 }, () => 0.5);
   assert.deepEqual(p, cornerXY("br", { w: 76, h: 82 }, { W: 360, H: 640 }));
 });
+
+test("bay lượn: góc dự phòng không bao giờ là góc trên-trái (chỗ nút Về quán)", () => {
+  const pet = { w: 76, h: 82 }, view = { W: 360, H: 640 };
+  const p = pickWanderSpot(pet, view, { x: 0, y: 0, w: 360, h: 640 }, cornerXY("br", pet, view), () => 0.5);
+  assert.notDeepEqual(p, { x: 12, y: 12 });
+});

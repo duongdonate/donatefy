@@ -26,7 +26,8 @@ export function pickWanderSpot(pet, view, avoid, last, rand = Math.random) {
     };
     if (!overlaps(p, pet, avoid) && far(p)) return p;
   }
-  const corners = ["bl", "tr", "br", "tl"].map((c) => cornerXY(c, pet, view));
+  // bỏ góc trên-trái: chỗ đặt nút "Về quán"
+  const corners = ["bl", "tr", "br"].map((c) => cornerXY(c, pet, view));
   if (!last) return corners[0];
   const dist = (p) => Math.hypot(p.x - last.x, p.y - last.y);
   return corners.reduce((a, b) => (dist(b) > dist(a) ? b : a));
