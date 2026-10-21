@@ -31,9 +31,10 @@ function RequireAuth() {
 }
 
 function GuestOnly() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const from = useLocation().state?.from;
-  if (user) return <Navigate to={from ? `${from.pathname}${from.search}` : "/listen"} replace />;
+  if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/listen"} replace />;
+  if (loading) return <FullLoader />;
   return <Outlet />;
 }
 

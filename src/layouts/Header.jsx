@@ -4,9 +4,11 @@ import Matcappa from "../mascot/Matcappa";
 import Avatar from "../components/Avatar";
 import { useAuth } from "../contexts/AuthContext";
 import { useTheme } from "../contexts/ThemeContext";
+import useLogout from "../hooks/useLogout";
 
 export default function Header({ className = "", ...props }) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
+  const logout = useLogout();
   const { isDark, toggleTheme } = useTheme();
 
   return (

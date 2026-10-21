@@ -1,10 +1,9 @@
-import { Link, useLocation } from "react-router-dom";
-import { memo, useEffect, useState } from "react";
+import { memo } from "react";
 import { LogOutIcon } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import useLogout from "../hooks/useLogout";
 
 function LogoutButton() {
-  const { logout } = useAuth();
+  const logout = useLogout();
   return (
     <button
       onClick={logout}

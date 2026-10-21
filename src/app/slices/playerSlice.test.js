@@ -12,6 +12,7 @@ import reducer, {
   cycleRepeat,
   setVolume,
   toggleMute,
+  resetPlayer,
 } from "./playerSlice.js";
 import { getCurrentSong } from "../selectors/playerSelectors.js";
 
@@ -93,5 +94,14 @@ s = reducer(s, toggleMute());
 assert.equal(s.muted, false);
 s = run(setVolume(0), toggleMute());
 assert.equal(s.volume, 0.5); // unmute từ 0 thì không im lặng
+
+// Đăng xuất: dừng nhạc, xoá hàng chờ, giữ âm lượng
+s = run(playContext({ songs, startIndex: 1 }), setVolume(0.3), toggleMute(), resetPlayer());
+assert.equal(current(s), undefined);
+assert.equal(s.isPlaying, false);
+assert.deepEqual(s.queue, []);
+assert.equal(s.position, -1);
+assert.equal(s.volume, 0.3);
+assert.equal(s.muted, true);
 
 console.log("playerSlice: all checks passed");

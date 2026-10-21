@@ -65,4 +65,7 @@
   .mc-bob, .mc-blink, .mc-streak, .mc-flick, .mc-disc, .mc-hop {
     animation: none !important;
   }
+  .mc-leaves, .mc-whirl {
+    transition: none;
+  }
 }

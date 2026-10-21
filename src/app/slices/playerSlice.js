@@ -127,6 +127,10 @@ const playerSlice = createSlice({
     toggleQueue(state) {
       state.showQueue = !state.showQueue;
     },
+    // Đăng xuất: dừng nhạc, xoá hàng chờ; giữ âm lượng người dùng đã chỉnh
+    resetPlayer(state) {
+      return { ...initialState, volume: state.volume, muted: state.muted };
+    },
   },
 });
 
@@ -145,6 +149,7 @@ export const {
   toggleMute,
   toggleLyrics,
   toggleQueue,
+  resetPlayer,
 } = playerSlice.actions;
 
 export default playerSlice.reducer;
