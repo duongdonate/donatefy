@@ -7,6 +7,7 @@ import { PageLoader } from "../components/Loader";
 import Matcappa from "../mascot/Matcappa";
 import MascotSpeech from "../mascot/MascotSpeech";
 import { LANDING_LINES, pickLine } from "../mascot/lines";
+import AppShell from "../layouts/AppShell";
 
 function TalkingMascot() {
   const [say, setSay] = useState({ i: -1, show: false });
@@ -37,6 +38,22 @@ function Section({ title, children }) {
 export default function DevUI() {
   const { isDark, toggleTheme } = useTheme();
   const [shuffle, setShuffle] = useState(true);
+  const [shell, setShell] = useState(false);
+
+  if (shell)
+    return (
+      <AppShell
+        right={
+          <IconButton label="Đóng AppShell" onClick={() => setShell(false)}>
+            ✕
+          </IconButton>
+        }
+      >
+        <div className="grid h-full place-items-center">
+          <Matcappa size={200} />
+        </div>
+      </AppShell>
+    );
 
   return (
     <main className="bg-cafe relative min-h-screen space-y-10 overflow-hidden p-8 text-ink">
@@ -47,6 +64,10 @@ export default function DevUI() {
           {isDark ? <Sun size={20} /> : <Moon size={20} />}
         </IconButton>
       </header>
+
+      <Button variant="secondary" onClick={() => setShell(true)}>
+        Xem AppShell
+      </Button>
 
       <Section title="Màu">
         {["bg-matcha-1", "bg-matcha-2", "bg-matcha-3", "bg-matcha-4", "bg-matcha-4/50", "bg-cream", "bg-ink", "bg-ink-soft", "bg-mascot"].map((c) => (
