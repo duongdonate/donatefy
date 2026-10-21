@@ -1,64 +1,96 @@
-.loader {
-  --dim: 2rem;
-  width: var(--dim);
-  height: var(--dim);
+/* Loader chasen: phương án A trong matcha-effects.html (vòng 0,8s, quẹt 0,3s) */
+.wrap {
   position: relative;
-  margin: calc(var(--dim) / 2);
-  animation: spin988 2s linear infinite;
+  display: inline-block;
 }
-
-.loader .circle {
-  --color: #333;
-  --dim_circle: calc(var(--dim) / 2.5);
-  width: var(--dim_circle);
-  height: var(--dim_circle);
-  background-color: var(--color);
-  border-radius: 50%;
+.scene {
   position: absolute;
-}
-
-.loader .circle:nth-child(1) {
-  top: 0;
   left: 0;
-}
-
-.loader .circle:nth-child(2) {
   top: 0;
-  right: 0;
+  width: 240px;
+  height: 240px;
+  transform-origin: 0 0;
 }
-
-.loader .circle:nth-child(3) {
-  bottom: 0;
-  left: 0;
+.bowl {
+  position: absolute;
+  left: 20px;
+  bottom: 18px;
+  width: 200px;
+  height: 120px;
 }
-
-.loader .circle:nth-child(4) {
-  bottom: 0;
-  right: 0;
+.orbitX {
+  position: absolute;
+  z-index: 1;
+  left: 82px;
+  top: 4px;
+  width: 76px;
+  height: 190px;
+  animation: orbitX 0.8s ease-in-out infinite alternate;
 }
-
-@keyframes spin988 {
-  0% {
-    transform: scale(1) rotate(0);
-  }
-
-  20%,
-  25% {
-    transform: scale(1.3) rotate(90deg);
-  }
-
-  45%,
-  50% {
-    transform: scale(1) rotate(180deg);
-  }
-
-  70%,
-  75% {
-    transform: scale(1.3) rotate(270deg);
-  }
-
-  95%,
-  100% {
-    transform: scale(1) rotate(360deg);
+.orbitY {
+  width: 100%;
+  height: 100%;
+  animation: orbitY 0.8s ease-in-out -0.4s infinite alternate;
+}
+.chasen {
+  width: 100%;
+  height: 100%;
+  transform-origin: 50% 20%;
+  animation: whisk 0.3s ease-in-out infinite alternate;
+  filter: drop-shadow(4px 8px 6px rgba(0, 0, 0, 0.25));
+}
+@keyframes orbitX {
+  from { transform: translateX(-46px); }
+  to { transform: translateX(46px); }
+}
+/* vào trong chén thì nhỏ lại, ra ngoài thì to hơn => có chiều sâu */
+@keyframes orbitY {
+  from { transform: translateY(-8px) scale(0.95); }
+  to { transform: translateY(6px) scale(1.03); }
+}
+@keyframes whisk {
+  from { transform: translateX(-9px) rotate(-6deg); }
+  to { transform: translateX(9px) rotate(6deg); }
+}
+.surface {
+  fill: #4f7a22;
+  animation: froth 3.2s ease-in-out infinite;
+}
+@keyframes froth {
+  0%, 100% { fill: #4f7a22; }
+  60% { fill: #9cc06a; }
+}
+.foam {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: foam 3.2s ease-in-out infinite;
+}
+@keyframes foam {
+  0%, 100% { transform: scaleX(0.71); }
+  50% { transform: scaleX(1.1); }
+}
+.bubble {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff, #d9e8b8 60%, rgba(160, 190, 110, 0.6));
+  animation: rise 2.4s ease-out infinite;
+  opacity: 0;
+}
+@keyframes rise {
+  0% { transform: translateY(0) scale(0.4); opacity: 0; }
+  20% { opacity: 1; }
+  100% { transform: translateY(-60px) scale(1); opacity: 0; }
+}
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .orbitX, .orbitY, .chasen, .surface, .foam, .bubble {
+    animation: none;
   }
 }

@@ -3,6 +3,7 @@ import { ListMusic, Moon, Shuffle, Sun, Volume2 } from "lucide-react";
 import { useState } from "react";
 import { Button, Glass, IconButton } from "../design";
 import { useTheme } from "../contexts/ThemeContext";
+import { PageLoader } from "../components/Loader";
 
 function Section({ title, children }) {
   return (
@@ -66,6 +67,11 @@ export default function DevUI() {
         <IconButton label="Âm lượng" size={48}>
           <Volume2 size={22} />
         </IconButton>
+      </Section>
+
+      <Section title="Loader">
+        <PageLoader size={80} />
+        <PageLoader size={160} />
       </Section>
     </main>
   );
