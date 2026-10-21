@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { lazy, Suspense, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -10,6 +10,9 @@ import DefaultLayout from "../layouts/DefaultLayout";
 import HomePage from "../pages/HomePage";
 import PlayListPage from "../pages/PlaylistPage";
 import { useAuth, AuthFlow } from "../contexts/AuthContext";
+
+// Chỉ dev: lazy để không lọt vào bản build production
+const DevUI = import.meta.env.DEV ? lazy(() => import("../pages/DevUI")) : null;
 
 function PublicRouter() {
   const { user } = useAuth();
@@ -55,6 +58,16 @@ export default function AppRouter() {
   return (
     <Router>
       <Routes>
+        {DevUI && (
+          <Route
+            path="/dev/ui"
+            element={
+              <Suspense>
+                <DevUI />
+              </Suspense>
+            }
+          />
+        )}
         <Route path="/login" element={<PublicRouter />}></Route>
         <Route element={<PrivateRouter />}>
           <Route path="/" element={<HomePage user={user} />} />
