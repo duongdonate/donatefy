@@ -1,13 +1,22 @@
 // Landing cuộn từng bước: mỗi lần lăn / phím / vuốt chỉ sang 1 bước, trang không cuộn
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Glass } from "../../design";
 import { useAuth } from "../../contexts/AuthContext";
 import { SCENES } from "./scenes";
-import { LOCK_MS, accumulateWheel, clampStep, fitScale, stepFromKey, swipeDir } from "./stepper";
+import { LOCK_MS, MASCOT_SPOTS, accumulateWheel, clampStep, fitScale, stepFromKey, swipeDir } from "./stepper";
+import FlyingMascot, { useMascotSize } from "../../mascot/FlyingMascot";
+import { cornerXY } from "../../mascot/flight";
+import { LANDING_LINES } from "../../mascot/lines";
 import "./landing.css";
 
 const pad2 = (n) => String(n).padStart(2, "0");
+
+// Giữ cùng một object khi góc / kích thước không đổi để mascot không bay lại
+function useMascotTarget(corner, pet, view) {
+  const { x, y } = cornerXY(corner, pet, view);
+  return useMemo(() => ({ x, y }), [x, y]);
+}
 
 export default function LandingPage() {
   const { user } = useAuth();
@@ -17,6 +26,10 @@ export default function LandingPage() {
   const stepRef = useRef(0);
   const locked = useRef(false);
   const boxes = useRef([]);
+  const pet = useMascotSize();
+  const [view, setView] = useState({ W: window.innerWidth, H: window.innerHeight });
+  const spot = MASCOT_SPOTS[step];
+  const target = useMascotTarget(spot.corner, pet, view);
 
   const go = useCallback((n) => {
     const to = clampStep(n);
@@ -89,10 +102,14 @@ export default function LandingPage() {
         };
         box.style.scale = String(fitScale(avail, { w: box.offsetWidth, h: box.offsetHeight }));
       });
+    const onResize = () => {
+      fit();
+      setView({ W: window.innerWidth, H: window.innerHeight });
+    };
     fit();
     document.fonts?.ready.then(fit);
-    window.addEventListener("resize", fit);
-    return () => window.removeEventListener("resize", fit);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
   const onStart = () => navigate(user ? "/listen" : "/login");
@@ -153,6 +170,7 @@ export default function LandingPage() {
           <path d="M7 5v4" />
         </svg>
       </div>
+      <FlyingMascot target={target} pose={spot.pose} lines={LANDING_LINES[step]} />
     </div>
   );
 }

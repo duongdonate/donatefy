@@ -5,6 +5,15 @@ export const LANDING_LINES = [
   ["Thong thả thôi ~", "Pha chén nhạc đầu tiên với mình nha!", "Một chén matcha, một chiếc đĩa, vậy là đủ.", "Mình buồn ngủ rồi… mà nhạc thì vẫn hay ~", "Cảm ơn bạn đã ghé quán!"],
 ];
 
+// Câu nói khi bay lượn quanh trang đăng nhập / đăng ký
+export const AUTH_LINES = [
+  "Nhập tên với mật khẩu là vào quán liền ~",
+  "Mình giữ chỗ cho bạn rồi nè ~",
+  "Chưa có tài khoản? Tạo một cái, nhanh lắm ~",
+  "Mình bay vòng vòng chờ bạn đó ~",
+  "Vào rồi mình pha nhạc cho nghe nha ~",
+];
+
 // Chọn câu khác câu vừa nói; -1 nếu không có câu nào
 export function pickLine(lines, lastIndex, rand = Math.random) {
   const n = lines.length;

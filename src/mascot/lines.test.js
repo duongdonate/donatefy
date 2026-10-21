@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickLine, LANDING_LINES } from "./lines.js";
+import { pickLine, LANDING_LINES, AUTH_LINES } from "./lines.js";
 
 test("không bao giờ trả lại câu vừa nói", () => {
   const lines = ["a", "b", "c", "d"];
@@ -27,4 +27,9 @@ test("rand ở hai đầu không vượt biên", () => {
 test("LANDING_LINES có 3 nhóm, mỗi nhóm 5 câu", () => {
   assert.equal(LANDING_LINES.length, 3);
   LANDING_LINES.forEach((g) => assert.equal(g.length, 5));
+});
+
+test("AUTH_LINES có 5 câu, giọng mascot kết bằng ~", () => {
+  assert.equal(AUTH_LINES.length, 5);
+  AUTH_LINES.forEach((l) => assert.ok(l.endsWith("~"), l));
 });
