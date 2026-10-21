@@ -48,7 +48,7 @@ function PlayListPage() {
 
   // Early return phải nằm sau mọi hook, nếu không React crash (#300)
   if (!playlist || !id) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/v1" replace />;
   }
 
   const isCurrentContext = currentPlaylist?._id === playlist._id;
