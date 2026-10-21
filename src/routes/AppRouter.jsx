@@ -5,13 +5,13 @@ import AppShell from "../layouts/AppShell";
 import HomePage from "../pages/HomePage";
 import PlayListPage from "../pages/PlaylistPage";
 import ListenPage from "../pages/ListenPage";
-import LandingStub from "../pages/LandingStub";
 import NotFound from "../pages/NotFound";
 import { PageLoader } from "../components/Loader";
 import { useAuth, AuthFlow } from "../contexts/AuthContext";
 
 // Chỉ dev: lazy để không lọt vào bản build production
 const DevUI = import.meta.env.DEV ? lazy(() => import("../pages/DevUI")) : null;
+const LandingPage = lazy(() => import("../features/landing/LandingPage"));
 
 function FullLoader() {
   return (
@@ -62,7 +62,14 @@ export default function AppRouter() {
             }
           />
         )}
-        <Route path="/" element={<LandingStub />} />
+        <Route
+          path="/"
+          element={
+            <Suspense fallback={<FullLoader />}>
+              <LandingPage />
+            </Suspense>
+          }
+        />
         <Route element={<GuestOnly />}>
           <Route path="/login" element={<AuthFlow />} />
           <Route path="/register" element={<AuthFlow />} />

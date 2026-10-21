@@ -1,0 +1,121 @@
+/* Landing cuộn từng bước: chuyển cảnh theo landing-mascot.html */
+.ld {
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 0.9s;
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: linear-gradient(170deg, #dfe8c9 0%, #f4efe1 45%, #eef1e2 75%, #e3ebd0 100%);
+}
+.dark .ld {
+  background: linear-gradient(170deg, #1c2616 0%, #181f14 55%, #1f2a18 100%);
+}
+
+/* Lớp cố định */
+.ld-blob {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(90px);
+  pointer-events: none;
+  transition: transform 1.4s var(--ease), opacity 1.4s;
+}
+[data-step="1"] .ld-blob.a { transform: translate(55vw, 10vh); }
+[data-step="1"] .ld-blob.b { transform: translate(-60vw, 30vh); }
+[data-step="2"] .ld-blob.a { transform: translate(40vw, 30vh); }
+[data-step="2"] .ld-blob.b { transform: translate(-50vw, 10vh); opacity: 0.25; }
+
+.ld-ghost {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  pointer-events: none;
+  font-family: Yellowtail, cursive;
+  font-size: clamp(130px, 24vw, 300px);
+  line-height: 1;
+  color: rgba(73, 115, 0, 0.13);
+  white-space: nowrap;
+  opacity: 0;
+  transform: translate(-50%, -30%) rotate(-6deg);
+  transition: opacity 0.6s var(--ease), transform var(--dur) var(--ease);
+}
+.ld-ghost.on { opacity: 1; transform: translate(-50%, -56%) rotate(-6deg); }
+.ld-ghost.gone { transform: translate(-50%, -80%) rotate(-6deg); }
+
+.ld-hint svg { animation: ld-nudge 1.6s ease-in-out infinite; }
+@keyframes ld-nudge { 50% { transform: translateY(4px); } }
+
+/* Các bước: cùng một khung, chỉ đổi nội dung */
+.ld-scene {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 56px 24px 72px;
+  pointer-events: none;
+}
+.ld-scene.current { pointer-events: auto; }
+.ld-m {
+  opacity: 0;
+  transition: opacity calc(var(--dur) * 0.7) var(--ease) var(--d, 0s), transform var(--dur) var(--ease) var(--d, 0s);
+}
+.ld-scene.prev .ld-m { transform: translateY(-60px); }
+.ld-scene.next .ld-m { transform: translateY(70px); }
+.ld-scene.current .ld-m { opacity: 1; transform: none; }
+.ld-scene.leaving .ld-m { transition-delay: 0s; }
+/* cảnh ẩn thì dừng hoạt ảnh cho nhẹ máy */
+.ld-scene:not(.current) * { animation-play-state: paused !important; }
+
+/* Bước 1: đĩa trượt ra khỏi bìa */
+.ld-disc {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  margin: -118px 0 0 -70px;
+  z-index: 1;
+  transition: transform var(--dur) var(--ease) 0.25s, opacity 0.4s var(--ease) 0.25s;
+}
+.ld-scene:not(.current) .ld-disc { transform: translateX(-110px); opacity: 0; transition-delay: 0s; }
+.ld-sleeve {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 250px;
+  aspect-ratio: 1;
+  margin: -125px 0 0 -170px;
+  border-radius: 8px;
+  z-index: 2;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 30% 80%, #6f9a3a 0, #3f6b1c 55%, #2a4a12 100%);
+  box-shadow: 0 36px 56px -24px rgba(31, 46, 23, 0.65), inset 0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+.ld-sleeve::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.04) 0 2px, transparent 2px 9px);
+}
+
+/* Bước 2: máy tính bảng nghiêng */
+.ld-device { perspective: 1600px; }
+.ld-device-inner {
+  transform: rotateY(-14deg) rotateX(6deg);
+  border-radius: 26px;
+  padding: 12px;
+  background: #15160f;
+  box-shadow: 40px 50px 80px -40px rgba(31, 46, 23, 0.6);
+  transition: transform 0.8s var(--ease);
+}
+.ld-device:hover .ld-device-inner { transform: rotateY(-6deg) rotateX(3deg); }
+.ld-screen { container-type: inline-size; }
+
+@media (max-width: 820px) {
+  .ld-device-inner { transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld { --dur: 0.01s; }
+  .ld-hint svg { animation: none; }
+  .ld-blob { transition: none; }
+}
