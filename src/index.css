@@ -4,9 +4,7 @@
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
-    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-    sans-serif;
+  font-family: "Be Vietnam Pro", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scrollbar-behavior: smooth;
@@ -60,6 +58,16 @@ code {
 
     /* Radius */
     --radius: 0.5rem;
+
+    /* Matcha v2: kênh RGB để Tailwind dùng được độ mờ (bg-matcha-4/50) */
+    --matcha-1: 167 196 167;
+    --matcha-2: 135 169 107;
+    --matcha-3: 104 142 49;
+    --matcha-4: 73 115 0;
+    --cream: 244 241 223;
+    --ink: 31 46 23;
+    --ink-soft: 85 98 76;
+    --mascot: 216 236 160;
   }
 
   .dark {
@@ -103,6 +111,16 @@ code {
 
     /* Radius */
     --radius: 0.5rem;
+
+    /* Matcha v2 (tối): phương án A "Đêm matcha" (dark-palette.html); chữ nhấn dùng matcha-1 */
+    --matcha-1: 167 196 167;
+    --matcha-2: 135 169 107;
+    --matcha-3: 104 142 49;
+    --matcha-4: 73 115 0;
+    --cream: 24 32 20;
+    --ink: 238 243 230;
+    --ink-soft: 176 190 166;
+    --mascot: 216 236 160;
   }
 }
 
@@ -116,6 +134,13 @@ code {
 }
 
 @layer utilities {
+  /* Nền sáng của quán (visual-direction-v3) */
+  .bg-cafe {
+    background: linear-gradient(160deg, #dfe8c9 0%, #f4efe1 55%, #e7ecd8 100%);
+  }
+  .dark .bg-cafe {
+    background: linear-gradient(160deg, #1c2616 0%, #181f14 55%, #1f2a18 100%);
+  }
   /* Mờ 2 mép khi chữ đang chạy (components/Marquee.jsx) */
   .marquee-fade {
     -webkit-mask-image: linear-gradient(to right, transparent, #000 12px, #000 calc(100% - 12px), transparent);
