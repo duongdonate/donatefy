@@ -1,0 +1,68 @@
+/* Matcappa: nhịp lấy từ matcappa-smiski-v3.html */
+.mc {
+  overflow: visible;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.mc-bob {
+  animation: mc-bob 2.6s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+}
+@keyframes mc-bob {
+  50% { transform: translateY(-3px) scaleY(1.015); }
+}
+.mc-blink {
+  animation: mc-blink 4.8s infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes mc-blink {
+  0%, 94%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.1); }
+}
+/* Chong chóng: đứng yên = hai lá; đang quay = một đĩa mờ có vệt chạy vòng */
+.mc-leaves,
+.mc-whirl {
+  transition: opacity 0.25s;
+}
+.mc:not(.mc-spinning) .mc-whirl,
+.mc-spinning .mc-leaves {
+  opacity: 0;
+}
+.mc-streak {
+  animation: mc-streak 0.28s linear infinite;
+}
+.mc-streak2 {
+  animation-duration: 0.2s;
+  animation-direction: reverse;
+}
+@keyframes mc-streak {
+  to { stroke-dashoffset: -100; }
+}
+.mc-flick {
+  animation: mc-flick 0.12s steps(2) infinite;
+}
+@keyframes mc-flick {
+  50% { opacity: 0.82; }
+}
+.mc-disc {
+  animation: mc-disc 3s linear infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@keyframes mc-disc {
+  to { transform: rotate(360deg); }
+}
+.mc-hop {
+  animation: mc-hop var(--mc-hop, 0.6s) cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+@keyframes mc-hop {
+  40% { transform: translateY(-18px) scale(0.96, 1.05); }
+  70% { transform: translateY(0) scale(1.05, 0.95); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mc-bob, .mc-blink, .mc-streak, .mc-flick, .mc-disc, .mc-hop {
+    animation: none !important;
+  }
+}

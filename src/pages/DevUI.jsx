@@ -4,6 +4,10 @@ import { useState } from "react";
 import { Button, Glass, IconButton } from "../design";
 import { useTheme } from "../contexts/ThemeContext";
 import { PageLoader } from "../components/Loader";
+import Matcappa from "../mascot/Matcappa";
+
+const POSES = ["stand", "hug-knees", "hug-vinyl", "doze"];
+const PROPS = ["still", "spin", "droop"];
 
 function Section({ title, children }) {
   return (
@@ -72,6 +76,23 @@ export default function DevUI() {
       <Section title="Loader">
         <PageLoader size={80} />
         <PageLoader size={160} />
+      </Section>
+
+      <Section title="Matcappa">
+        <div className="text-center text-xs">
+          <Matcappa size={240} label="Matcappa, bấm để nhảy" />
+          bấm thử
+        </div>
+        <div className="grid grid-cols-4 gap-3">
+          {PROPS.map((p) =>
+            POSES.map((pose) => (
+              <div key={pose + p} className="rounded-2xl bg-white/40 p-2 text-center text-xs dark:bg-white/5">
+                <Matcappa pose={pose} propeller={p} size={110} />
+                {pose} · {p}
+              </div>
+            ))
+          )}
+        </div>
       </Section>
     </main>
   );
