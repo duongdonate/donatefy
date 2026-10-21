@@ -310,11 +310,10 @@ flowchart TD
 ### 6.5 Thư viện (`/library`)
 
 - Lớp phủ mở từ nút Thư viện trên rail, hiển thị mọi playlist của người dùng.
-- Có ô tìm playlist, sắp xếp (gần đây / tên / số bài), nút **Tạo playlist**, menu ⋯ để đổi tên / xoá.
+- **Đã chốt: A · Xoè bìa** (bản mẫu `playlists-options.html`), **bỏ hiệu ứng đĩa than trượt ra**: lớp phủ tối kiểu Groove, mỗi lúc tập trung một playlist ở giữa; lướt bằng ‹ ›, ←/→, lăn chuột hoặc bấm bìa bên cạnh.
+- Bìa cuối là **Tạo playlist**; menu ⋯ để đổi tên / xoá.
+- **Không có ô tìm và sắp xếp** (chấp nhận vì số playlist thường ít). Thứ tự: playlist đang phát trước, rồi mới nhất.
 - Playlist đang phát có nhãn "Đang phát".
-- **Hai phương án đang chờ chốt** (bản mẫu `playlists-options.html`):
-  - **A · Xoè bìa:** lớp phủ tối kiểu Groove, mỗi lúc tập trung một playlist ở giữa, đĩa than trượt ra và quay; lướt bằng ‹ › hoặc ←/→.
-  - **B · Kệ đĩa:** lưới bìa trên kính sáng, thấy toàn bộ playlist một lúc; rê chuột thì đĩa trượt ra và hiện nút phát. *(Đề xuất: B, đồng bộ với trang chi tiết dạng lưới.)*
 
 ### 6.6 Chi tiết playlist (`/playlist/:id`)
 
@@ -394,9 +393,9 @@ Ký hiệu độ ưu tiên: **P0** bắt buộc cho bản phát hành · **P1** 
 
 | Mã | Yêu cầu | Ưu tiên |
 |---|---|---|
-| FR-30 | Tạo playlist (tên 1–60 ký tự); bìa chọn **một lần lúc tạo** và giữ cố định | P0 |
+| FR-30 | Tạo playlist (tên 1–60 ký tự); bìa là **ảnh** do backend gán ngẫu nhiên **một lần lúc tạo** và giữ cố định *(chốt 22/10)* | P0 |
 | FR-31 | Đổi tên, xoá playlist (có hỏi xác nhận) | P0 |
-| FR-32 | Thêm bài bằng cách dán một hoặc nhiều link YouTube; bỏ qua link trùng hoặc link hỏng và báo số bài đã thêm | P0 |
+| FR-32 | Thêm bài bằng cách dán **một** link YouTube; tự điền tên bài và kênh (sửa được), chọn 1 trong 4 khung hình làm bìa, xem trước rồi thêm. Tên / bìa đã sửa lưu **riêng cho playlist đó**. Báo ngay nếu link hỏng hoặc bài đã có *(đổi 22/10, theo bản mẫu)* | P0 |
 | FR-33 | Gỡ bài khỏi playlist (có thể hoàn tác trong 5 giây) | P0 |
 | FR-34 | Kéo thả sắp xếp bài trong playlist, lưu lên server | P1 |
 | FR-35 | Phát cả playlist, hoặc phát xáo trộn | P0 |
@@ -586,8 +585,8 @@ gantt
   section Frontend
   GĐ1 Nền tảng & Matcappa           :g1, after g0, 11d
   GĐ2 Landing & Đăng nhập           :g2, after g1, 10d
-  GĐ4 Thư viện & Playlist           :g4, after g2, 14d
-  GĐ5 Now Playing & Hàng chờ        :g5, after g4, 14d
+  GĐ5 Now Playing & Hàng chờ        :g5, after g2, 14d
+  GĐ4 Thư viện & Playlist           :g4, after g5, 14d
   GĐ6 Hoàn thiện, kiểm thử          :g6, after g5, 9d
   section Backend
   GĐ3 Dữ liệu theo user & phân quyền :g3, 2026-11-10, 12d
@@ -602,8 +601,8 @@ gantt
 | GĐ1 | Nền tảng & Matcappa (frontend) | 28/10 → 07/11 |
 | GĐ2 | Landing & Đăng nhập (frontend) | 08/11 → 17/11 |
 | GĐ3 | Dữ liệu theo user & phân quyền (backend, song song) | 10/11 → 21/11 |
-| GĐ4 | Thư viện & Playlist (frontend) | 18/11 → 01/12 |
-| GĐ5 | Now Playing & Hàng chờ (frontend) | 02/12 → 15/12 |
+| GĐ5 | Now Playing & Hàng chờ (frontend, làm trước GĐ4) | 18/11 → 01/12 |
+| GĐ4 | Thư viện & Playlist (frontend) | 02/12 → 15/12 |
 | GĐ6 | Hoàn thiện, kiểm thử | 16/12 → 26/12 |
 | 🚩 | **Phát hành v2.0** | **31/12** |
 
@@ -647,7 +646,7 @@ gantt
 | CORS cho link xem thử | Bản xem thử gọi được API |
 | Cập nhật `openapi.yml` | Redocly lint 0 lỗi |
 
-#### GĐ4 · Thư viện và Playlist: 18/11 → 01/12
+#### GĐ4 · Thư viện và Playlist: 02/12 → 15/12 (làm sau GĐ5)
 
 | Việc | Kết quả mong đợi |
 |---|---|
@@ -656,7 +655,7 @@ gantt
 | Tìm kiếm dạng lớp phủ + lịch sử theo người dùng | FR-40 → FR-42 |
 | Bài đã thích | FR-44 |
 
-#### GĐ5 · Now Playing và Hàng chờ: 02/12 → 15/12
+#### GĐ5 · Now Playing và Hàng chờ: 18/11 → 01/12 (làm trước GĐ4)
 
 | Việc | Kết quả mong đợi |
 |---|---|
@@ -690,8 +689,8 @@ gantt
 | 2 | Bộ component nền + Matcappa + khung `AppShell` | 07/11 |
 | 3 | Landing + Đăng nhập chạy trên link xem thử | 17/11 |
 | 4 | Backend phân quyền, dữ liệu theo người dùng, API docs cập nhật | 21/11 |
-| 5 | Thư viện, chi tiết playlist, tìm kiếm, bài đã thích | 01/12 |
-| 6 | Now Playing, hàng chờ, phím tắt, Media Session | 15/12 |
+| 5 | Now Playing, hàng chờ, phím tắt, Media Session | 01/12 |
+| 6 | Thư viện, chi tiết playlist, tìm kiếm, bài đã thích | 15/12 |
 | 7 | Bản hoàn thiện: responsive, truy cập, hiệu năng, kiểm thử đạt | 26/12 |
 | 8 | **Donatefy v2.0 lên `donatefy.vercel.app`** | **31/12** |
 
@@ -705,7 +704,7 @@ gantt
 |---|---|---|---|
 | **TC-01** | Đăng ký trùng tên | 1. Mở `/register` 2. Nhập tên đã có sẵn 3. Bấm Đăng ký | Báo "Tên tài khoản đã tồn tại" dưới ô nhập; không tạo tài khoản; vẫn ở trang đăng ký |
 | **TC-02** | Giữ phiên và hết hạn | 1. Đăng nhập 2. Tải lại trang 3. Giả lập token hết hạn rồi bấm một thao tác | Bước 2: vẫn đăng nhập, ở `/listen`. Bước 3: token tự làm mới, thao tác thành công; nếu làm mới thất bại thì về `/login` kèm thông báo |
-| **TC-03** | Thêm bài bằng nhiều link | 1. Mở một playlist 2. "+ Thêm bài" 3. Dán 3 link: 1 hợp lệ, 1 trùng bài đã có, 1 link hỏng | Thêm đúng 1 bài; toast "Đã thêm 1 bài, bỏ qua 2 link"; lưới cập nhật không cần tải lại trang |
+| **TC-03** | Thêm bài, chọn bìa, sửa tên | 1. Mở một playlist 2. "+ Thêm bài" 3. Dán link hỏng 4. Dán link bài đã có 5. Dán link hợp lệ, sửa tên, chọn khung hình thứ 3, bấm Thêm 6. Tải lại trang | Bước 3: báo link hỏng. Bước 4: báo bài đã có, nút Thêm bị khoá. Bước 5: thẻ mới hiện đúng tên và bìa đã chọn, không cần tải lại. Bước 6: vẫn đúng; bài đó trong playlist khác không bị đổi |
 | **TC-04** | Shuffle giữ bài đang phát | 1. Phát bài 3 của playlist 10 bài 2. Bật Shuffle 3. Mở hàng chờ 4. Tắt Shuffle | Bước 2: nhạc không ngắt, vẫn bài 3. Bước 3: thứ tự "Tiếp theo" đã xáo, không chứa bài 3. Bước 4: "Tiếp theo" là bài 4, 5, 6… |
 | **TC-05** | Bài lỗi liên tiếp | 1. Tạo hàng chờ có 3 video bị chặn nhúng rồi tới 1 bài thường 2. Phát từ đầu | Tự bỏ qua 3 bài lỗi; dừng và báo "Có vài bài không phát được"; không lặp vô hạn |
 | **TC-06** | Kéo thả hàng chờ | 1. Mở hàng chờ 2. Kéo bài ở vị trí 5 lên vị trí 1 của "Tiếp theo" 3. Đợi bài hiện tại hết | Bài vừa kéo được phát kế tiếp; chữ trong danh sách không bị bôi đen khi kéo |
@@ -768,7 +767,7 @@ gantt
 
 ## 16. Quy trình làm việc
 
-- **Nhánh:** mỗi giai đoạn là một nhánh `v2/<tên>` cắt từ `main`. Vercel tự tạo link xem thử cho từng nhánh.
+- **Nhánh:** nhánh tích hợp `v2/main` cắt từ `main`; mỗi giai đoạn là một nhánh `v2/<tên>` cắt từ `v2/main`, duyệt xong merge về `v2/main`. Chỉ merge `v2/main` vào `main` lúc phát hành, nên `donatefy.vercel.app` giữ v1 tới ngày đó. Vercel tự tạo link xem thử cho từng nhánh.
 - **Commit:** câu mô tả ngắn, tiếng Việt, nói rõ làm gì (vd `Feat: Lớp phủ hàng chờ có hiệu ứng bìa bay`).
 - **Review:** tự review theo 5 trục (đúng, dễ đọc, kiến trúc, bảo mật, hiệu năng) trước khi merge.
 - **Merge:** chỉ merge khi đạt Definition of Done (mục 13.2).
@@ -781,8 +780,8 @@ gantt
 
 | # | Câu hỏi | Lựa chọn | Đề xuất | Hạn chốt |
 |---|---|---|---|---|
-| 1 | Thanh kính bên phải có tự ẩn cùng header và rail không? | Luôn hiện / tự ẩn cùng | Luôn hiện (đây là nút điều khiển chính) | 27/10 |
-| 2 | Kiểu trang Thư viện | A · Xoè bìa / B · Kệ đĩa | B · Kệ đĩa | 27/10 |
+| 1 | ~~Thanh kính bên phải có tự ẩn cùng header và rail không?~~ | **Đã chốt 21/10: luôn hiện** | | |
+| 2 | ~~Kiểu trang Thư viện~~ | **Đã chốt 21/10: A · Xoè bìa**, bỏ đĩa trượt ra, không tìm / sắp xếp | | |
 | 3 | Bảng màu chế độ tối | Cần bản mẫu | Làm bản mẫu trong GĐ1 | 31/10 |
 | 4 | Câu thoại của Matcappa ngoài landing | Cần viết thêm | Viết cùng FR-52 | 01/12 |
 | 5 | Có làm trang xem playlist công khai (FR-37) trong v2 không? | Có / dời v2.1 | Dời v2.1 nếu GĐ4 trễ | 18/11 |
@@ -813,7 +812,7 @@ gantt
 | `controls-options.html` | Vị trí Shuffle, Queue, âm lượng | Chọn C |
 | `queue-overlay.html` | Lớp phủ hàng chờ | Đã chốt |
 | `playlist-detail-grid.html` | Chi tiết playlist dạng lưới | Đã chốt |
-| `playlists-options.html` | Thư viện playlist (A / B) | Chưa chốt |
+| `playlists-options.html` | Thư viện playlist (A / B) | Chọn A, bỏ đĩa trượt ra |
 | `matcha-effects.html` | Loader chasen | Chọn A (0,8s / 0,3s) |
 
 Xem bản mẫu: chạy lệnh dưới trong thư mục `.superpowers/brainstorm`, rồi mở `http://127.0.0.1:5178/<tên file>`.
