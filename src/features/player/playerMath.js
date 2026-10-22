@@ -16,3 +16,51 @@ export function parseSavedVolume(raw) {
     return null;
   }
 }
+
+// Các ô dock quanh bài đang phát: offset âm = đã phát, 0 = đang phát, dương = sắp tới
+export function dockWindow(orderLength, position, size = 5) {
+  if (position < 0) return [];
+  const half = Math.floor(size / 2);
+  const out = [];
+  for (let offset = -half; offset <= half; offset++) {
+    const pos = position + offset;
+    if (pos >= 0 && pos < orderLength) out.push({ pos, offset });
+  }
+  return out;
+}
+
+// Thanh trượt dọc (dưới = 0), bỏ `inset` hai đầu như bản mẫu
+export function valueFromPointer(clientY, rect, inset = 0.1) {
+  const bottom = rect.top + rect.height;
+  const v = (bottom - clientY - rect.height * inset) / (rect.height * (1 - 2 * inset));
+  return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100;
+}
+
+// Đổi chỗ phần tử với hàng xóm; vượt biên thì giữ nguyên mảng cũ
+export function moveItem(list, index, delta) {
+  const to = index + delta;
+  if (to < 0 || to >= list.length) return list;
+  const out = [...list];
+  [out[index], out[to]] = [out[to], out[index]];
+  return out;
+}
+
+const TYPING = ["INPUT", "TEXTAREA", "SELECT"];
+const OWN_KEYS = [" ", "ArrowLeft", "ArrowRight"]; // nút / thanh trượt tự xử lý các phím này
+const KEYS = { " ": "toggle", ArrowLeft: "back5", ArrowRight: "fwd5", m: "mute", M: "mute", q: "queue", Q: "queue", "/": "search" };
+
+export function hotkeyAction(e) {
+  const t = e.target ?? {};
+  if (TYPING.includes(t.tagName) || t.isContentEditable) return null;
+  if (e.ctrlKey || e.metaKey || e.altKey) return null;
+  const control = ["BUTTON", "A"].includes(t.tagName) || t.getAttribute?.("role") === "slider";
+  if (control && OWN_KEYS.includes(e.key)) return null;
+  if (e.shiftKey && e.key === "ArrowLeft") return "previous";
+  if (e.shiftKey && e.key === "ArrowRight") return "next";
+  return KEYS[e.key] ?? null;
+}
+
+export function mascotFor({ hasSong, isPlaying }) {
+  if (!hasSong) return { pose: "hug-knees", propeller: "still" };
+  return isPlaying ? { pose: "hug-vinyl", propeller: "spin" } : { pose: "doze", propeller: "droop" };
+}
