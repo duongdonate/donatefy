@@ -7,7 +7,7 @@ import Sidebar from "../components/Sidebar/Sidebar.jsx";
 import ThemeToggle from "../components/ThemeToggle/ThemeToggle.jsx";
 
 import { useSelector } from "react-redux";
-import { getIsShowQueue, getCurrentSong } from "../app/selectors/";
+import { getIsShowQueue } from "../app/selectors/";
 import SongQueue from "../components/SongQueue/";
 import AvatarButton from "../components/AvatarButton";
 import LogoutButton from "../components/LogoutButton.jsx";
@@ -15,10 +15,9 @@ import LogoutButton from "../components/LogoutButton.jsx";
 function DefaultLayout({ children }) {
   // Redux
   const showQueue = useSelector(getIsShowQueue);
-  const hasPlayer = !!useSelector(getCurrentSong);
 
   return (
-    <div className="w-screen h-screen bg-background grid grid-cols-10 grid-rows-8 gap-3">
+    <div className="w-screen h-full bg-background grid grid-cols-10 grid-rows-8 gap-3">
       {/* Logo */}
       <div className="px-4 flex justify-start items-center col-span-3">
         <Logo />

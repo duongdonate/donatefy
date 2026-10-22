@@ -1,4 +1,6 @@
+import { Maximize2 } from "lucide-react";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getCurrentSong } from "../../app/selectors";
 import { usePlaybackTime } from "../../features/player/PlaybackTime";
 
@@ -11,6 +13,7 @@ import Marquee from "../Marquee";
 const MusicPlayer = () => {
   const currentSong = useSelector(getCurrentSong);
   const { currentTime, duration, seek, previous, next, togglePlay } = usePlaybackTime();
+  const navigate = useNavigate();
 
   if (!currentSong) return null;
 
@@ -50,7 +53,18 @@ const MusicPlayer = () => {
 
         <ControlPlayer onPlayPause={togglePlay} onNext={next} onPrevious={previous} />
 
-        <AdditionalControls />
+        <div className="flex flex-1 max-w-xs items-center justify-end space-x-4">
+          <AdditionalControls />
+          {/* Mở rộng Music Layer thành trang Now Playing */}
+          <button
+            onClick={() => navigate("/listen")}
+            aria-label="Mở Now Playing"
+            title="Mở Now Playing"
+            className="text-muted-foreground hover:text-secondary-foreground transition-colors"
+          >
+            <Maximize2 size={20} />
+          </button>
+        </div>
       </div>
     </div>
   );

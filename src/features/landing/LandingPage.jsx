@@ -1,6 +1,8 @@
 // Landing cuộn từng bước: mỗi lần lăn / phím / vuốt chỉ sang 1 bước, trang không cuộn
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { resetPlayer } from "../../app/slices/playerSlice";
 import { Glass } from "../../design";
 import { useAuth } from "../../contexts/AuthContext";
 import { SCENES } from "./scenes";
@@ -21,6 +23,12 @@ function useMascotTarget(corner, pet, view) {
 export default function LandingPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Vào landing = ra khỏi quán: huỷ trình phát
+  useEffect(() => {
+    dispatch(resetPlayer());
+  }, [dispatch]);
   const [step, setStep] = useState(0);
   const [leaving, setLeaving] = useState(-1);
   const stepRef = useRef(0);

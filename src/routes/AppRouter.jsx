@@ -1,5 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { getCurrentSong } from "../app/selectors";
 import DefaultLayout from "../layouts/DefaultLayout";
 import AppShell from "../layouts/AppShell";
 import HomePage from "../pages/HomePage";
@@ -44,21 +46,27 @@ function GuestOnly() {
 
 // Nhạc chạy song song mọi trang trong app; Music Layer dính đáy
 function PlayerLayout() {
+  const { pathname } = useLocation();
   return (
     <Suspense fallback={<FullLoader />}>
       <PlayerEngine>
         <Outlet />
-        <MusicPlayer />
+        {/* /listen đã là bản mở rộng của Music Layer */}
+        {pathname !== "/listen" && <MusicPlayer />}
       </PlayerEngine>
     </Suspense>
   );
 }
 
 function V1Layout() {
+  const hasSong = !!useSelector(getCurrentSong);
   return (
-    <DefaultLayout>
-      <Outlet />
-    </DefaultLayout>
+    // Chừa đáy cho Music Layer để thanh không che nội dung
+    <div className={`h-screen ${hasSong ? "pb-28" : ""}`}>
+      <DefaultLayout>
+        <Outlet />
+      </DefaultLayout>
+    </div>
   );
 }
 
