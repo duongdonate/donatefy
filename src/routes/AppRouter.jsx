@@ -9,6 +9,8 @@ import PlayListPage from "../pages/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
 import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
+// Music Layer tải sẵn (nhẹ, không kéo react-player): lazy riêng làm cả trang nháy loader khi rời /listen
+import MusicPlayer from "../components/MusicPlayer";
 import { PageLoader } from "../components/Loader";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -18,7 +20,7 @@ const LandingPage = lazy(() => import("../features/landing/LandingPage"));
 const AuthPage = lazy(() => import("../features/auth/AuthPage"));
 // Bộ phát chỉ tải khi vào trong quán: landing / đăng nhập không kéo theo react-player
 const PlayerEngine = lazy(() => import("../features/player/PlayerEngine"));
-const MusicPlayer = lazy(() => import("../components/MusicPlayer"));
+
 
 function FullLoader() {
   return (

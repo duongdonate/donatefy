@@ -2,7 +2,7 @@
 import { motion, Reorder } from "framer-motion";
 import { Pause, Play, Repeat, Repeat1, Shuffle, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch, useSelector, useStore } from "react-redux";
 import { getCurrentPlaylist, getCurrentSong, getIsPlaying, getIsShuffle, getRepeat } from "../../app/selectors";
 import { cycleRepeat, playAt, reorderUpNext, toggleQueue, toggleShuffle } from "../../app/slices/playerSlice";
 import { Glass, IconButton, Vinyl } from "../../design";
@@ -32,6 +32,7 @@ function QBtn({ pressed, onClick, children }) {
 
 export default function QueueOverlay() {
   const dispatch = useDispatch();
+  const store = useStore();
   const song = useSelector(getCurrentSong);
   const isPlaying = useSelector(getIsPlaying);
   const shuffle = useSelector(getIsShuffle);
@@ -47,20 +48,25 @@ export default function QueueOverlay() {
   const played = order.slice(0, position);
   const close = () => dispatch(toggleQueue());
 
-  // Mở: focus nút đóng; đóng: trả focus về nút Hàng chờ
+  // Mở: focus nút đóng; đóng: trả focus về nút Hàng chờ.
+  // Rời trang khi đang mở (vd. bấm Back) thì cũng đóng, để trang khác không thấy showQueue còn bật.
   useEffect(() => {
     closeBtn.current?.focus();
-    return () => document.querySelector("[data-queue-toggle]")?.focus();
-  }, []);
+    // Esc ở mức window: bấm vào vùng trống của lớp phủ làm focus rơi về body vẫn đóng được
+    const onEsc = (e) => e.key === "Escape" && dispatch(toggleQueue());
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("keydown", onEsc);
+      if (store.getState().player.showQueue) dispatch(toggleQueue());
+      document.querySelector("[data-queue-toggle]")?.focus();
+    };
+  }, [dispatch, store]);
 
-  // Esc đóng, Tab không lọt ra ngoài lớp phủ
+  // Tab không lọt ra ngoài lớp phủ
   const onKeyDown = (e) => {
-    if (e.key === "Escape") {
-      e.stopPropagation();
-      return close();
-    }
     if (e.key !== "Tab") return;
-    const els = [...root.current.querySelectorAll(FOCUSABLE)];
+    // bỏ phần tử tabIndex=-1 (tab đang ẩn) để biết đúng phần tử đầu / cuối
+    const els = [...root.current.querySelectorAll(FOCUSABLE)].filter((el) => el.tabIndex >= 0);
     const first = els[0], last = els.at(-1);
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
