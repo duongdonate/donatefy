@@ -5,6 +5,7 @@ import { getCurrentPlaylist, getCurrentSong, getIsPlaying, getIsShuffle } from "
 import Marquee from "../../components/Marquee";
 import { Vinyl } from "../../design";
 import { usePlaybackTime } from "./PlaybackTime";
+import Dock from "./Dock";
 import ProgressBar from "./ProgressBar";
 import Tonearm from "./Tonearm";
 
@@ -19,7 +20,7 @@ export default function NowPlaying() {
   const { currentTime, duration, seek } = usePlaybackTime();
 
   return (
-    <div className="flex h-full flex-col items-center px-6 pb-[200px] pt-[clamp(24px,5vh,56px)]">
+    <div className="relative flex h-full flex-col items-center px-6 pb-[clamp(140px,18vw,210px)] pt-[clamp(24px,5vh,56px)]">
       <motion.div
         key={song?._id ?? "none"}
         initial={{ opacity: 0 }}
@@ -54,6 +55,7 @@ export default function NowPlaying() {
           <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />
         )}
       </div>
+      <Dock />
     </div>
   );
 }
