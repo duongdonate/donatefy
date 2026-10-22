@@ -6,7 +6,7 @@ import DefaultLayout from "../layouts/DefaultLayout";
 import AppShell from "../layouts/AppShell";
 import HomePage from "../pages/HomePage";
 import PlayListPage from "../pages/PlaylistPage";
-import ListenPage from "../pages/ListenPage";
+import NowPlaying from "../features/player/NowPlaying";
 import NotFound from "../pages/NotFound";
 import { PageLoader } from "../components/Loader";
 import { useAuth } from "../contexts/AuthContext";
@@ -113,7 +113,7 @@ export default function AppRouter() {
               path="/listen"
               element={
                 <AppShell>
-                  <ListenPage />
+                  <NowPlaying />
                 </AppShell>
               }
             />
