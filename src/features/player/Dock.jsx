@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { getIsPlaying, getRepeat } from "../../app/selectors";
+import { getIsPlaying, getIsShowQueue, getRepeat } from "../../app/selectors";
 import { playAt } from "../../app/slices/playerSlice";
 import { Glass, IconButton } from "../../design";
 import { usePlaybackTime } from "./PlaybackTime";
@@ -14,6 +14,7 @@ export default function Dock({ size = 5 }) {
   const dispatch = useDispatch();
   const isPlaying = useSelector(getIsPlaying);
   const repeat = useSelector(getRepeat);
+  const showQueue = useSelector(getIsShowQueue);
   const { queue, order, position } = useSelector((s) => s.player);
   const { previous, next, togglePlay } = usePlaybackTime();
   if (position < 0) return null;
@@ -62,11 +63,16 @@ export default function Dock({ size = 5 }) {
               }}
             >
               <motion.span
-                layoutId={now ? "now-cover" : undefined}
+                // bìa đang phát bay sang lớp phủ hàng chờ khi mở (cùng layoutId)
+                layoutId={now && !showQueue ? "now-cover" : undefined}
+                transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
                 className={`block h-full w-full rounded-[10px] bg-cover bg-center ${
                   now ? "shadow-[0_0_0_3px_rgb(var(--matcha-4)),0_20px_30px_-10px_rgba(0,0,0,.55)]" : "shadow-[0_16px_24px_-10px_rgba(0,0,0,.5)]"
                 }`}
-                style={{ backgroundImage: song.thumbnail ? `url(${song.thumbnail})` : undefined }}
+                style={{
+                  backgroundImage: song.thumbnail ? `url(${song.thumbnail})` : undefined,
+                  opacity: now && showQueue ? 0 : 1,
+                }}
               />
             </button>
           );
