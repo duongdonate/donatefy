@@ -13,6 +13,9 @@ import { useAuth } from "../contexts/AuthContext";
 const DevUI = import.meta.env.DEV ? lazy(() => import("../pages/DevUI")) : null;
 const LandingPage = lazy(() => import("../features/landing/LandingPage"));
 const AuthPage = lazy(() => import("../features/auth/AuthPage"));
+// Bộ phát chỉ tải khi vào trong quán: landing / đăng nhập không kéo theo react-player
+const PlayerEngine = lazy(() => import("../features/player/PlayerEngine"));
+const MusicPlayer = lazy(() => import("../components/MusicPlayer"));
 
 function FullLoader() {
   return (
@@ -37,6 +40,18 @@ function GuestOnly() {
   if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/listen"} replace />;
   if (loading) return <FullLoader />;
   return <Outlet />;
+}
+
+// Nhạc chạy song song mọi trang trong app; Music Layer dính đáy
+function PlayerLayout() {
+  return (
+    <Suspense fallback={<FullLoader />}>
+      <PlayerEngine>
+        <Outlet />
+        <MusicPlayer />
+      </PlayerEngine>
+    </Suspense>
+  );
 }
 
 function V1Layout() {
@@ -85,18 +100,20 @@ export default function AppRouter() {
           ))}
         </Route>
         <Route element={<RequireAuth />}>
-          <Route
-            path="/listen"
-            element={
-              <AppShell>
-                <ListenPage />
-              </AppShell>
-            }
-          />
-          {/* shortcut: giao diện v1 giữ tạm tới GĐ4 (Thư viện, chi tiết playlist) */}
-          <Route element={<V1Layout />}>
-            <Route path="/v1" element={<HomePage user={user} />} />
-            <Route path="/playlist/:id" element={<PlayListPage />} />
+          <Route element={<PlayerLayout />}>
+            <Route
+              path="/listen"
+              element={
+                <AppShell>
+                  <ListenPage />
+                </AppShell>
+              }
+            />
+            {/* shortcut: giao diện v1 giữ tạm tới GĐ4 (Thư viện, chi tiết playlist) */}
+            <Route element={<V1Layout />}>
+              <Route path="/v1" element={<HomePage user={user} />} />
+              <Route path="/playlist/:id" element={<PlayListPage />} />
+            </Route>
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
