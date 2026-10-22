@@ -12,11 +12,13 @@ export const MASCOT_SPOTS = [
 
 export const clampStep = (n, count = STEP_COUNT) => Math.max(0, Math.min(count - 1, n));
 
-// Cộng dồn lăn chuột / touchpad để nhiều cú nhỏ chỉ ra một bước
-export function accumulateWheel(acc, deltaY) {
+// Cộng dồn lăn chuột / touchpad để nhiều cú nhỏ chỉ ra một bước.
+// `spent`: cử chỉ này đã đổi bước rồi, bỏ qua phần quán tính còn lại cho tới quãng nghỉ (component reset).
+export function accumulateWheel(acc, deltaY, spent = false) {
+  if (spent) return { acc: 0, dir: 0, spent: true };
   const next = acc + deltaY;
-  if (Math.abs(next) > WHEEL_THRESHOLD) return { acc: 0, dir: Math.sign(next) };
-  return { acc: next, dir: 0 };
+  if (Math.abs(next) > WHEEL_THRESHOLD) return { acc: 0, dir: Math.sign(next), spent: true };
+  return { acc: next, dir: 0, spent: false };
 }
 
 const KEY_DELTA = { ArrowDown: 1, PageDown: 1, " ": 1, ArrowUp: -1, PageUp: -1 };

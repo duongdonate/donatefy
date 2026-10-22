@@ -14,7 +14,19 @@ test("wheel cộng dồn: nhiều cú nhỏ chỉ ra 1 bước", () => {
   assert.deepEqual(dirs, [1]);
 });
 
-test("wheel lên", () => assert.deepEqual(accumulateWheel(-30, -20), { acc: 0, dir: -1 }));
+test("wheel lên", () => assert.deepEqual(accumulateWheel(-30, -20), { acc: 0, dir: -1, spent: true }));
+
+test("một cú lăn quán tính dài (không có quãng nghỉ) chỉ ra 1 bước", () => {
+  let acc = 0, spent = false;
+  const dirs = [];
+  for (let n = 0; n < 200; n++) {
+    const r = accumulateWheel(acc, 5, spent);
+    acc = r.acc;
+    spent = r.spent;
+    if (r.dir) dirs.push(r.dir);
+  }
+  assert.deepEqual(dirs, [1]);
+});
 
 test("phím", () => {
   assert.equal(stepFromKey("ArrowDown", 0), 1);

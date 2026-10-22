@@ -149,7 +149,6 @@ export default function FlyingMascot({ target, pose = "stand", lines = [] }) {
           bob={!spin}
           look={look}
           talking={talking}
-          className="pointer-events-auto"
         />
       </div>
       <MascotSpeech

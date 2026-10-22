@@ -52,13 +52,18 @@ export default function LandingPage() {
   }, []);
 
   useEffect(() => {
-    let acc = 0, accTimer, startY = null;
+    let acc = 0, spent = false, accTimer, startY = null;
     const onWheel = (e) => {
       e.preventDefault();
       clearTimeout(accTimer);
-      accTimer = setTimeout(() => (acc = 0), 160);
-      const r = accumulateWheel(acc, e.deltaY);
+      // nghỉ 160ms mới tính là cú lăn mới
+      accTimer = setTimeout(() => {
+        acc = 0;
+        spent = false;
+      }, 160);
+      const r = accumulateWheel(acc, e.deltaY, spent);
       acc = r.acc;
+      spent = r.spent;
       if (r.dir) go(stepRef.current + r.dir);
     };
     const onKey = (e) => {
