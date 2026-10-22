@@ -1,12 +1,16 @@
 // /listen: màn Now Playing (visual-direction-v3.html, bỏ 2 khối điều khiển 3D)
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { getCurrentPlaylist, getCurrentSong, getIsPlaying, getIsShowQueue, getIsShuffle } from "../../app/selectors";
+import { toggleMute, toggleQueue } from "../../app/slices/playerSlice";
+import useHotkeys from "../../hooks/useHotkeys";
 import QueueOverlay from "../queue/QueueOverlay";
 import Marquee from "../../components/Marquee";
-import { Vinyl } from "../../design";
+import { Button, Vinyl } from "../../design";
 import { usePlaybackTime } from "./PlaybackTime";
 import Dock from "./Dock";
+import PlayerMascot from "./PlayerMascot";
 import ProgressBar from "./ProgressBar";
 import Tonearm from "./Tonearm";
 
@@ -19,7 +23,21 @@ export default function NowPlaying() {
   const playlist = useSelector(getCurrentPlaylist);
   const showQueue = useSelector(getIsShowQueue);
   const { order, position } = useSelector((s) => s.player);
-  const { currentTime, duration, seek } = usePlaybackTime();
+  const { currentTime, duration, seek, previous, next, togglePlay } = usePlaybackTime();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const clampSeek = (t) => seek(Math.min(duration, Math.max(0, t)));
+
+  // FR-16; "/" (tìm kiếm) để GĐ4
+  useHotkeys({
+    toggle: togglePlay,
+    back5: () => clampSeek(currentTime - 5),
+    fwd5: () => clampSeek(currentTime + 5),
+    previous,
+    next,
+    mute: () => dispatch(toggleMute()),
+    queue: () => song && dispatch(toggleQueue()),
+  });
 
   return (
     // reducedMotion="user": bật giảm chuyển động thì bìa không bay, đĩa không trượt
@@ -49,14 +67,26 @@ export default function NowPlaying() {
           <div className="relative mt-6" style={{ width: DECK, height: DECK }}>
             <Vinyl
               size={420}
-              spinning={isPlaying}
+              spinning={song ? isPlaying : true}
+              duration={song ? 6 : 18}
               label={song?.thumbnail ? `url(${song.thumbnail}) center/cover` : undefined}
               style={{ width: "100%", height: "100%" }}
             />
             <Tonearm down={!!song && isPlaying} />
+            <PlayerMascot
+              hasSong={!!song}
+              isPlaying={isPlaying}
+              greet={!song}
+              className="absolute bottom-[-4%] right-[96%]"
+            />
           </div>
-          {song && (
+          {song ? (
             <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />
+          ) : (
+            // shortcut: thư viện v1 ở /v1 tới khi GĐ4 làm lớp phủ Thư viện
+            <Button className="mt-8" onClick={() => navigate("/v1")}>
+              Mở thư viện
+            </Button>
           )}
         </div>
         <Dock />

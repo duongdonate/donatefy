@@ -8,14 +8,14 @@ const SHEEN =
   "conic-gradient(from 20deg, transparent 0 8%, rgba(255,255,255,.2) 13%, transparent 20% 52%, rgba(255,255,255,.14) 58%, transparent 66%)";
 const DEFAULT_LABEL = "radial-gradient(circle,#e9e6da 0 7%,#3f6b1c 8% 100%)";
 
-export default function Vinyl({ size = 236, label = DEFAULT_LABEL, spinning = true, className = "", style }) {
+export default function Vinyl({ size = 236, label = DEFAULT_LABEL, spinning = true, duration = 6, className = "", style }) {
   const k = size / 236;
   return (
     <div aria-hidden="true" className={`relative shrink-0 ${className}`} style={{ width: size, height: size, ...style }}>
       <div
         className="absolute inset-0 animate-spin rounded-full motion-reduce:animate-none"
         style={{
-          animationDuration: "6s",
+          animationDuration: `${duration}s`,
           animationPlayState: spinning ? "running" : "paused",
           background: GROOVES,
           boxShadow: `0 ${30 * k}px ${50 * k}px ${-20 * k}px rgba(73,115,0,.55), inset 0 0 0 ${5 * k}px rgba(73,115,0,.9), inset 0 0 ${30 * k}px rgba(0,0,0,.2)`,

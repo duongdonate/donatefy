@@ -14,6 +14,25 @@ export const AUTH_LINES = [
   "Vào rồi mình pha nhạc cho nghe nha ~",
 ];
 
+// Câu nói trên màn Now Playing theo trạng thái trình phát
+export const PLAYER_LINES = {
+  empty: [
+    "Dán link YouTube đầu tiên với mình nha ~",
+    "Chưa có đĩa nào, mình ngồi chờ bạn nè ~",
+    "Mở thư viện chọn một chồng đĩa đi ~",
+  ],
+  playing: [
+    "Đĩa đang quay, nghe chung với mình nha ~",
+    "Bài này hay ghê, mình ôm đĩa luôn rồi ~",
+    "Bấm Hàng chờ để xem bài tiếp theo nha ~",
+  ],
+  paused: [
+    "Mình chợp mắt xíu, bấm phát là dậy liền ~",
+    "Nghỉ một chút rồi nghe tiếp nha ~",
+    "Đĩa đứng yên rồi, buồn ngủ quá ~",
+  ],
+};
+
 // Chọn câu khác câu vừa nói; -1 nếu không có câu nào
 export function pickLine(lines, lastIndex, rand = Math.random) {
   const n = lines.length;
