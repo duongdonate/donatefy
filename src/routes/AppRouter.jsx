@@ -7,6 +7,7 @@ import AppShell from "../layouts/AppShell";
 import HomePage from "../pages/HomePage";
 import PlayListPage from "../pages/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
+import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
 import { PageLoader } from "../components/Loader";
 import { useAuth } from "../contexts/AuthContext";
@@ -112,7 +113,7 @@ export default function AppRouter() {
             <Route
               path="/listen"
               element={
-                <AppShell>
+                <AppShell right={<GlassBar />}>
                   <NowPlaying />
                 </AppShell>
               }
