@@ -8,9 +8,9 @@ import useHotkeys from "../../hooks/useHotkeys";
 import QueueOverlay from "../queue/QueueOverlay";
 import Marquee from "../../components/Marquee";
 import { Button, Vinyl } from "../../design";
+import Matcappa from "../../mascot/Matcappa";
 import { usePlaybackTime } from "./PlaybackTime";
 import Dock from "./Dock";
-import PlayerMascot from "./PlayerMascot";
 import ProgressBar from "./ProgressBar";
 import Tonearm from "./Tonearm";
 
@@ -73,12 +73,8 @@ export default function NowPlaying() {
               style={{ width: "100%", height: "100%" }}
             />
             <Tonearm down={!!song && isPlaying} />
-            <PlayerMascot
-              hasSong={!!song}
-              isPlaying={isPlaying}
-              greet={!song}
-              className="absolute bottom-[-4%] right-[96%]"
-            />
+            {/* Mascot ôm đĩa bay cạnh đĩa (không nói chuyện) */}
+            <Matcappa pose="hug-vinyl" propeller="spin" size={120} className="absolute bottom-[-4%] right-[96%]" />
           </div>
           {song ? (
             <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />

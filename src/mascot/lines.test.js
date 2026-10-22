@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickLine, LANDING_LINES, AUTH_LINES, PLAYER_LINES } from "./lines.js";
+import { pickLine, LANDING_LINES, AUTH_LINES } from "./lines.js";
 
 test("không bao giờ trả lại câu vừa nói", () => {
   const lines = ["a", "b", "c", "d"];
@@ -34,10 +34,3 @@ test("AUTH_LINES có 5 câu, giọng mascot kết bằng ~", () => {
   AUTH_LINES.forEach((l) => assert.ok(l.endsWith("~"), l));
 });
 
-test("PLAYER_LINES: 3 nhóm × 3 câu, giọng mascot", () => {
-  for (const k of ["empty", "playing", "paused"]) {
-    assert.equal(PLAYER_LINES[k].length, 3, k);
-    PLAYER_LINES[k].forEach((l) => assert.ok(l.endsWith("~"), l));
-  }
-  assert.equal(PLAYER_LINES.empty[0], "Dán link YouTube đầu tiên với mình nha ~");
-});

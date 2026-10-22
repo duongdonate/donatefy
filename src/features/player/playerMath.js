@@ -60,7 +60,3 @@ export function hotkeyAction(e) {
   return KEYS[e.key] ?? null;
 }
 
-export function mascotFor({ hasSong, isPlaying }) {
-  if (!hasSong) return { pose: "hug-knees", propeller: "still" };
-  return isPlaying ? { pose: "hug-vinyl", propeller: "spin" } : { pose: "doze", propeller: "droop" };
-}

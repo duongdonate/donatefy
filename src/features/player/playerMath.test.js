@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction, mascotFor } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction } from "./playerMath.js";
 
 test("bài trước: quá 3 giây thì về đầu bài", () => {
   assert.equal(previousAction(3.5, 4, "off"), "restart");
@@ -66,8 +66,3 @@ test("phím tắt", () => {
   assert.equal(k("x"), null);
 });
 
-test("mascot theo trạng thái", () => {
-  assert.deepEqual(mascotFor({ hasSong: false, isPlaying: false }), { pose: "hug-knees", propeller: "still" });
-  assert.deepEqual(mascotFor({ hasSong: true, isPlaying: true }), { pose: "hug-vinyl", propeller: "spin" });
-  assert.deepEqual(mascotFor({ hasSong: true, isPlaying: false }), { pose: "doze", propeller: "droop" });
-});
