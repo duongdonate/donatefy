@@ -16,7 +16,7 @@ import {
   setCurrentPlaylist,
 } from "../../app/slices/playlistSlice";
 import { playContext } from "../../app/slices/playerSlice";
-import { useToastContext } from "../../contexts/ToastContext";
+import useToast from "../../hooks/useToast";
 import { Button, IconButton } from "../../design";
 import useConfirm from "../../hooks/useConfirm";
 import Matcappa from "../../mascot/Matcappa";
@@ -56,7 +56,7 @@ export default function LibraryPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const confirm = useConfirm();
-  const { showToast } = useToastContext();
+  const { showToast } = useToast();
   const playlists = useSelector(getAllPlaylists);
   const currentPlaylist = useSelector(getCurrentPlaylist);
   const song = useSelector(getCurrentSong);

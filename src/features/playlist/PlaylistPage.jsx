@@ -6,7 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { getCurrentPlaylist, getCurrentSong, getIsShuffle } from "../../app/selectors";
 import { playContext, toggleShuffle } from "../../app/slices/playerSlice";
 import { setCurrentPlaylist } from "../../app/slices/playlistSlice";
-import { useToastContext } from "../../contexts/ToastContext";
+import useToast from "../../hooks/useToast";
 import { Button } from "../../design";
 import { focusRing } from "../../design/Button";
 import Matcappa from "../../mascot/Matcappa";
@@ -17,7 +17,6 @@ import { insertAt } from "./insertAt";
 import PlaylistHeader from "./PlaylistHeader";
 import SongDialog from "./SongDialog";
 import SongTile from "./SongTile";
-import UndoBar from "./UndoBar";
 
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-matcha-4 bg-transparent text-sm font-bold text-matcha-1 hover:bg-white/20 ${focusRing}`;
@@ -26,7 +25,7 @@ export default function PlaylistPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { showToast } = useToastContext();
+  const { showToast, dismiss } = useToast();
   const currentSong = useSelector(getCurrentSong);
   const currentPlaylist = useSelector(getCurrentPlaylist);
   const shuffle = useSelector(getIsShuffle);
@@ -36,8 +35,7 @@ export default function PlaylistPage() {
   const [attempt, setAttempt] = useState(0);
   const [dialog, setDialog] = useState(null); // null | { mode: "add" } | { mode: "edit", song }
 
-  const [undo, setUndo] = useState(null); // tên bài đang chờ hoàn tác
-  const pending = useRef(null); // { song, index, playlistId, timer }
+  const pending = useRef(null); // { song, index, playlistId, timer, toastId }
   const idRef = useRef(null);
   const toastRef = useRef(showToast);
   toastRef.current = showToast;
@@ -48,7 +46,7 @@ export default function PlaylistPage() {
     if (!p) return;
     clearTimeout(p.timer);
     pending.current = null;
-    setUndo(null);
+    dismiss(p.toastId);
     playlistService.removeSong(p.playlistId, { videoId: p.song.id }).catch(() => {
       if (idRef.current === p.playlistId)
         setSongs((cur) => (cur.some((s) => s.id === p.song.id) ? cur : insertAt(cur, p.song, p.index)));
@@ -112,15 +110,18 @@ export default function PlaylistPage() {
     const index = songs.findIndex((s) => s.id === song.id);
     if (index < 0) return;
     setSongs(songs.filter((s) => s.id !== song.id));
-    setUndo(song.name);
-    pending.current = { song, index, playlistId: id, timer: setTimeout(flush, 5000) };
+    const toastId = showToast(`Đã gỡ "${song.name}"`, {
+      action: { label: "Hoàn tác", onClick: onUndo },
+      duration: 5000,
+    });
+    pending.current = { song, index, playlistId: id, timer: setTimeout(flush, 5000), toastId };
   };
   const onUndo = () => {
     const p = pending.current;
     if (!p) return;
     clearTimeout(p.timer);
     pending.current = null;
-    setUndo(null);
+    dismiss(p.toastId);
     setSongs((cur) => insertAt(cur, p.song, p.index));
   };
 
@@ -174,7 +175,6 @@ export default function PlaylistPage() {
           )}
         </div>
       </section>
-      <UndoBar name={undo} onUndo={onUndo} />
       {dialog && (
         <SongDialog
           {...dialog}

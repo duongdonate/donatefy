@@ -1,35 +1,61 @@
-// contexts/ToastContext.jsx
-import { createContext, useContext, useState, useCallback } from "react";
+// Thông báo nổi giữa đáy màn hình, sát trên Music Layer, đè lên mọi lớp (z cao nhất app đang là 50)
+import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import Toast from "../components/Toast/Toast";
-import styles from "../components/Toast/Toast.module.css";
 
-export const ToastContext = createContext();
+export const ToastContext = createContext(null);
+
+const DURATION = 4000;
+let seq = 0;
 
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
+  const timers = useRef(new Map());
 
-  const showToast = useCallback((message) => {
-    const id = Date.now();
-    setToasts((prev) => [...prev, { id, message }]);
+  const dismiss = useCallback((id) => {
+    clearTimeout(timers.current.get(id));
+    timers.current.delete(id);
+    setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  const removeToast = (id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  };
+  // action: { label, onClick } → nút bên phải (vd. "Hoàn tác"); bấm xong toast tự đóng. Trả id để dismiss sớm.
+  const showToast = useCallback(
+    (message, { action, duration = DURATION } = {}) => {
+      const id = ++seq;
+      setToasts((prev) => [...prev, { id, message, action }]);
+      timers.current.set(
+        id,
+        setTimeout(() => dismiss(id), duration),
+      );
+      return id;
+    },
+    [dismiss],
+  );
+
+  const value = useMemo(() => ({ showToast, dismiss }), [showToast, dismiss]);
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={value}>
       {children}
-      <div className={styles.toastContainer}>
-        <AnimatePresence>
+      <div
+        role="status"
+        aria-live="polite"
+        className="pointer-events-none fixed bottom-24 left-1/2 right-0 z-[100] flex -translate-x-1/2 flex-col items-center gap-2"
+      >
+        <AnimatePresence initial={false}>
           {toasts.map((t) => (
-            <Toast key={t.id} {...t} onRemove={removeToast} />
+            <Toast
+              key={t.id}
+              message={t.message}
+              action={t.action}
+              onAction={() => {
+                t.action.onClick();
+                dismiss(t.id);
+              }}
+            />
           ))}
         </AnimatePresence>
       </div>
     </ToastContext.Provider>
   );
 };
-
-export const useToastContext = () => useContext(ToastContext);

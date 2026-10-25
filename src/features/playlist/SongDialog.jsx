@@ -1,7 +1,7 @@
 // Hộp thêm bài / sửa bài (playlist-detail-grid.html, phần "Thêm bài")
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useToastContext } from "../../contexts/ToastContext";
+import useToast from "../../hooks/useToast";
 import { Button, Glass, IconButton, Vinyl } from "../../design";
 import useDebounce from "../../hooks/useDebounce";
 import playlistService from "../../services/api/playlistService";
@@ -14,7 +14,7 @@ const inputCls = "h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 
 export default function SongDialog({ mode, playlistId, existingIds = [], song, onDone, onClose }) {
-  const { showToast } = useToastContext();
+  const { showToast } = useToast();
   const isAdd = mode === "add";
   const root = useRef(null);
   const first = useRef(null);
