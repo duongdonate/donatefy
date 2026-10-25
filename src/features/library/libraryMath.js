@@ -1,9 +1,9 @@
 const time = (p) => new Date(p.createdAt).getTime() || 0; // thiếu createdAt = cũ nhất
 
-// Đang phát lên đầu, còn lại mới tạo trước; không đổi mảng gốc
+// Đang phát lên đầu, còn lại cũ trước mới sau (bìa mới tạo nằm ngay trước thẻ Tạo); không đổi mảng gốc
 export const libraryOrder = (playlists, playingId) =>
   [...playlists].sort(
-    (a, b) => (b._id === playingId) - (a._id === playingId) || time(b) - time(a),
+    (a, b) => (b._id === playingId) - (a._id === playingId) || time(a) - time(b),
   );
 
 // Công thức quạt của bản mẫu playlists-options.html

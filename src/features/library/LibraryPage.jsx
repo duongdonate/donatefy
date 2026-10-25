@@ -1,5 +1,6 @@
 // Thư viện "Xoè bìa" (playlists-options.html phần A), không có đĩa trượt ra
-import { ChevronLeft, ChevronRight, Play, Plus } from "lucide-react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, Loader2, Play, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +59,7 @@ export default function LibraryPage() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
+  const justMade = useRef(null); // id playlist vừa tạo: chỉ bìa này có hiệu ứng hiện ra
   const strip = useRef(null);
   const atRef = useRef(0);
   const itemsRef = useRef(items);
@@ -160,6 +162,7 @@ export default function LibraryPage() {
     setBusy(true);
     try {
       const made = await playlistService.create({ name });
+      justMade.current = made._id;
       dispatch(addPlaylist(made));
       setSelId(made._id);
       setNewName("");
@@ -287,7 +290,10 @@ export default function LibraryPage() {
                 }}
               >
                 {it ? (
-                  <div
+                  <motion.div
+                    initial={it._id === justMade.current ? { opacity: 0, scale: 0.6 } : false}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
                     style={{
                       boxShadow: centre
@@ -307,7 +313,7 @@ export default function LibraryPage() {
                       />
                     )}
                     {!centre && <span className="sr-only">{it.name}</span>}
-                  </div>
+                  </motion.div>
                 ) : (
                   <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center">
                     <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
@@ -399,15 +405,27 @@ export default function LibraryPage() {
                     autoComplete="off"
                     className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
                   />
-                  <p id="new-playlist-count" className="mt-1 flex justify-between gap-2 text-xs">
+                  <p
+                    id="new-playlist-count"
+                    className="mt-1 pr-2 flex justify-between gap-2 text-xs"
+                  >
                     <span className="text-red-400">
-                      {newName && !newName.trim() ? "Tên không được chỉ có khoảng trắng" : ""}
+                      {newName && !newName.trim()
+                        ? "Tên không được chỉ có khoảng trắng"
+                        : ""}
                     </span>
                     <span className="text-white/50">{newName.length}/60</span>
                   </p>
                 </div>
-                <Button type="submit" disabled={busy || !newName.trim()}>
-                  Tạo
+                <Button type="submit" disabled={busy || !newName.trim()} aria-busy={busy}>
+                  {busy ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                      Đang tạo…
+                    </>
+                  ) : (
+                    "Tạo"
+                  )}
                 </Button>
               </form>
             </>
