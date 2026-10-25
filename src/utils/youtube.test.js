@@ -14,6 +14,8 @@ test("fetchOembed luôn trả chuỗi, lỗi thì null", async () => {
   try {
     globalThis.fetch = async () => ({ ok: true, json: async () => ({ title: " A " }) });
     assert.deepEqual(await fetchOembed("x"), { name: "A", artist: "" });
+    globalThis.fetch = async () => ({ ok: true, json: async () => ({}) });
+    assert.equal(await fetchOembed("x"), null);
     globalThis.fetch = async () => ({ ok: false });
     assert.equal(await fetchOembed("x"), null);
     globalThis.fetch = async () => { throw new Error("net"); };

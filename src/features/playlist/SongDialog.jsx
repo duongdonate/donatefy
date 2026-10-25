@@ -88,6 +88,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
     else if (!e.shiftKey && document.activeElement === z) (e.preventDefault(), a.focus());
   };
 
+  const markBad = (u) => setBad((b) => new Set(b).add(u));
   const urls = videoId ? frameUrls(videoId) : [];
   const cover = thumb ?? urls.find((u) => !bad.has(u)) ?? null; // mặc định: khung đầu tải được
   const nameT = (name ?? "").trim();
@@ -177,6 +178,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
               </div>
             </fieldset>
             <div className={videoId ? "" : "pointer-events-none opacity-35"}>
+              {videoId && !cover && <p role="status" className="mb-1 text-xs text-red-300">Video này không có khung hình dùng được ~</p>}
               <div id="song-frames-label" className="mb-1 text-xs font-semibold opacity-70">Ảnh bìa · chọn một khung hình trong video</div>
               <div role="radiogroup" aria-labelledby="song-frames-label" className="grid grid-cols-4 gap-2">
                 {urls.map((u, i) => (
@@ -192,7 +194,13 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
                     style={{ backgroundImage: `url(${u})` }}
                   >
                     {/* ảnh ẩn chỉ để biết khung nào tải lỗi */}
-                    <img src={u} alt="" className="hidden" onError={() => setBad((b) => new Set(b).add(u))} />
+                    <img
+                      src={u}
+                      alt=""
+                      className="hidden"
+                      onError={() => markBad(u)}
+                      onLoad={(e) => e.currentTarget.naturalWidth <= 120 && markBad(u)} // ảnh giả 120×90 của YouTube
+                    />
                     {cover === u && <span aria-hidden="true" className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-matcha-4 text-xs font-extrabold text-white">✓</span>}
                   </button>
                 ))}
