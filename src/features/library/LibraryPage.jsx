@@ -46,7 +46,10 @@ const LEAVES = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({
 const minutes = (sec) => `${Math.max(1, Math.round(sec / 60))} phút`;
 const inField = (t) => t.closest?.("input, textarea, [contenteditable]");
 const arrow =
-  "absolute top-1/2 z-30 -translate-y-1/2 !text-[#eef3e6] hover:!bg-white/10";
+  "absolute top-1/2 z-30 -translate-y-1/2 border border-white/20 !bg-white/10 !text-[#eef3e6] shadow-[0_8px_24px_-8px_rgba(0,0,0,.7)] backdrop-blur-md hover:!bg-white/20";
+// Hai mép dải bìa mờ dần
+const edgeFade =
+  "linear-gradient(to right, transparent, #000 14%, #000 86%, transparent)";
 
 export default function LibraryPage() {
   const dispatch = useDispatch();
@@ -130,16 +133,26 @@ export default function LibraryPage() {
     };
   }, [go]);
 
-  const onKeyDown = (e) => {
-    if (
-      inField(e.target) ||
-      e.target.closest?.("[role=menu]") ||
-      (e.key !== "ArrowLeft" && e.key !== "ArrowRight")
-    )
-      return;
-    e.preventDefault();
-    go(atRef.current + (e.key === "ArrowRight" ? 1 : -1));
-  };
+  // ←/→ lướt bìa ở cả trang (không cần focus vào thư viện); bỏ qua khi đang gõ, mở menu hay hộp thoại
+  useEffect(() => {
+    const onKey = (e) => {
+      if (
+        (e.key !== "ArrowLeft" && e.key !== "ArrowRight") ||
+        e.altKey ||
+        e.ctrlKey ||
+        e.metaKey ||
+        e.shiftKey ||
+        inField(e.target) ||
+        e.target.closest?.("[role=menu], [role=slider]") ||
+        document.querySelector("[role=dialog]")
+      )
+        return;
+      e.preventDefault();
+      go(atRef.current + (e.key === "ArrowRight" ? 1 : -1));
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [go]);
 
   const loadSongs = useCallback(
     async (id) => {
@@ -182,7 +195,10 @@ export default function LibraryPage() {
       const made = await playlistService.create({ name });
       // Tải lại danh sách + ảnh bìa để thả đĩa là có hình ngay; quá 2s thì thôi (playlist đã lưu rồi)
       const fresh = await Promise.race([
-        Promise.all([playlistService.getAll().then(unwrap), preload(made.thumbnail)]).then(([list]) => list),
+        Promise.all([
+          playlistService.getAll().then(unwrap),
+          preload(made.thumbnail),
+        ]).then(([list]) => list),
         wait(2000).then(() => null),
       ]).catch(() => null);
       await wait(CREATE_MIN_MS - (Date.now() - start));
@@ -241,7 +257,6 @@ export default function LibraryPage() {
     <>
       {/* Phủ kín màn hình (main có pb-28 khi có nhạc, absolute inset-0 vẫn phủ cả phần đệm); đệm riêng để không chui dưới header/rail/Music Layer */}
       <section
-        onKeyDown={onKeyDown}
         aria-label="Thư viện playlist"
         className={`absolute inset-0 flex flex-col overflow-clip pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
         style={{
@@ -297,100 +312,118 @@ export default function LibraryPage() {
             <ChevronRight size={24} />
           </IconButton>
 
-          {items.map((it, i) => {
-            const o = i - at,
-              a = Math.abs(o);
-            const centre = o === 0;
-            return (
-              <div
-                key={it?._id ?? "create"}
-                aria-hidden={a > 3}
-                onClick={() => !centre && go(i)}
-                className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[600ms] ease-matcha motion-reduce:transition-none"
-                style={{
-                  width: "var(--w)",
-                  margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
-                  transform: fanTransform(o),
-                  zIndex: 20 - a,
-                  opacity: a > 3 ? 0 : 1,
-                  pointerEvents: a > 3 ? "none" : "auto",
-                  filter: centre ? "none" : "brightness(.7) saturate(.7)",
-                  cursor: centre ? "default" : "pointer",
-                }}
-              >
-                {it ? (
-                  <motion.div
-                    initial={
-                      it._id === justMade.current && !reduceMotion
-                        ? { y: "-160%", rotate: -12, opacity: 0 }
-                        : false
-                    }
-                    animate={{ y: 0, rotate: 0, opacity: 1 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 260,
-                      damping: 14,
-                      opacity: { duration: 0.15 },
-                    }}
-                    className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
-                    style={{
-                      boxShadow: centre
-                        ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)"
-                        : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
-                      outline: centre
-                        ? "1px solid rgba(238,243,230,.35)"
-                        : "none",
-                    }}
-                  >
-                    {it.cover && (
-                      <img
-                        src={it.cover}
-                        alt=""
-                        draggable={false}
-                        className="h-full w-full object-cover"
-                      />
-                    )}
-                    {!centre && <span className="sr-only">{it.name}</span>}
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key={shake}
-                    animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : false}
-                    transition={{ duration: 0.4 }}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
-                  >
-                    {busy && !reduceMotion && (
-                      // Lớp lấp lánh quét ngang trong lúc chờ server
+          <div
+            className="absolute inset-0"
+            style={{ maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+          >
+            {items.map((it, i) => {
+              const o = i - at,
+                a = Math.abs(o);
+              const centre = o === 0;
+              return (
+                <div
+                  key={it?._id ?? "create"}
+                  aria-hidden={a > 3}
+                  onClick={() => !centre && go(i)}
+                  className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[600ms] ease-matcha motion-reduce:transition-none"
+                  style={{
+                    width: "var(--w)",
+                    margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
+                    transform: fanTransform(o),
+                    zIndex: 20 - a,
+                    opacity: a > 3 ? 0 : 1,
+                    pointerEvents: a > 3 ? "none" : "auto",
+                    filter: centre ? "none" : "brightness(.7) saturate(.7)",
+                    cursor: centre ? "default" : "pointer",
+                  }}
+                >
+                  {it ? (
+                    <motion.div
+                      initial={
+                        it._id === justMade.current && !reduceMotion
+                          ? { y: "-160%", rotate: -12, opacity: 0 }
+                          : false
+                      }
+                      animate={{ y: 0, rotate: 0, opacity: 1 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 260,
+                        damping: 14,
+                        opacity: { duration: 0.15 },
+                      }}
+                      className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
+                      style={{
+                        boxShadow: centre
+                          ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)"
+                          : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
+                        outline: centre
+                          ? "1px solid rgba(238,243,230,.35)"
+                          : "none",
+                      }}
+                    >
+                      {it.cover && (
+                        <img
+                          src={it.cover}
+                          alt=""
+                          draggable={false}
+                          className="h-full w-full object-cover"
+                        />
+                      )}
+                      {!centre && <span className="sr-only">{it.name}</span>}
+                    </motion.div>
+                  ) : (
+                    <motion.div
+                      key={shake}
+                      animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : false}
+                      transition={{ duration: 0.4 }}
+                      className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
+                    >
+                      {busy && !reduceMotion && (
+                        // Lớp lấp lánh quét ngang trong lúc chờ server
+                        <motion.span
+                          aria-hidden="true"
+                          className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                          initial={{ x: "-120%" }}
+                          animate={{ x: "220%" }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "linear",
+                          }}
+                        />
+                      )}
+                      <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
+                        <Plus size={28} aria-hidden="true" />
+                      </span>
+                      <b className="text-base">Tạo playlist</b>
+                    </motion.div>
+                  )}
+                  {it?._id === justMade.current &&
+                    !reduceMotion &&
+                    LEAVES.map((l, k) => (
+                      // Lá trà bung ra khi đĩa đáp xuống
                       <motion.span
+                        key={k}
                         aria-hidden="true"
-                        className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                        initial={{ x: "-120%" }}
-                        animate={{ x: "220%" }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-3 rounded-[8px_0] bg-matcha-1"
+                        initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
+                        animate={{
+                          x: l.x,
+                          y: l.y,
+                          rotate: 200,
+                          opacity: [0, 1, 0],
+                        }}
+                        transition={{
+                          delay: 0.35,
+                          duration: 0.8,
+                          ease: "easeOut",
+                        }}
                       />
-                    )}
-                    <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
-                      <Plus size={28} aria-hidden="true" />
-                    </span>
-                    <b className="text-base">Tạo playlist</b>
-                  </motion.div>
-                )}
-                {it?._id === justMade.current &&
-                  !reduceMotion &&
-                  LEAVES.map((l, k) => (
-                    // Lá trà bung ra khi đĩa đáp xuống
-                    <motion.span
-                      key={k}
-                      aria-hidden="true"
-                      className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-3 rounded-[8px_0] bg-matcha-1"
-                      initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
-                      animate={{ x: l.x, y: l.y, rotate: 200, opacity: [0, 1, 0] }}
-                      transition={{ delay: 0.35, duration: 0.8, ease: "easeOut" }}
-                    />
-                  ))}
-              </div>
-            );
-          })}
+                    ))}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         <div className="relative z-10 flex min-h-[7.5rem] flex-col items-center px-8 pb-5 text-center">
@@ -487,10 +520,18 @@ export default function LibraryPage() {
                     <span className="text-white/50">{newName.length}/60</span>
                   </p>
                 </div>
-                <Button type="submit" disabled={busy || !newName.trim()} aria-busy={busy}>
+                <Button
+                  type="submit"
+                  disabled={busy || !newName.trim()}
+                  aria-busy={busy}
+                >
                   {busy ? (
                     <>
-                      <Loader2 size={16} className="animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                      <Loader2
+                        size={16}
+                        className="animate-spin motion-reduce:animate-none"
+                        aria-hidden="true"
+                      />
                       Đang tạo…
                     </>
                   ) : (
