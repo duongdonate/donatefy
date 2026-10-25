@@ -30,6 +30,7 @@ const CREATE = "__create";
 // Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
 const W = "min(24cqw, 68cqh, 340px)";
 const unwrap = (res) => (Array.isArray(res) ? res : (res?.data ?? []));
+const WHEEL_REPEAT_MS = 250; // 20 cú lăn nhỏ trong ~200ms vẫn chỉ 1 bìa
 const CREATE_MIN_MS = 1200; // hiệu ứng chờ tối thiểu để thả đĩa không bị giật
 const wait = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)));
 const preload = (src) =>
@@ -83,7 +84,6 @@ export default function LibraryPage() {
   const atRef = useRef(0);
   const itemsRef = useRef(items);
   const requested = useRef(new Set());
-  const locked = useRef(false);
   atRef.current = at;
   itemsRef.current = items;
 
@@ -99,20 +99,21 @@ export default function LibraryPage() {
     };
   }, [dispatch, showToast]);
 
+  // Không khoá theo thời gian: bấm/phím nhanh bao nhiêu lần thì lướt bấy nhiêu bìa, transition tự nối tiếp
   const go = useCallback((n) => {
     const to = clampStep(n, itemsRef.current.length);
-    if (locked.current || to === atRef.current) return;
-    locked.current = true;
-    setTimeout(() => (locked.current = false), 450);
+    if (to === atRef.current) return;
+    atRef.current = to; // bấm liên tiếp trước khi render lại vẫn cộng đúng
     setRenaming(false);
     setSelId(keyOf(itemsRef.current[to]));
   }, []);
 
-  // Lăn chuột: cộng dồn, một cú một bìa (cùng mẫu với landing)
+  // Lăn chuột: cộng dồn, một nấc rõ ràng một bìa; lăn liên tục thì cứ WHEEL_REPEAT_MS lại thêm một bìa
   useEffect(() => {
     const el = strip.current;
     let acc = 0,
       spent = false,
+      last = 0,
       timer;
     const onWheel = (e) => {
       e.preventDefault();
@@ -121,7 +122,9 @@ export default function LibraryPage() {
         acc = 0;
         spent = false;
       }, 160);
+      if (spent && e.timeStamp - last > WHEEL_REPEAT_MS) spent = false;
       const r = accumulateWheel(acc, e.deltaY || e.deltaX, spent);
+      if (r.dir) last = e.timeStamp;
       acc = r.acc;
       spent = r.spent;
       if (r.dir) go(atRef.current + r.dir);
@@ -325,7 +328,7 @@ export default function LibraryPage() {
                   key={it?._id ?? "create"}
                   aria-hidden={a > 3}
                   onClick={() => !centre && go(i)}
-                  className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[600ms] ease-matcha motion-reduce:transition-none"
+                  className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[450ms] ease-matcha motion-reduce:transition-none"
                   style={{
                     width: "var(--w)",
                     margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
