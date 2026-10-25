@@ -1,13 +1,11 @@
-import { Heart, Home, Library } from "lucide-react";
+import { Home, Library } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { Glass } from "../design";
 import { focusRing } from "../design/Button";
 
-// shortcut: Thư viện và Bài đã thích tạm dẫn về giao diện v1 (/v1), đổi khi làm GĐ4
 const LINKS = [
   { to: "/listen", label: "Trang chủ", Icon: Home },
-  { to: "/v1", label: "Thư viện", Icon: Library },
-  { to: "/v1#liked", label: "Bài đã thích", Icon: Heart },
+  { to: "/library", label: "Thư viện", Icon: Library },
 ];
 
 export default function Rail({ className = "", ...props }) {

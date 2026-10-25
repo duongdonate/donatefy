@@ -1,5 +1,8 @@
 // Khung v2: nền quán + header/rail tự ẩn khi đứng yên; `right` (thanh kính C) luôn hiện
 import { useState } from "react";
+import { useSelector } from "react-redux";
+import { useLocation } from "react-router-dom";
+import { getCurrentSong } from "../app/selectors";
 import useIdle from "../hooks/useIdle";
 import Header from "./Header";
 import Rail from "./Rail";
@@ -9,6 +12,9 @@ const chrome = "transition duration-400 ease-matcha motion-reduce:transition-non
 export default function AppShell({ children, right }) {
   const [hover, setHover] = useState(false);
   const [focusIn, setFocusIn] = useState(false);
+  // Chừa đáy cho Music Layer (không hiện ở /listen)
+  const { pathname } = useLocation();
+  const pad = !!useSelector(getCurrentSong) && pathname !== "/listen";
   const idle = useIdle(2500, { hold: hover || focusIn });
 
   // Giữ header/rail khi chuột đang ở trên hoặc focus bàn phím đang ở bên trong
@@ -43,7 +49,7 @@ export default function AppShell({ children, right }) {
         <Rail />
       </div>
 
-      <main className="relative h-full w-full">{children}</main>
+      <main className={`relative h-full w-full ${pad ? "pb-28" : ""}`}>{children}</main>
       {right && <div className="absolute right-4 top-28 z-20">{right}</div>}
     </div>
   );

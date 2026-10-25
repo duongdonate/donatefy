@@ -79,8 +79,7 @@ export default function NowPlaying() {
           {song ? (
             <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />
           ) : (
-            // shortcut: thư viện v1 ở /v1 tới khi GĐ4 làm lớp phủ Thư viện
-            <Button className="mt-8" onClick={() => navigate("/v1")}>
+            <Button className="mt-8" onClick={() => navigate("/library")}>
               Mở thư viện
             </Button>
           )}

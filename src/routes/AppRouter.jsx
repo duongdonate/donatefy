@@ -1,11 +1,8 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { getCurrentSong } from "../app/selectors";
-import DefaultLayout from "../layouts/DefaultLayout";
 import AppShell from "../layouts/AppShell";
-import HomePage from "../pages/HomePage";
-import PlayListPage from "../pages/PlaylistPage";
+import LibraryPage from "../features/library/LibraryPage";
+import PlaylistPage from "../features/playlist/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
 import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
@@ -61,21 +58,7 @@ function PlayerLayout() {
   );
 }
 
-function V1Layout() {
-  const hasSong = !!useSelector(getCurrentSong);
-  return (
-    // Chừa đáy cho Music Layer để thanh không che nội dung
-    <div className={`h-screen ${hasSong ? "pb-28" : ""}`}>
-      <DefaultLayout>
-        <Outlet />
-      </DefaultLayout>
-    </div>
-  );
-}
-
 export default function AppRouter() {
-  const { user } = useAuth();
-
   return (
     <Router>
       <Routes>
@@ -120,11 +103,8 @@ export default function AppRouter() {
                 </AppShell>
               }
             />
-            {/* shortcut: giao diện v1 giữ tạm tới GĐ4 (Thư viện, chi tiết playlist) */}
-            <Route element={<V1Layout />}>
-              <Route path="/v1" element={<HomePage user={user} />} />
-              <Route path="/playlist/:id" element={<PlayListPage />} />
-            </Route>
+            <Route path="/library" element={<AppShell><LibraryPage /></AppShell>} />
+            <Route path="/playlist/:id" element={<AppShell><PlaylistPage /></AppShell>} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
