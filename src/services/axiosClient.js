@@ -37,8 +37,9 @@ axiosClient.interceptors.response.use(
       config._retried = true;
       try {
         await refreshAccessToken();
-      } catch {
-        expireSession();
+      } catch (refreshErr) {
+        // Chỉ khi máy chủ từ chối refresh (401) mới hết phiên; mất mạng/5xx giữ nguyên phiên
+        if (refreshErr?.response?.status === 401) expireSession();
         return Promise.reject(error.response.data);
       }
       return axiosClient(config);

@@ -57,8 +57,13 @@ export const AuthProvider = ({ children }) => {
 
   const startSession = async (access_token) => {
     setAccessToken(access_token);
-    const { user } = await axiosClient.get("/api/auth/me");
-    setUser(user);
+    try {
+      const { user } = await axiosClient.get("/api/auth/me");
+      setUser(user);
+    } catch (err) {
+      setAccessToken(null); // không để lại trạng thái nửa đăng nhập
+      throw err;
+    }
   };
 
   const login = async (username, password) => {
