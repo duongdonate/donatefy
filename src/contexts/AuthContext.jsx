@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import axiosClient from "../services/axiosClient";
+import axiosClient, { refreshAccessToken } from "../services/axiosClient";
 import axiosUpload from "../services/axiosUpload";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { setAccessToken, onSessionExpired } from "../services/authSession";
 import SignInForm from "../components/SignInForm";
 import SignUpForm from "../components/SignUpForm";
 
@@ -16,54 +16,58 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useLocalStorage("user", null);
-  const [token, setToken] = useLocalStorage("token", null);
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      fetchCurrentUser();
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+    // Khoá cũ từ bản lưu token trong localStorage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-  const uploadAvatar = async (username, avatarFile) => {
+    let cancelled = false; // StrictMode chạy effect 2 lần; refreshAccessToken dùng chung một lượt
+    (async () => {
+      try {
+        await refreshAccessToken();
+        const { user } = await axiosClient.get("/api/auth/me");
+        if (!cancelled) setUser(user);
+      } catch {
+        if (!cancelled) setUser(null);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    const unsubscribe = onSessionExpired(() => setUser(null));
+    return () => {
+      cancelled = true;
+      unsubscribe();
+    };
+  }, []);
+
+  const uploadAvatar = async (avatarFile) => {
     try {
-      // Tạo FormData và thêm file
+      // Backend lấy người dùng từ token
       const formData = new FormData();
-      formData.append("username", username);
       formData.append("avatar", avatarFile);
-
-      // Upload file avatar
       await axiosUpload.post("/upload/avatars", formData);
     } catch (err) {
       console.error("Error uploading file:", err);
     }
   };
 
-  const fetchCurrentUser = async () => {
-    try {
-      const { user } = await axiosClient.get("/api/auth/me", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUser(user);
-    } catch (error) {
-      console.error("Failed to fetch user:", error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
+  const startSession = async (access_token) => {
+    setAccessToken(access_token);
+    const { user } = await axiosClient.get("/api/auth/me");
+    setUser(user);
   };
 
   const login = async (username, password) => {
     try {
-      const res = await axiosClient.post("/api/auth/login", {
+      const { access_token } = await axiosClient.post("/api/auth/login", {
         username,
         password,
       });
-      const { access_token } = res;
-      setToken(access_token);
+      await startSession(access_token);
       return { success: true, message: "Đăng nhập thành công" };
     } catch (error) {
       console.error("Login failed:", error);
@@ -76,17 +80,16 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (username, password, avatar) => {
     try {
-      const res = await axiosClient.post("/api/auth/register", {
+      const { access_token } = await axiosClient.post("/api/auth/register", {
         username,
         password,
         avatar: avatar ? true : false,
       });
+      setAccessToken(access_token);
       if (avatar) {
-        await uploadAvatar(username, avatar);
+        await uploadAvatar(avatar);
       }
-
-      const { access_token } = res;
-      setToken(access_token);
+      await startSession(access_token);
       return { success: true, message: "Đăng ký thành công" };
     } catch (error) {
       console.error("Registration failed:", error?.message);
@@ -97,16 +100,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await axiosClient.post("/api/auth/logout");
+    } catch {
+      // vẫn đăng xuất cục bộ
+    }
+    setAccessToken(null);
     setUser(null);
-    setToken(null);
-    localStorage.removeItem("token");
   };
 
   return (
-    <AuthContext.Provider
-      value={{ user, token, login, register, logout, loading }}
-    >
+    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
