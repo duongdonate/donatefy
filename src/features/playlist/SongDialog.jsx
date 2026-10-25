@@ -22,7 +22,8 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
   const closeRef = useRef(onClose);
   const existingRef = useRef(existingIds);
   existingRef.current = existingIds;
-  closeRef.current = () => !sendingRef.current && onClose(); // không đóng khi đang gửi // onClose đổi mỗi lần render: giữ ở ref để effect mở/đóng chỉ chạy một lần
+  // onClose đổi mỗi lần render: giữ ở ref để effect mở/đóng chỉ chạy một lần; không đóng khi đang gửi
+  closeRef.current = () => !sendingRef.current && onClose();
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState(isAdd ? null : song.id);
   const [oembed, setOembed] = useState(null);
@@ -90,7 +91,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
 
   const markBad = (u) => setBad((b) => new Set(b).add(u));
   const urls = videoId ? frameUrls(videoId) : [];
-  const cover = thumb ?? urls.find((u) => !bad.has(u)) ?? null; // mặc định: khung đầu tải được
+  const cover = thumb && !bad.has(thumb) ? thumb : urls.find((u) => !bad.has(u)) ?? null; // mặc định: khung đầu tải được
   const nameT = (name ?? "").trim();
   const artistT = (artist ?? "").trim();
   const ready = !!videoId && !pending && !checking && !problem && !!nameT && !!cover;
