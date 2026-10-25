@@ -37,6 +37,7 @@ export default function SongTile({ song, index, playing, onPlay, onRemove, onEdi
           size={32}
           triggerClass="!bg-black/45 !text-white hover:!bg-black/65"
           menuClass="left-0 top-full mt-1"
+          flipClass="bottom-full left-0 mb-1"
           onRename={() => onEdit(song)}
           onDelete={() => onRemove(song)}
         />

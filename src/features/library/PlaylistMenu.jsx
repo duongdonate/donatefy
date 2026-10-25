@@ -11,9 +11,21 @@ export default function PlaylistMenu({
   size,
   triggerClass = "!text-[#eef3e6] hover:!bg-white/10",
   menuClass = "bottom-full right-0 mb-2",
+  flipClass, // nếu có: dùng khi dưới nút không đủ chỗ trong khung cuộn
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef(null);
+  const [flip, setFlip] = useState(false);
+
+  const toggle = () => {
+    if (!open && flipClass) {
+      let box = root.current.parentElement;
+      while (box && !/(auto|scroll|hidden|clip)/.test(getComputedStyle(box).overflowY)) box = box.parentElement;
+      const limit = Math.min(box ? box.getBoundingClientRect().bottom : Infinity, window.innerHeight);
+      setFlip(root.current.getBoundingClientRect().bottom + 112 > limit);
+    }
+    setOpen(!open);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -53,7 +65,7 @@ export default function PlaylistMenu({
         size={size}
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggle}
         className={triggerClass}
       >
         <MoreHorizontal size={20} />
@@ -61,7 +73,7 @@ export default function PlaylistMenu({
       {open && (
         <div
           role="menu"
-          className={`absolute z-30 w-40 ${menuClass} rounded-xl border border-white/15 bg-[rgba(10,16,9,.95)] p-1 text-[#eef3e6] shadow-xl`}
+          className={`absolute z-30 w-40 ${flip ? flipClass : menuClass} rounded-xl border border-white/15 bg-[rgba(10,16,9,.95)] p-1 text-[#eef3e6] shadow-xl`}
         >
           {item(Pencil, editLabel, onRename)}
           {item(Trash2, "Xoá", onDelete, true)}
