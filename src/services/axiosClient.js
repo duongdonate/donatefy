@@ -6,14 +6,14 @@ const axiosClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000, // timeout 10s
+  timeout: 60000, // chờ Render Free thức dậy
   withCredentials: true,
 });
 
 export const refreshAccessToken = () =>
   refreshOnce(() =>
     axios
-      .post(`${axiosClient.defaults.baseURL}/api/auth/refresh`, null, { withCredentials: true })
+      .post(`${axiosClient.defaults.baseURL}/api/auth/refresh`, null, { withCredentials: true, timeout: 60000 })
       .then((r) => r.data.access_token)
   );
 

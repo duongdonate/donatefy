@@ -2,8 +2,6 @@ import { useState, useEffect, memo } from "react";
 import { UserRoundCog } from "lucide-react";
 import defaultAvatar from "../assets/image/Tanjiro.jpg";
 import { useAuth } from "../contexts/AuthContext";
-import { Link } from "react-router-dom";
-import axiosClient from "../services/axiosClient";
 
 const Avatar = ({ onClick }) => {
   const [avatar, setAvatar] = useState(null);
@@ -21,7 +19,9 @@ const Avatar = ({ onClick }) => {
 
   useEffect(() => {
     const loadAvatar = async () => {
-      if (user?.username) {
+      if (typeof user?.avatar === "string" && user.avatar.startsWith("http")) {
+        setAvatar(user.avatar); // ảnh Google
+      } else if (user?.username) {
         const baseUrl = `${import.meta.env.VITE_API_URL}/uploads/avatars/${
           user.username
         }`;

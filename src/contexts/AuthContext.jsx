@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import axiosClient, { refreshAccessToken } from "../services/axiosClient";
 import axiosUpload from "../services/axiosUpload";
-import { setAccessToken, onSessionExpired } from "../services/authSession";
+import { setAccessToken, onSessionExpired, retryStartup } from "../services/authSession";
 import SignInForm from "../components/SignInForm";
 import SignUpForm from "../components/SignUpForm";
 
@@ -18,6 +18,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [waking, setWaking] = useState(false);
 
   useEffect(() => {
     // Khoá cũ từ bản lưu token trong localStorage
@@ -25,21 +26,27 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("user");
 
     let cancelled = false; // StrictMode chạy effect 2 lần; refreshAccessToken dùng chung một lượt
+    const wakeTimer = setTimeout(() => setWaking(true), 3000);
     (async () => {
       try {
-        await refreshAccessToken();
+        await retryStartup(refreshAccessToken, { isFatal: (e) => e?.response?.status === 401 });
         const { user } = await axiosClient.get("/api/auth/me");
         if (!cancelled) setUser(user);
       } catch {
         if (!cancelled) setUser(null);
       } finally {
-        if (!cancelled) setLoading(false);
+        clearTimeout(wakeTimer);
+        if (!cancelled) {
+          setWaking(false);
+          setLoading(false);
+        }
       }
     })();
 
     const unsubscribe = onSessionExpired(() => setUser(null));
     return () => {
       cancelled = true;
+      clearTimeout(wakeTimer);
       unsubscribe();
     };
   }, []);
@@ -116,7 +123,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, register, logout, loading, waking }}>
       {children}
     </AuthContext.Provider>
   );

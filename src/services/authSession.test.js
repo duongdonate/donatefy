@@ -6,6 +6,7 @@ import {
   refreshOnce,
   onSessionExpired,
   expireSession,
+  retryStartup,
 } from "./authSession.js";
 
 test("refreshOnce: gọi đồng thời chỉ chạy một lần, cùng token", async () => {
@@ -47,4 +48,46 @@ test("expireSession xoá token và gọi cb; hàm huỷ gỡ cb", () => {
   off();
   expireSession();
   assert.equal(n, 1);
+});
+
+test("retryStartup: thành công ngay, gọi một lần", async () => {
+  let n = 0;
+  assert.equal(await retryStartup(async () => (++n, "ok"), { isFatal: () => false }), "ok");
+  assert.equal(n, 1);
+});
+
+test("retryStartup: lỗi thường thử lại với 1000, 2000", async () => {
+  let n = 0;
+  const waits = [];
+  const fn = async () => {
+    if (++n < 3) throw new Error("mạng");
+    return "ok";
+  };
+  const r = await retryStartup(fn, { isFatal: () => false, sleep: async (ms) => waits.push(ms) });
+  assert.equal(r, "ok");
+  assert.equal(n, 3);
+  assert.deepEqual(waits, [1000, 2000]);
+});
+
+test("retryStartup: lỗi fatal ném ngay", async () => {
+  let n = 0;
+  await assert.rejects(
+    retryStartup(async () => { n++; throw { response: { status: 401 } }; }, { isFatal: (e) => e.response.status === 401 })
+  );
+  assert.equal(n, 1);
+});
+
+test("retryStartup: lỗi mãi thì ném lỗi cuối, không vượt totalMs", async () => {
+  let t = 0;
+  let n = 0;
+  await assert.rejects(
+    retryStartup(async () => { throw new Error(`e${++n}`); }, {
+      isFatal: () => false,
+      totalMs: 5000,
+      now: () => t,
+      sleep: async (ms) => { t += ms; },
+    }),
+    /e\d/
+  );
+  assert.ok(t <= 5000);
 });

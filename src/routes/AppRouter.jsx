@@ -20,9 +20,13 @@ const PlayerEngine = lazy(() => import("../features/player/PlayerEngine"));
 
 
 function FullLoader() {
+  const { waking } = useAuth();
   return (
     <div className="bg-cafe grid min-h-screen place-items-center">
-      <PageLoader />
+      <div className="flex flex-col items-center gap-4">
+        <PageLoader />
+        {waking && <p className="text-sm opacity-70">Quán đang mở cửa, chờ xíu nha…</p>}
+      </div>
     </div>
   );
 }
