@@ -79,7 +79,7 @@ export default function NowPlaying() {
           {song ? (
             <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />
           ) : (
-            <Button className="mt-8" onClick={() => navigate("/library")}>
+            <Button className="mt-8" onClick={() => navigate("/playlists")}>
               Mở thư viện
             </Button>
           )}

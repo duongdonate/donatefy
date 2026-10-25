@@ -6,7 +6,7 @@ import { focusRing } from "../design/Button";
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [
   { to: "/listen", label: "Trang chủ", Icon: Home },
-  { to: "/library", label: "Thư viện", Icon: Library, also: "/playlist/" },
+  { to: "/playlists", label: "Thư viện", Icon: Library, also: "/playlists/" },
 ];
 
 export default function Rail({ className = "", ...props }) {

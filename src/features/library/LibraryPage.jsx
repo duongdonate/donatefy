@@ -367,7 +367,7 @@ export default function LibraryPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => navigate(`/playlist/${p._id}`)}
+                  onClick={() => navigate(`/playlists/${p._id}`)}
                   className="!text-[#eef3e6]"
                 >
                   Mở

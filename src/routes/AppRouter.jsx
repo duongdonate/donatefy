@@ -1,5 +1,5 @@
 import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate, useLocation, useParams } from "react-router-dom";
 import AppShell from "../layouts/AppShell";
 import LibraryPage from "../features/library/LibraryPage";
 import PlaylistPage from "../features/playlist/PlaylistPage";
@@ -27,13 +27,18 @@ function FullLoader() {
   );
 }
 
-// Cần đăng nhập: chưa có thì về /login, nhớ chỗ cũ để quay lại (link chia sẻ /playlist/:id)
+// Cần đăng nhập: chưa có thì về /login, nhớ chỗ cũ để quay lại (link chia sẻ /playlists/:id)
 function RequireAuth() {
   const { user, loading } = useAuth();
   const location = useLocation();
   if (user) return <Outlet />;
   if (loading) return <FullLoader />;
   return <Navigate to="/login" replace state={{ from: location }} />;
+}
+
+function OldPlaylist() {
+  const { id } = useParams();
+  return <Navigate to={`/playlists/${id}`} replace />;
 }
 
 function GuestOnly() {
@@ -103,8 +108,11 @@ export default function AppRouter() {
                 </AppShell>
               }
             />
-            <Route path="/library" element={<AppShell><LibraryPage /></AppShell>} />
-            <Route path="/playlist/:id" element={<AppShell><PlaylistPage /></AppShell>} />
+            <Route path="/playlists" element={<AppShell><LibraryPage /></AppShell>} />
+            <Route path="/playlists/:id" element={<AppShell><PlaylistPage /></AppShell>} />
+            {/* Link cũ vẫn dùng được */}
+            <Route path="/library" element={<Navigate to="/playlists" replace />} />
+            <Route path="/playlist/:id" element={<OldPlaylist />} />
           </Route>
         </Route>
         <Route path="*" element={<NotFound />} />
