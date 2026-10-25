@@ -3,8 +3,17 @@ import { ChevronLeft, ChevronRight, Play, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getAllPlaylists, getCurrentPlaylist, getCurrentSong } from "../../app/selectors";
-import { removePlaylist, addPlaylist, setAllPlaylists, setCurrentPlaylist } from "../../app/slices/playlistSlice";
+import {
+  getAllPlaylists,
+  getCurrentPlaylist,
+  getCurrentSong,
+} from "../../app/selectors";
+import {
+  removePlaylist,
+  addPlaylist,
+  setAllPlaylists,
+  setCurrentPlaylist,
+} from "../../app/slices/playlistSlice";
 import { playContext } from "../../app/slices/playerSlice";
 import { useToastContext } from "../../contexts/ToastContext";
 import { Button, IconButton } from "../../design";
@@ -19,10 +28,11 @@ import PlaylistMenu from "./PlaylistMenu";
 const CREATE = "__create";
 // Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
 const W = "min(24cqw, 68cqh, 340px)";
-const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
+const unwrap = (res) => (Array.isArray(res) ? res : (res?.data ?? []));
 const minutes = (sec) => `${Math.max(1, Math.round(sec / 60))} phút`;
 const inField = (t) => t.closest?.("input, textarea, [contenteditable]");
-const arrow = "absolute top-1/2 z-30 -translate-y-1/2 !text-[#eef3e6] hover:!bg-white/10";
+const arrow =
+  "absolute top-1/2 z-30 -translate-y-1/2 !text-[#eef3e6] hover:!bg-white/10";
 
 export default function LibraryPage() {
   const dispatch = useDispatch();
@@ -34,7 +44,10 @@ export default function LibraryPage() {
   const song = useSelector(getCurrentSong);
   const playingId = song ? currentPlaylist?._id : null;
 
-  const items = useMemo(() => [...libraryOrder(playlists, playingId), null], [playlists, playingId]); // null = thẻ Tạo
+  const items = useMemo(
+    () => [...libraryOrder(playlists, playingId), null],
+    [playlists, playingId],
+  ); // null = thẻ Tạo
   const keyOf = (it) => it?._id ?? CREATE;
   const [selId, setSelId] = useState(null); // id bìa giữa; CREATE = thẻ Tạo; null = bìa đầu
   const found = selId ? items.findIndex((it) => keyOf(it) === selId) : 0;
@@ -76,7 +89,9 @@ export default function LibraryPage() {
   // Lăn chuột: cộng dồn, một cú một bìa (cùng mẫu với landing)
   useEffect(() => {
     const el = strip.current;
-    let acc = 0, spent = false, timer;
+    let acc = 0,
+      spent = false,
+      timer;
     const onWheel = (e) => {
       e.preventDefault();
       clearTimeout(timer);
@@ -97,7 +112,12 @@ export default function LibraryPage() {
   }, [go]);
 
   const onKeyDown = (e) => {
-    if (inField(e.target) || e.target.closest?.("[role=menu]") || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    if (
+      inField(e.target) ||
+      e.target.closest?.("[role=menu]") ||
+      (e.key !== "ArrowLeft" && e.key !== "ArrowRight")
+    )
+      return;
     e.preventDefault();
     go(atRef.current + (e.key === "ArrowRight" ? 1 : -1));
   };
@@ -115,7 +135,8 @@ export default function LibraryPage() {
   // Số phút của bìa giữa
   useEffect(() => {
     const id = p?._id;
-    if (!id || !p.videos?.length || songsById[id] || requested.current.has(id)) return;
+    if (!id || !p.videos?.length || songsById[id] || requested.current.has(id))
+      return;
     requested.current.add(id);
     loadSongs(id).catch(() => requested.current.delete(id));
   }, [p, songsById, loadSongs]);
@@ -134,7 +155,8 @@ export default function LibraryPage() {
   const create = async (e) => {
     e.preventDefault();
     const name = e.currentTarget.elements.name.value.trim();
-    if (!name || name.length > 60) return showToast("Tên playlist dài 1–60 ký tự nha ~");
+    if (!name || name.length > 60)
+      return showToast("Tên playlist dài 1–60 ký tự nha ~");
     if (busy) return;
     setBusy(true);
     try {
@@ -151,13 +173,17 @@ export default function LibraryPage() {
 
   const saveName = async () => {
     const name = draft.trim();
-    if (!name || name.length > 60) return showToast("Tên playlist dài 1–60 ký tự nha ~");
+    if (!name || name.length > 60)
+      return showToast("Tên playlist dài 1–60 ký tự nha ~");
     if (name === p.name) return setRenaming(false);
     try {
       const updated = await playlistService.rename(p._id, name);
       const next = { ...p, name: updated?.name ?? name };
-      dispatch(setAllPlaylists(playlists.map((x) => (x._id === p._id ? next : x))));
-      if (currentPlaylist?._id === p._id) dispatch(setCurrentPlaylist({ ...currentPlaylist, name: next.name }));
+      dispatch(
+        setAllPlaylists(playlists.map((x) => (x._id === p._id ? next : x))),
+      );
+      if (currentPlaylist?._id === p._id)
+        dispatch(setCurrentPlaylist({ ...currentPlaylist, name: next.name }));
       setRenaming(false);
     } catch {
       showToast("Đổi tên thất bại, thử lại sau nha");
@@ -180,42 +206,68 @@ export default function LibraryPage() {
   const count = p?.videos?.length ?? 0;
 
   return (
-    <div className="h-full p-4 pb-4 pl-24 pr-6 pt-24">
+    <>
+      {/* Phủ kín màn hình (main có pb-28 khi có nhạc, absolute inset-0 vẫn phủ cả phần đệm); đệm riêng để không chui dưới header/rail/Music Layer */}
       <section
         onKeyDown={onKeyDown}
         aria-label="Thư viện playlist"
-        className="relative flex h-full flex-col overflow-hidden rounded-[28px] text-[#eef3e6] backdrop-blur-2xl [container-type:inline-size]"
-        style={{ background: "radial-gradient(60cqw 40cqw at 50% 45%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.82)" }}
+        className={`absolute inset-0 flex flex-col overflow-hidden pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
+        style={{
+          background:
+            "radial-gradient(60cqw 40cqw at 50% 45%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.82)",
+        }}
       >
         <span
           aria-hidden="true"
           className="pointer-events-none absolute -bottom-[3cqw] left-1/2 -translate-x-1/2 select-none whitespace-nowrap font-extrabold tracking-tighter text-transparent"
-          style={{ fontSize: "17cqw", WebkitTextStroke: ".15cqw rgba(167,196,167,.12)" }}
+          style={{
+            fontSize: "17cqw",
+            WebkitTextStroke: ".15cqw rgba(167,196,167,.12)",
+          }}
         >
-          Thư viện
+          PLAYLISTS
         </span>
 
-        <header className="relative z-10 flex items-baseline gap-3 px-8 pt-6">
-          <h1 className="text-3xl font-extrabold tracking-tight">Playlist của bạn</h1>
-          <span className="text-sm opacity-60">{playlists.length} playlist</span>
+        <header className="relative z-10 flex items-baseline gap-3 px-8 pt-2">
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Playlist của bạn
+          </h1>
+          <span className="text-sm opacity-60">
+            {playlists.length} playlist
+          </span>
         </header>
 
-        <div ref={strip} className="relative min-h-0 flex-1 [container-type:size]" style={{ "--w": W }}>
+        <div
+          ref={strip}
+          className="relative min-h-0 flex-1 [container-type:size]"
+          style={{ "--w": W }}
+        >
           {playlists.length === 0 && (
             <div className="absolute left-8 top-2 z-10 flex items-center gap-2 text-sm opacity-80">
               <Matcappa pose="hug-knees" size={72} />
               <p>Chưa có chồng đĩa nào, tạo cái đầu tiên nha ~</p>
             </div>
           )}
-          <IconButton label="Playlist trước" onClick={() => go(at - 1)} disabled={at === 0} className={`${arrow} left-4`}>
+          <IconButton
+            label="Playlist trước"
+            onClick={() => go(at - 1)}
+            disabled={at === 0}
+            className={`${arrow} left-4`}
+          >
             <ChevronLeft size={24} />
           </IconButton>
-          <IconButton label="Playlist sau" onClick={() => go(at + 1)} disabled={at === items.length - 1} className={`${arrow} right-4`}>
+          <IconButton
+            label="Playlist sau"
+            onClick={() => go(at + 1)}
+            disabled={at === items.length - 1}
+            className={`${arrow} right-4`}
+          >
             <ChevronRight size={24} />
           </IconButton>
 
           {items.map((it, i) => {
-            const o = i - at, a = Math.abs(o);
+            const o = i - at,
+              a = Math.abs(o);
             const centre = o === 0;
             return (
               <div
@@ -238,38 +290,31 @@ export default function LibraryPage() {
                   <div
                     className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
                     style={{
-                      boxShadow: centre ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)" : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
-                      outline: centre ? "1px solid rgba(238,243,230,.35)" : "none",
+                      boxShadow: centre
+                        ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)"
+                        : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
+                      outline: centre
+                        ? "1px solid rgba(238,243,230,.35)"
+                        : "none",
                     }}
                   >
-                    {it.cover && <img src={it.cover} alt="" draggable={false} className="h-full w-full object-cover" />}
+                    {it.cover && (
+                      <img
+                        src={it.cover}
+                        alt=""
+                        draggable={false}
+                        className="h-full w-full object-cover"
+                      />
+                    )}
                     {!centre && <span className="sr-only">{it.name}</span>}
                   </div>
                 ) : (
-                  <form
-                    onSubmit={create}
-                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
-                  >
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center">
                     <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
                       <Plus size={28} aria-hidden="true" />
                     </span>
                     <b className="text-base">Tạo playlist</b>
-                    {centre && (
-                      <>
-                        <input
-                          name="name"
-                          maxLength={60}
-                          placeholder="Tên playlist"
-                          aria-label="Tên playlist mới"
-                          autoComplete="off"
-                          className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-sm outline-none focus:border-matcha-1"
-                        />
-                        <Button type="submit" size="sm" disabled={busy}>
-                          Tạo
-                        </Button>
-                      </>
-                    )}
-                  </form>
+                  </div>
                 )}
               </div>
             );
@@ -297,21 +342,34 @@ export default function LibraryPage() {
                   className="h-10 w-72 max-w-full rounded-xl border border-matcha-1 bg-white/10 px-3 text-center text-xl font-extrabold outline-none"
                 />
               ) : (
-                <h2 className="max-w-[80%] truncate text-2xl font-extrabold tracking-tight">{p.name}</h2>
+                <h2 className="max-w-[80%] truncate text-2xl font-extrabold tracking-tight">
+                  {p.name}
+                </h2>
               )}
               <p className="mt-1 text-sm">
                 <span className="opacity-60">
-                  {count} bài{songs ? ` · ${minutes(totalDuration(songs))}` : ""}
+                  {count} bài
+                  {songs ? ` · ${minutes(totalDuration(songs))}` : ""}
                 </span>
                 {playingId === p._id && (
-                  <span className="ml-2 rounded-full bg-matcha-1/20 px-2 py-0.5 text-xs font-semibold text-matcha-1">Đang phát</span>
+                  <span className="ml-2 rounded-full bg-matcha-1/20 px-2 py-0.5 text-xs font-semibold text-matcha-1">
+                    Đang phát
+                  </span>
                 )}
               </p>
               <div className="mt-3 flex items-center gap-3">
-                <Button onClick={play} disabled={!count} title={count ? undefined : "Playlist chưa có bài"}>
+                <Button
+                  onClick={play}
+                  disabled={!count}
+                  title={count ? undefined : "Playlist chưa có bài"}
+                >
                   <Play size={16} aria-hidden="true" /> Phát
                 </Button>
-                <Button variant="secondary" onClick={() => navigate(`/playlist/${p._id}`)} className="!text-[#eef3e6]">
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/playlist/${p._id}`)}
+                  className="!text-[#eef3e6]"
+                >
                   Mở
                 </Button>
                 <PlaylistMenu
@@ -325,12 +383,26 @@ export default function LibraryPage() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-extrabold tracking-tight">Tạo playlist mới</h2>
-              <p className="mt-1 text-sm opacity-60">Đặt tên rồi thêm bài từ link YouTube</p>
+              <h2 className="text-2xl font-extrabold tracking-tight">
+                Tạo playlist mới
+              </h2>
+              <form onSubmit={create} className="mt-3 flex items-center gap-3">
+                <input
+                  name="name"
+                  maxLength={60}
+                  placeholder="Tên playlist"
+                  aria-label="Tên playlist mới"
+                  autoComplete="off"
+                  className="h-10 w-64 max-w-full rounded-xl border border-white/25 bg-white/10 px-3 text-sm outline-none focus:border-matcha-1"
+                />
+                <Button type="submit" disabled={busy}>
+                  Tạo
+                </Button>
+              </form>
             </>
           )}
         </div>
       </section>
-    </div>
+    </>
   );
 }
