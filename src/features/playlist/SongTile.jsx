@@ -1,9 +1,9 @@
-import { MoreHorizontal, Play, X } from "lucide-react";
+import { Play } from "lucide-react";
 import { focusRing } from "../../design/Button";
+import PlaylistMenu from "../library/PlaylistMenu";
 import formatDuration from "../../utils/formatDuration";
 
 const show = "opacity-0 transition duration-200 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100";
-const corner = `absolute top-2 grid h-8 w-8 place-items-center rounded-full bg-black/45 text-white hover:bg-black/65 ${show} ${focusRing}`;
 
 export default function SongTile({ song, index, playing, onPlay, onRemove, onEdit }) {
   return (
@@ -29,12 +29,17 @@ export default function SongTile({ song, index, playing, onPlay, onRemove, onEdi
             Đang phát
           </span>
         )}
-        <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(song); }} aria-label="Sửa tên và bìa" title="Sửa tên và bìa" className={`${corner} left-2`}>
-          <MoreHorizontal size={16} aria-hidden="true" />
-        </button>
-        <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(song); }} aria-label="Gỡ khỏi playlist" title="Gỡ khỏi playlist" className={`${corner} right-2`}>
-          <X size={16} aria-hidden="true" />
-        </button>
+      </div>
+      <div onClick={(e) => e.stopPropagation()} className={`absolute left-3.5 top-3.5 ${show}`}>
+        <PlaylistMenu
+          editLabel="Sửa"
+          label={`Tuỳ chọn ${song.name}`}
+          size={32}
+          triggerClass="!bg-black/45 !text-white hover:!bg-black/65"
+          menuClass="left-0 top-full mt-1"
+          onRename={() => onEdit(song)}
+          onDelete={() => onRemove(song)}
+        />
       </div>
       <b className={`mt-2 line-clamp-2 text-sm font-bold leading-snug ${playing ? "text-matcha-1" : ""}`}>{song.name}</b>
       <span className="block truncate text-xs opacity-60">{song.artist}</span>

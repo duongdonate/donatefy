@@ -1,8 +1,8 @@
 // Chi tiết playlist dạng lưới (playlist-detail-grid.html)
-import { Plus } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { getCurrentPlaylist, getCurrentSong, getIsShuffle } from "../../app/selectors";
 import { playContext, toggleShuffle } from "../../app/slices/playerSlice";
 import { setCurrentPlaylist } from "../../app/slices/playlistSlice";
@@ -20,11 +20,12 @@ import SongTile from "./SongTile";
 import UndoBar from "./UndoBar";
 
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
-const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-matcha-4/50 bg-white/10 text-sm font-bold text-matcha-1 hover:bg-white/20 ${focusRing}`;
+const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-matcha-4 bg-transparent text-sm font-bold text-matcha-1 hover:bg-white/20 ${focusRing}`;
 
 export default function PlaylistPage() {
   const { id } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { showToast } = useToastContext();
   const currentSong = useSelector(getCurrentSong);
   const currentPlaylist = useSelector(getCurrentPlaylist);
@@ -124,14 +125,20 @@ export default function PlaylistPage() {
   };
 
   return (
-    <div className="h-full p-4 pl-24 pr-6 pt-24">
+    <>
+      {/* Phủ kín như Thư viện: absolute inset-0, đệm riêng tránh header/rail/Music Layer */}
       <section
         aria-label={playlist.name}
-        className="flex h-full flex-col overflow-hidden rounded-[28px] text-[#eef3e6] backdrop-blur-2xl [container-type:inline-size]"
+        className={`absolute inset-0 flex flex-col overflow-clip pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${currentSong ? "pb-28" : "pb-4"}`}
         style={{ background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
       >
+        <div className="shrink-0 px-8">
+          <Button variant="ghost" size="sm" aria-label="Về thư viện" onClick={() => navigate("/playlists")} className="!text-[#eef3e6] hover:!bg-white/10">
+            <ArrowLeft size={16} aria-hidden="true" /> Thư viện
+          </Button>
+        </div>
         <PlaylistHeader playlist={playlist} songs={songs} onPlay={() => playFrom(0)} onShuffle={onShuffle} onAdd={onAdd} />
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto px-8 pb-6">
+        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-8 pb-6">
           {songs.length === 0 ? (
             <div className="grid h-full place-items-center text-center">
               <div className="flex flex-col items-center gap-3">
@@ -180,6 +187,6 @@ export default function PlaylistPage() {
           onClose={() => setDialog(null)}
         />
       )}
-    </div>
+    </>
   );
 }

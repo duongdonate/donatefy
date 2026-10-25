@@ -1,5 +1,5 @@
 import { Play, Plus, Shuffle } from "lucide-react";
-import { Button, IconButton, Vinyl } from "../../design";
+import { Button } from "../../design";
 import { totalDuration } from "../library/libraryMath";
 
 const fmtTotal = (sec) =>
@@ -8,16 +8,9 @@ const fmtTotal = (sec) =>
 export default function PlaylistHeader({ playlist, songs, onPlay, onShuffle, onAdd }) {
   const n = songs.length;
   return (
-    <div className="flex shrink-0 items-center gap-6 px-8 pt-6">
-      <div className="relative h-36 w-52 shrink-0">
-        <Vinyl
-          size={128}
-          className="absolute left-[72px] top-2"
-          label={playlist.cover ? `url(${playlist.cover}) center/cover` : undefined}
-        />
-        <div className="absolute left-0 top-0 h-36 w-36 overflow-hidden rounded-xl bg-matcha-4 shadow-2xl">
-          {playlist.cover && <img src={playlist.cover} alt="" draggable={false} className="h-full w-full object-cover" />}
-        </div>
+    <div className="flex shrink-0 items-center gap-6 px-8 pt-2">
+      <div className="h-36 w-36 shrink-0 overflow-hidden rounded-xl bg-matcha-4 shadow-2xl">
+        {playlist.cover && <img src={playlist.cover} alt="" draggable={false} className="h-full w-full object-cover" />}
       </div>
       <div className="glass flex min-w-0 flex-1 flex-wrap items-center justify-between gap-4 rounded-3xl px-6 py-4">
         <div className="min-w-0">
@@ -32,9 +25,9 @@ export default function PlaylistHeader({ playlist, songs, onPlay, onShuffle, onA
           <Button variant="secondary" onClick={onShuffle} disabled={!n} className="!text-[#eef3e6]">
             <Shuffle size={16} aria-hidden="true" /> Trộn bài
           </Button>
-          <IconButton label="Thêm bài" onClick={onAdd} className="!text-[#eef3e6] hover:!bg-white/10">
-            <Plus size={20} />
-          </IconButton>
+          <Button variant="ghost" onClick={onAdd} className="border-2 border-dashed border-matcha-4 !text-matcha-1 hover:!bg-white/10">
+            <Plus size={16} aria-hidden="true" /> Thêm bài
+          </Button>
         </div>
       </div>
     </div>

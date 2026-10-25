@@ -3,7 +3,15 @@ import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { IconButton } from "../../design";
 
-export default function PlaylistMenu({ onRename, onDelete }) {
+export default function PlaylistMenu({
+  onRename,
+  onDelete,
+  editLabel = "Đổi tên",
+  label = "Tuỳ chọn playlist",
+  size,
+  triggerClass = "!text-[#eef3e6] hover:!bg-white/10",
+  menuClass = "bottom-full right-0 mb-2",
+}) {
   const [open, setOpen] = useState(false);
   const root = useRef(null);
 
@@ -41,20 +49,21 @@ export default function PlaylistMenu({ onRename, onDelete }) {
   return (
     <div ref={root} className="relative">
       <IconButton
-        label="Tuỳ chọn playlist"
+        label={label}
+        size={size}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        className="!text-[#eef3e6] hover:!bg-white/10"
+        className={triggerClass}
       >
         <MoreHorizontal size={20} />
       </IconButton>
       {open && (
         <div
           role="menu"
-          className="absolute bottom-full right-0 z-30 mb-2 w-40 rounded-xl border border-white/15 bg-[rgba(10,16,9,.95)] p-1 text-[#eef3e6] shadow-xl"
+          className={`absolute z-30 w-40 ${menuClass} rounded-xl border border-white/15 bg-[rgba(10,16,9,.95)] p-1 text-[#eef3e6] shadow-xl`}
         >
-          {item(Pencil, "Đổi tên", onRename)}
+          {item(Pencil, editLabel, onRename)}
           {item(Trash2, "Xoá", onDelete, true)}
         </div>
       )}
