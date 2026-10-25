@@ -1,5 +1,5 @@
 // Thư viện "Xoè bìa" (playlists-options.html phần A), không có đĩa trượt ra
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { ChevronLeft, ChevronRight, Loader2, Play, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,6 +30,19 @@ const CREATE = "__create";
 // Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
 const W = "min(24cqw, 68cqh, 340px)";
 const unwrap = (res) => (Array.isArray(res) ? res : (res?.data ?? []));
+const CREATE_MIN_MS = 1200; // hiệu ứng chờ tối thiểu để thả đĩa không bị giật
+const wait = (ms) => new Promise((r) => setTimeout(r, Math.max(0, ms)));
+const preload = (src) =>
+  new Promise((r) => {
+    if (!src) return r();
+    const img = new Image();
+    img.onload = img.onerror = r;
+    img.src = src;
+  });
+const LEAVES = [0, 1, 2, 3, 4, 5, 6, 7].map((k) => ({
+  x: Math.round(Math.cos(k * 0.8) * 90),
+  y: Math.round(Math.sin(k * 0.8) * 60 - 30),
+}));
 const minutes = (sec) => `${Math.max(1, Math.round(sec / 60))} phút`;
 const inField = (t) => t.closest?.("input, textarea, [contenteditable]");
 const arrow =
@@ -59,7 +72,10 @@ export default function LibraryPage() {
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
   const [newName, setNewName] = useState("");
-  const justMade = useRef(null); // id playlist vừa tạo: chỉ bìa này có hiệu ứng hiện ra
+  const justMade = useRef(null); // id playlist vừa tạo: chỉ bìa này có hiệu ứng thả đĩa
+  const [createErr, setCreateErr] = useState("");
+  const [shake, setShake] = useState(0);
+  const reduceMotion = useReducedMotion();
   const strip = useRef(null);
   const atRef = useRef(0);
   const itemsRef = useRef(items);
@@ -160,15 +176,28 @@ export default function LibraryPage() {
     const name = newName.trim();
     if (!name || busy) return; // nút Tạo đã khoá khi rỗng; maxLength chặn quá 60
     setBusy(true);
+    setCreateErr("");
+    const start = Date.now();
     try {
       const made = await playlistService.create({ name });
+      // Tải lại danh sách + ảnh bìa để thả đĩa là có hình ngay; quá 2s thì thôi (playlist đã lưu rồi)
+      const fresh = await Promise.race([
+        Promise.all([playlistService.getAll().then(unwrap), preload(made.thumbnail)]).then(([list]) => list),
+        wait(2000).then(() => null),
+      ]).catch(() => null);
+      await wait(CREATE_MIN_MS - (Date.now() - start));
       justMade.current = made._id;
-      dispatch(addPlaylist(made));
+      dispatch(
+        fresh?.some((x) => x._id === made._id)
+          ? setAllPlaylists(fresh)
+          : addPlaylist({ ...made, cover: made.cover ?? made.thumbnail }), // POST không trả `cover`
+      );
       setSelId(made._id);
       setNewName("");
       showToast(`Đã tạo playlist "${made.name}"`);
     } catch {
-      showToast("Tạo playlist thất bại, thử lại sau nha");
+      setCreateErr("Chưa tạo được, thử lại nha ~");
+      setShake((n) => n + 1);
     } finally {
       setBusy(false);
     }
@@ -291,9 +320,18 @@ export default function LibraryPage() {
               >
                 {it ? (
                   <motion.div
-                    initial={it._id === justMade.current ? { opacity: 0, scale: 0.6 } : false}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    initial={
+                      it._id === justMade.current && !reduceMotion
+                        ? { y: "-160%", rotate: -12, opacity: 0 }
+                        : false
+                    }
+                    animate={{ y: 0, rotate: 0, opacity: 1 }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 260,
+                      damping: 14,
+                      opacity: { duration: 0.15 },
+                    }}
                     className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
                     style={{
                       boxShadow: centre
@@ -315,13 +353,41 @@ export default function LibraryPage() {
                     {!centre && <span className="sr-only">{it.name}</span>}
                   </motion.div>
                 ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center">
+                  <motion.div
+                    key={shake}
+                    animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : false}
+                    transition={{ duration: 0.4 }}
+                    className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
+                  >
+                    {busy && !reduceMotion && (
+                      // Lớp lấp lánh quét ngang trong lúc chờ server
+                      <motion.span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                        initial={{ x: "-120%" }}
+                        animate={{ x: "220%" }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      />
+                    )}
                     <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
                       <Plus size={28} aria-hidden="true" />
                     </span>
                     <b className="text-base">Tạo playlist</b>
-                  </div>
+                  </motion.div>
                 )}
+                {it?._id === justMade.current &&
+                  !reduceMotion &&
+                  LEAVES.map((l, k) => (
+                    // Lá trà bung ra khi đĩa đáp xuống
+                    <motion.span
+                      key={k}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-3 rounded-[8px_0] bg-matcha-1"
+                      initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
+                      animate={{ x: l.x, y: l.y, rotate: 200, opacity: [0, 1, 0] }}
+                      transition={{ delay: 0.35, duration: 0.8, ease: "easeOut" }}
+                    />
+                  ))}
               </div>
             );
           })}
@@ -398,7 +464,10 @@ export default function LibraryPage() {
                     name="name"
                     maxLength={60}
                     value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
+                    onChange={(e) => {
+                      setNewName(e.target.value);
+                      setCreateErr("");
+                    }}
                     placeholder="Tên playlist"
                     aria-label="Tên playlist mới"
                     aria-describedby="new-playlist-count"
@@ -409,10 +478,11 @@ export default function LibraryPage() {
                     id="new-playlist-count"
                     className="mt-1 pr-2 flex justify-between gap-2 text-xs"
                   >
-                    <span className="text-red-400">
-                      {newName && !newName.trim()
-                        ? "Tên không được chỉ có khoảng trắng"
-                        : ""}
+                    <span className="text-red-400" aria-live="polite">
+                      {createErr ||
+                        (newName && !newName.trim()
+                          ? "Tên không được chỉ có khoảng trắng"
+                          : "")}
                     </span>
                     <span className="text-white/50">{newName.length}/60</span>
                   </p>
