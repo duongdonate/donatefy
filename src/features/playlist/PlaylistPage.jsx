@@ -49,7 +49,8 @@ export default function PlaylistPage() {
     pending.current = null;
     setUndo(null);
     playlistService.removeSong(p.playlistId, { videoId: p.song.id }).catch(() => {
-      if (idRef.current === p.playlistId) setSongs((cur) => insertAt(cur, p.song, p.index));
+      if (idRef.current === p.playlistId)
+        setSongs((cur) => (cur.some((s) => s.id === p.song.id) ? cur : insertAt(cur, p.song, p.index)));
       toastRef.current(`Chưa gỡ được "${p.song.name}", thử lại nha ~`);
     });
   }).current;
@@ -97,8 +98,14 @@ export default function PlaylistPage() {
     if (!shuffle) dispatch(toggleShuffle());
     playFrom(0);
   };
-  const onAdd = () => setDialog({ mode: "add" });
-  const onEdit = (song) => setDialog({ mode: "edit", song });
+  const onAdd = () => {
+    flush(); // dialog trả danh sách từ server: không để bài gỡ nào còn chờ
+    setDialog({ mode: "add" });
+  };
+  const onEdit = (song) => {
+    flush();
+    setDialog({ mode: "edit", song });
+  };
   const onRemove = (song) => {
     flush(); // bài gỡ trước đó còn chờ thì gửi luôn
     const index = songs.findIndex((s) => s.id === song.id);
@@ -160,7 +167,7 @@ export default function PlaylistPage() {
           )}
         </div>
       </section>
-      {undo && <UndoBar name={undo} onUndo={onUndo} />}
+      <UndoBar name={undo} onUndo={onUndo} />
       {dialog && (
         <SongDialog
           {...dialog}
