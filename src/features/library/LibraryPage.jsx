@@ -211,7 +211,7 @@ export default function LibraryPage() {
       <section
         onKeyDown={onKeyDown}
         aria-label="Thư viện playlist"
-        className={`absolute inset-0 flex flex-col overflow-hidden pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
+        className={`absolute inset-0 flex flex-col overflow-clip pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
         style={{
           background:
             "radial-gradient(60cqw 40cqw at 50% 45%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.82)",
@@ -239,7 +239,7 @@ export default function LibraryPage() {
 
         <div
           ref={strip}
-          className="relative min-h-0 flex-1 [container-type:size]"
+          className="relative min-h-0 flex-1 overflow-clip [container-type:size]"
           style={{ "--w": W }}
         >
           {playlists.length === 0 && (
