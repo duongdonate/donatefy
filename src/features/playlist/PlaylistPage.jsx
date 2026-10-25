@@ -1,6 +1,6 @@
 // Chi tiết playlist dạng lưới (playlist-detail-grid.html)
 import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
 import { getCurrentPlaylist, getCurrentSong, getIsShuffle } from "../../app/selectors";
@@ -13,9 +13,11 @@ import Matcappa from "../../mascot/Matcappa";
 import NotFound from "../../pages/NotFound";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";
+import { insertAt } from "./insertAt";
 import PlaylistHeader from "./PlaylistHeader";
 import SongDialog from "./SongDialog";
 import SongTile from "./SongTile";
+import UndoBar from "./UndoBar";
 
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-matcha-4/50 bg-white/10 text-sm font-bold text-matcha-1 hover:bg-white/20 ${focusRing}`;
@@ -32,6 +34,34 @@ export default function PlaylistPage() {
   const [state, setState] = useState("loading"); // loading | ok | missing (server trả lỗi) | error (mạng)
   const [attempt, setAttempt] = useState(0);
   const [dialog, setDialog] = useState(null); // null | { mode: "add" } | { mode: "edit", song }
+
+  const [undo, setUndo] = useState(null); // tên bài đang chờ hoàn tác
+  const pending = useRef(null); // { song, index, playlistId, timer }
+  const idRef = useRef(null);
+  const toastRef = useRef(showToast);
+  toastRef.current = showToast;
+
+  // Gửi lệnh xoá của bài đang chờ (nếu có); lỗi thì hiện lại thẻ
+  const flush = useRef(() => {
+    const p = pending.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    pending.current = null;
+    setUndo(null);
+    playlistService.removeSong(p.playlistId, { videoId: p.song.id }).catch(() => {
+      if (idRef.current === p.playlistId) setSongs((cur) => insertAt(cur, p.song, p.index));
+      toastRef.current(`Chưa gỡ được "${p.song.name}", thử lại nha ~`);
+    });
+  }).current;
+
+  // Đổi playlist hoặc rời trang: gửi ngay yêu cầu còn chờ (của playlist cũ)
+  useEffect(() => {
+    idRef.current = id;
+    return () => {
+      flush();
+      idRef.current = null;
+    };
+  }, [id, flush]);
 
   useEffect(() => {
     let alive = true;
@@ -69,8 +99,22 @@ export default function PlaylistPage() {
   };
   const onAdd = () => setDialog({ mode: "add" });
   const onEdit = (song) => setDialog({ mode: "edit", song });
-  // Task 8 (gỡ + hoàn tác) thay hàm này
-  const onRemove = () => showToast("Sắp có nha ~");
+  const onRemove = (song) => {
+    flush(); // bài gỡ trước đó còn chờ thì gửi luôn
+    const index = songs.findIndex((s) => s.id === song.id);
+    if (index < 0) return;
+    setSongs(songs.filter((s) => s.id !== song.id));
+    setUndo(song.name);
+    pending.current = { song, index, playlistId: id, timer: setTimeout(flush, 5000) };
+  };
+  const onUndo = () => {
+    const p = pending.current;
+    if (!p) return;
+    clearTimeout(p.timer);
+    pending.current = null;
+    setUndo(null);
+    setSongs((cur) => insertAt(cur, p.song, p.index));
+  };
 
   return (
     <div className="h-full p-4 pl-24 pr-6 pt-24">
@@ -116,6 +160,7 @@ export default function PlaylistPage() {
           )}
         </div>
       </section>
+      {undo && <UndoBar name={undo} onUndo={onUndo} />}
       {dialog && (
         <SongDialog
           {...dialog}
