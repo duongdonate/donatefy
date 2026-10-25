@@ -18,8 +18,11 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
   const isAdd = mode === "add";
   const root = useRef(null);
   const first = useRef(null);
+  const sendingRef = useRef(false);
   const closeRef = useRef(onClose);
-  closeRef.current = onClose; // onClose đổi mỗi lần render: giữ ở ref để effect mở/đóng chỉ chạy một lần
+  const existingRef = useRef(existingIds);
+  existingRef.current = existingIds;
+  closeRef.current = () => !sendingRef.current && onClose(); // không đóng khi đang gửi // onClose đổi mỗi lần render: giữ ở ref để effect mở/đóng chỉ chạy một lần
   const [url, setUrl] = useState("");
   const [videoId, setVideoId] = useState(isAdd ? null : song.id);
   const [oembed, setOembed] = useState(null);
@@ -27,7 +30,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
   const [checking, setChecking] = useState(false);
   const [name, setName] = useState(song?.name ?? "");
   const [artist, setArtist] = useState(song?.artist ?? "");
-  const [thumb, setThumb] = useState(song?.thumbnail ?? null);
+  const [thumb, setThumb] = useState(song && frameUrls(song.id).includes(song.thumbnail) ? song.thumbnail : null);
   const [bad, setBad] = useState(() => new Set());
   const [sending, setSending] = useState(false);
   const [serverErr, setServerErr] = useState("");
@@ -49,22 +52,20 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
     setChecking(false);
     if (!debounced.trim()) return;
     if (!id) return setProblem("Link này không phải YouTube rồi ~");
-    if (existingIds.includes(id)) return setProblem("Bài này có trong chồng đĩa rồi ~");
+    if (existingRef.current.includes(id)) return setProblem("Bài này có trong chồng đĩa rồi ~");
     setChecking(true);
-    fetchOembed(id).then((o) => {
+    fetchOembed(id).catch(() => null).then((o) => {
       if (!alive) return;
       setChecking(false);
       if (!o) return setProblem("Không đọc được video này, thử link khác nha ~");
       setVideoId(id);
       setOembed(o);
-      setName(o.name);
-      setArtist(o.artist);
+      setName(o.name ?? "");
+      setArtist(o.artist ?? "");
     });
     return () => {
       alive = false;
     };
-    // existingIds đổi tham chiếu mỗi lần PlaylistPage render; chỉ cần đọc lại khi link đổi
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounced, isAdd]);
 
   // Mở: focus ô đầu; đóng: trả focus về chỗ đã mở. Esc ở mức window.
@@ -89,37 +90,41 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
 
   const urls = videoId ? frameUrls(videoId) : [];
   const cover = thumb ?? urls.find((u) => !bad.has(u)) ?? null; // mặc định: khung đầu tải được
-  const ready = !!videoId && !pending && !checking && !problem && !!name.trim() && !!cover;
+  const nameT = (name ?? "").trim();
+  const artistT = (artist ?? "").trim();
+  const ready = !!videoId && !pending && !checking && !problem && !!nameT && !!cover;
 
   const submit = async (e) => {
     e.preventDefault();
     if (!ready || sending) return;
     setSending(true);
+    sendingRef.current = true;
     setServerErr("");
     try {
       if (isAdd) {
         await playlistService.addSong(playlistId, {
           videoId,
-          name: name !== oembed.name ? name.trim() : undefined,
-          artist: artist !== oembed.artist ? artist : undefined,
+          name: nameT !== oembed.name ? nameT : undefined,
+          artist: artistT !== oembed.artist ? artistT : undefined,
           thumbnail: cover,
         });
       } else {
-        await playlistService.editSong(playlistId, { id: videoId, name: name.trim(), artist, thumbnail: cover });
+        await playlistService.editSong(playlistId, { id: videoId, name: nameT, artist: artistT, thumbnail: cover });
       }
       const songs = unwrap(await songService.getSongs(playlistId));
-      showToast(isAdd ? `Đã thả "${name.trim()}" vào chồng đĩa` : "Đã lưu bài ~");
+      showToast(isAdd ? `Đã thả "${nameT}" vào chồng đĩa` : "Đã lưu bài ~");
       onDone(songs);
     } catch (err) {
       setServerErr(err?.isAxiosError ? OFFLINE : err?.error ?? "Chưa lưu được, thử lại nha ~");
       setSending(false);
+      sendingRef.current = false;
     }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-[rgba(5,8,4,.5)] p-4"
-      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+      onMouseDown={(e) => e.target === e.currentTarget && closeRef.current()}
     >
       <Glass
         as="form"
@@ -135,7 +140,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
       >
         <div className="flex items-center gap-3">
           <h3 id="song-dlg-title" className="text-xl font-extrabold">{isAdd ? "Thêm bài" : "Sửa bài"}</h3>
-          <IconButton label="Đóng" onClick={onClose} className="ml-auto !text-[#eef3e6] hover:!bg-white/10">
+          <IconButton label="Đóng" onClick={() => closeRef.current()} className="ml-auto !text-[#eef3e6] hover:!bg-white/10">
             <X size={20} />
           </IconButton>
         </div>
@@ -208,7 +213,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
 
         <div className="mt-4 flex items-center justify-end gap-3">
           {serverErr && <p role="alert" className="mr-auto text-sm text-red-300">{serverErr}</p>}
-          <Button variant="ghost" onClick={onClose} className="!text-[#eef3e6] hover:!bg-white/10">Huỷ</Button>
+          <Button variant="ghost" onClick={() => closeRef.current()} className="!text-[#eef3e6] hover:!bg-white/10">Huỷ</Button>
           <Button type="submit" disabled={!ready || sending}>{isAdd ? "Thêm vào playlist" : "Lưu"}</Button>
         </div>
       </Glass>

@@ -22,7 +22,7 @@ export async function fetchOembed(id) {
     const res = await fetch(`https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`);
     if (!res.ok) return null;
     const { title, author_name } = await res.json();
-    return { name: title, artist: author_name };
+    return { name: String(title ?? "").trim(), artist: String(author_name ?? "").trim() };
   } catch {
     return null;
   }
