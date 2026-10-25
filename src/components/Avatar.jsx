@@ -49,6 +49,7 @@ const Avatar = ({ onClick }) => {
       <img
         src={avatar || defaultAvatar}
         alt="Avatar"
+        referrerPolicy="no-referrer"
         className="w-full h-full object-cover rounded-full border-2 border-border"
       />
       <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 flex items-center justify-center rounded-full cursor-pointer transition">

@@ -12,6 +12,7 @@ const loadGsi = () => {
     s.addEventListener("load", resolve);
     s.addEventListener("error", () => {
       loading = null;
+      s.remove(); // thẻ hỏng không được dùng lại
       reject(new Error("gsi"));
     });
     if (!s.isConnected) document.head.appendChild(s);

@@ -29,9 +29,22 @@ export const AuthProvider = ({ children }) => {
     const wakeTimer = setTimeout(() => setWaking(true), 3000);
     (async () => {
       try {
-        await retryStartup(refreshAccessToken, { isFatal: (e) => e?.response?.status === 401 });
-        const { user } = await axiosClient.get("/api/auth/me");
-        if (!cancelled) setUser(user);
+        // Chỉ 401 mới là chưa đăng nhập; mạng/5xx thì cứ chờ Render, không đá về /login
+        const isFatal = (e) => e?.response?.status === 401;
+        const boot = async () => {
+          await refreshAccessToken();
+          return (await axiosClient.get("/api/auth/me")).user;
+        };
+        let me;
+        while (me === undefined) {
+          try {
+            me = await retryStartup(boot, { isFatal });
+          } catch (e) {
+            if (isFatal(e) || cancelled) throw e;
+            setWaking(true);
+          }
+        }
+        if (!cancelled) setUser(me);
       } catch {
         if (!cancelled) setUser(null);
       } finally {
