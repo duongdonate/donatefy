@@ -7,6 +7,7 @@ import { getCurrentPlaylist, getCurrentSong, getIsShuffle } from "../../app/sele
 import { playContext, toggleShuffle } from "../../app/slices/playerSlice";
 import { setCurrentPlaylist } from "../../app/slices/playlistSlice";
 import { useToastContext } from "../../contexts/ToastContext";
+import { Button } from "../../design";
 import { focusRing } from "../../design/Button";
 import Matcappa from "../../mascot/Matcappa";
 import NotFound from "../../pages/NotFound";
@@ -27,7 +28,8 @@ export default function PlaylistPage() {
   const shuffle = useSelector(getIsShuffle);
   const [playlist, setPlaylist] = useState(null);
   const [songs, setSongs] = useState([]); // Task 7/8 cập nhật qua setSongs
-  const [state, setState] = useState("loading"); // loading | ok | missing | error
+  const [state, setState] = useState("loading"); // loading | ok | missing (server trả lỗi) | error (mạng)
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     let alive = true;
@@ -39,14 +41,20 @@ export default function PlaylistPage() {
         setSongs(unwrap(res));
         setState("ok");
       })
-      .catch((err) => alive && setState(err?.response?.status === 404 ? "missing" : "error"));
+      .catch((err) => alive && setState(err?.isAxiosError ? "error" : "missing"));
     return () => {
       alive = false;
     };
-  }, [id]);
+  }, [id, attempt]);
 
   if (state === "missing") return <NotFound />;
-  if (state === "error") return <p className="p-8 pt-28">Không tải được playlist, thử lại sau nha ~</p>;
+  if (state === "error")
+    return (
+      <div className="flex flex-col items-start gap-3 p-8 pt-28">
+        <p>Không tải được playlist, thử lại sau nha ~</p>
+        <Button onClick={() => setAttempt((n) => n + 1)}>Thử lại</Button>
+      </div>
+    );
   if (state === "loading") return <p className="p-8 pt-28 opacity-60">Đang tải…</p>;
 
   const playFrom = (startIndex) => {

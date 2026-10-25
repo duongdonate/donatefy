@@ -7,12 +7,11 @@ const corner = `absolute top-2 grid h-8 w-8 place-items-center rounded-full bg-b
 
 export default function SongTile({ song, index, playing, onPlay, onRemove, onEdit }) {
   return (
-    <div className="group relative rounded-2xl p-1.5 transition duration-200 hover:bg-white/10">
+    <div onClick={() => onPlay(index)} className="group relative cursor-pointer rounded-2xl p-1.5 transition duration-200 hover:bg-white/10">
       <div className={`relative aspect-video overflow-hidden rounded-xl bg-white/10 shadow-lg ${playing ? "ring-2 ring-matcha-4" : ""}`}>
         {song.thumbnail && <img src={song.thumbnail} alt="" loading="lazy" draggable={false} className="h-full w-full object-cover" />}
         <button
           type="button"
-          onClick={() => onPlay(index)}
           aria-label={`Phát ${song.name}`}
           className={`absolute inset-0 grid place-items-center rounded-xl ${focusRing}`}
         >
@@ -30,10 +29,10 @@ export default function SongTile({ song, index, playing, onPlay, onRemove, onEdi
             Đang phát
           </span>
         )}
-        <button type="button" onClick={() => onEdit(song)} aria-label="Sửa tên và bìa" title="Sửa tên và bìa" className={`${corner} left-2`}>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onEdit(song); }} aria-label="Sửa tên và bìa" title="Sửa tên và bìa" className={`${corner} left-2`}>
           <MoreHorizontal size={16} aria-hidden="true" />
         </button>
-        <button type="button" onClick={() => onRemove(song)} aria-label="Gỡ khỏi playlist" title="Gỡ khỏi playlist" className={`${corner} right-2`}>
+        <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(song); }} aria-label="Gỡ khỏi playlist" title="Gỡ khỏi playlist" className={`${corner} right-2`}>
           <X size={16} aria-hidden="true" />
         </button>
       </div>
