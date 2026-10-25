@@ -17,7 +17,8 @@ import { fanTransform, libraryOrder, totalDuration } from "./libraryMath";
 import PlaylistMenu from "./PlaylistMenu";
 
 const CREATE = "__create";
-const W = "clamp(170px, min(24cqw, 34vh), 340px)";
+// Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
+const W = "min(24cqw, 68cqh, 340px)";
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 const minutes = (sec) => `${Math.max(1, Math.round(sec / 60))} phút`;
 const inField = (t) => t.closest?.("input, textarea, [contenteditable]");
@@ -199,7 +200,7 @@ export default function LibraryPage() {
           <span className="text-sm opacity-60">{playlists.length} playlist</span>
         </header>
 
-        <div ref={strip} className="relative min-h-0 flex-1" style={{ "--w": W }}>
+        <div ref={strip} className="relative min-h-0 flex-1 [container-type:size]" style={{ "--w": W }}>
           {playlists.length === 0 && (
             <div className="absolute left-8 top-2 z-10 flex items-center gap-2 text-sm opacity-80">
               <Matcappa pose="hug-knees" size={72} />
