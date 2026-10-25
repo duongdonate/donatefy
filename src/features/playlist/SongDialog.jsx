@@ -1,0 +1,217 @@
+// Hộp thêm bài / sửa bài (playlist-detail-grid.html, phần "Thêm bài")
+import { X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useToastContext } from "../../contexts/ToastContext";
+import { Button, Glass, IconButton, Vinyl } from "../../design";
+import useDebounce from "../../hooks/useDebounce";
+import playlistService from "../../services/api/playlistService";
+import songService from "../../services/api/songService";
+import { fetchOembed, frameUrls, parseYouTubeId } from "../../utils/youtube";
+
+const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
+const OFFLINE = "Quán đang mất sóng một chút, bạn thử lại sau nhé.";
+const inputCls = "h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3 text-sm outline-none placeholder:text-[#eef3e6]/40 focus:border-matcha-1 focus:ring-2 focus:ring-matcha-1/20";
+const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
+
+export default function SongDialog({ mode, playlistId, existingIds = [], song, onDone, onClose }) {
+  const { showToast } = useToastContext();
+  const isAdd = mode === "add";
+  const root = useRef(null);
+  const first = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose; // onClose đổi mỗi lần render: giữ ở ref để effect mở/đóng chỉ chạy một lần
+  const [url, setUrl] = useState("");
+  const [videoId, setVideoId] = useState(isAdd ? null : song.id);
+  const [oembed, setOembed] = useState(null);
+  const [problem, setProblem] = useState("");
+  const [checking, setChecking] = useState(false);
+  const [name, setName] = useState(song?.name ?? "");
+  const [artist, setArtist] = useState(song?.artist ?? "");
+  const [thumb, setThumb] = useState(song?.thumbnail ?? null);
+  const [bad, setBad] = useState(() => new Set());
+  const [sending, setSending] = useState(false);
+  const [serverErr, setServerErr] = useState("");
+  const debounced = useDebounce(url, 300);
+  const pending = isAdd && url !== debounced; // chưa đọc xong ô link
+
+  // Đọc link (chỉ chế độ thêm): kiểm tra ở máy, chỉ hỏi oEmbed khi link hợp lệ và chưa có trong playlist
+  useEffect(() => {
+    if (!isAdd) return;
+    let alive = true;
+    const id = parseYouTubeId(debounced);
+    setVideoId(null);
+    setOembed(null);
+    setThumb(null);
+    setBad(new Set());
+    setName("");
+    setArtist("");
+    setProblem("");
+    setChecking(false);
+    if (!debounced.trim()) return;
+    if (!id) return setProblem("Link này không phải YouTube rồi ~");
+    if (existingIds.includes(id)) return setProblem("Bài này có trong chồng đĩa rồi ~");
+    setChecking(true);
+    fetchOembed(id).then((o) => {
+      if (!alive) return;
+      setChecking(false);
+      if (!o) return setProblem("Không đọc được video này, thử link khác nha ~");
+      setVideoId(id);
+      setOembed(o);
+      setName(o.name);
+      setArtist(o.artist);
+    });
+    return () => {
+      alive = false;
+    };
+    // existingIds đổi tham chiếu mỗi lần PlaylistPage render; chỉ cần đọc lại khi link đổi
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debounced, isAdd]);
+
+  // Mở: focus ô đầu; đóng: trả focus về chỗ đã mở. Esc ở mức window.
+  useEffect(() => {
+    const opener = document.activeElement;
+    first.current?.focus();
+    const onEsc = (e) => e.key === "Escape" && closeRef.current();
+    window.addEventListener("keydown", onEsc);
+    return () => {
+      window.removeEventListener("keydown", onEsc);
+      opener?.focus?.();
+    };
+  }, []);
+
+  const onKeyDown = (e) => {
+    if (e.key !== "Tab") return;
+    const els = [...root.current.querySelectorAll(FOCUSABLE)].filter((el) => el.tabIndex >= 0);
+    const a = els[0], z = els.at(-1);
+    if (e.shiftKey && document.activeElement === a) (e.preventDefault(), z.focus());
+    else if (!e.shiftKey && document.activeElement === z) (e.preventDefault(), a.focus());
+  };
+
+  const urls = videoId ? frameUrls(videoId) : [];
+  const cover = thumb ?? urls.find((u) => !bad.has(u)) ?? null; // mặc định: khung đầu tải được
+  const ready = !!videoId && !pending && !checking && !problem && !!name.trim() && !!cover;
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!ready || sending) return;
+    setSending(true);
+    setServerErr("");
+    try {
+      if (isAdd) {
+        await playlistService.addSong(playlistId, {
+          videoId,
+          name: name !== oembed.name ? name.trim() : undefined,
+          artist: artist !== oembed.artist ? artist : undefined,
+          thumbnail: cover,
+        });
+      } else {
+        await playlistService.editSong(playlistId, { id: videoId, name: name.trim(), artist, thumbnail: cover });
+      }
+      const songs = unwrap(await songService.getSongs(playlistId));
+      showToast(isAdd ? `Đã thả "${name.trim()}" vào chồng đĩa` : "Đã lưu bài ~");
+      onDone(songs);
+    } catch (err) {
+      setServerErr(err?.isAxiosError ? OFFLINE : err?.error ?? "Chưa lưu được, thử lại nha ~");
+      setSending(false);
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(5,8,4,.5)] p-4"
+      onMouseDown={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <Glass
+        as="form"
+        ref={root}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="song-dlg-title"
+        noValidate
+        onSubmit={submit}
+        onKeyDown={onKeyDown}
+        blur={30}
+        className="max-h-full w-full max-w-3xl overflow-y-auto rounded-[28px] !border-white/15 !bg-[rgba(40,48,36,.72)] p-6 text-[#eef3e6]"
+      >
+        <div className="flex items-center gap-3">
+          <h3 id="song-dlg-title" className="text-xl font-extrabold">{isAdd ? "Thêm bài" : "Sửa bài"}</h3>
+          <IconButton label="Đóng" onClick={onClose} className="ml-auto !text-[#eef3e6] hover:!bg-white/10">
+            <X size={20} />
+          </IconButton>
+        </div>
+
+        <div className="mt-5 grid gap-6 md:grid-cols-[1fr_200px]">
+          <div className="space-y-4">
+            {isAdd && (
+              <div>
+                <label htmlFor="song-url" className="mb-1 block text-xs font-semibold opacity-70">Link YouTube</label>
+                <input
+                  id="song-url"
+                  ref={first}
+                  value={url}
+                  onChange={(e) => setUrl(e.target.value)}
+                  placeholder="Dán link, vd. youtube.com/watch?v=wBXrNikQAI8"
+                  autoComplete="off"
+                  aria-invalid={!!problem}
+                  aria-describedby="song-url-status"
+                  className={`${inputCls} ${problem ? "!border-red-400" : ""}`}
+                />
+                <p id="song-url-status" role="status" aria-live="polite" className={`mt-1 min-h-5 text-xs ${problem ? "text-red-300" : "opacity-70"}`}>
+                  {problem || (checking ? "Đang đọc video…" : "")}
+                </p>
+              </div>
+            )}
+            <fieldset disabled={!videoId} className={`grid grid-cols-2 gap-3 ${videoId ? "" : "opacity-35"}`}>
+              <div>
+                <label htmlFor="song-name" className="mb-1 block text-xs font-semibold opacity-70">Tên bài</label>
+                <input id="song-name" ref={isAdd ? undefined : first} value={name} onChange={(e) => setName(e.target.value)} placeholder="Tự điền sau khi dán link" className={inputCls} />
+              </div>
+              <div>
+                <label htmlFor="song-artist" className="mb-1 block text-xs font-semibold opacity-70">Ca sĩ / kênh</label>
+                <input id="song-artist" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Tự điền sau khi dán link" className={inputCls} />
+              </div>
+            </fieldset>
+            <div className={videoId ? "" : "pointer-events-none opacity-35"}>
+              <div id="song-frames-label" className="mb-1 text-xs font-semibold opacity-70">Ảnh bìa · chọn một khung hình trong video</div>
+              <div role="radiogroup" aria-labelledby="song-frames-label" className="grid grid-cols-4 gap-2">
+                {urls.map((u, i) => (
+                  <button
+                    key={u}
+                    type="button"
+                    role="radio"
+                    aria-checked={cover === u}
+                    aria-label={`Khung hình ${i + 1}`}
+                    onClick={() => setThumb(u)}
+                    hidden={bad.has(u)}
+                    className="relative aspect-video overflow-hidden rounded-lg bg-white/10 bg-cover bg-center outline-none focus-visible:ring-2 focus-visible:ring-matcha-1 aria-checked:ring-2 aria-checked:ring-matcha-1"
+                    style={{ backgroundImage: `url(${u})` }}
+                  >
+                    {/* ảnh ẩn chỉ để biết khung nào tải lỗi */}
+                    <img src={u} alt="" className="hidden" onError={() => setBad((b) => new Set(b).add(u))} />
+                    {cover === u && <span aria-hidden="true" className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-matcha-4 text-xs font-extrabold text-white">✓</span>}
+                  </button>
+                ))}
+                {!videoId && Array.from({ length: 4 }, (_, i) => <div key={i} aria-hidden="true" className="aspect-video rounded-lg bg-white/10" />)}
+              </div>
+            </div>
+          </div>
+
+          <div aria-hidden="true" className="text-center">
+            <div className="relative mx-auto h-36 w-44">
+              <Vinyl size={120} spinning={false} label={cover ? `url(${cover}) center/cover` : undefined} className="!absolute left-20 top-2" />
+              <div className="absolute left-0 top-8 aspect-video w-32 rounded-lg bg-white/15 bg-cover bg-center shadow-[0_16px_24px_-10px_rgba(0,0,0,.7)]" style={{ backgroundImage: cover ? `url(${cover})` : undefined }} />
+            </div>
+            <div className="mt-2 truncate text-sm font-bold">{name || "Chưa có bài"}</div>
+            <small className="mt-2 block text-xs leading-snug opacity-55">Ảnh bìa sẽ hiện trên dải bìa ở dock và trên nhãn đĩa than.</small>
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-end gap-3">
+          {serverErr && <p role="alert" className="mr-auto text-sm text-red-300">{serverErr}</p>}
+          <Button variant="ghost" onClick={onClose} className="!text-[#eef3e6] hover:!bg-white/10">Huỷ</Button>
+          <Button type="submit" disabled={!ready || sending}>{isAdd ? "Thêm vào playlist" : "Lưu"}</Button>
+        </div>
+      </Glass>
+    </div>
+  );
+}

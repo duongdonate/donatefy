@@ -14,6 +14,7 @@ import NotFound from "../../pages/NotFound";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";
 import PlaylistHeader from "./PlaylistHeader";
+import SongDialog from "./SongDialog";
 import SongTile from "./SongTile";
 
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
@@ -30,6 +31,7 @@ export default function PlaylistPage() {
   const [songs, setSongs] = useState([]); // Task 7/8 cập nhật qua setSongs
   const [state, setState] = useState("loading"); // loading | ok | missing (server trả lỗi) | error (mạng)
   const [attempt, setAttempt] = useState(0);
+  const [dialog, setDialog] = useState(null); // null | { mode: "add" } | { mode: "edit", song }
 
   useEffect(() => {
     let alive = true;
@@ -65,9 +67,9 @@ export default function PlaylistPage() {
     if (!shuffle) dispatch(toggleShuffle());
     playFrom(0);
   };
-  // Task 7 (SongDialog) và Task 8 (gỡ + hoàn tác) thay ba hàm này
-  const onAdd = () => showToast("Sắp có nha ~");
-  const onEdit = () => showToast("Sắp có nha ~");
+  const onAdd = () => setDialog({ mode: "add" });
+  const onEdit = (song) => setDialog({ mode: "edit", song });
+  // Task 8 (gỡ + hoàn tác) thay hàm này
   const onRemove = () => showToast("Sắp có nha ~");
 
   return (
@@ -114,6 +116,18 @@ export default function PlaylistPage() {
           )}
         </div>
       </section>
+      {dialog && (
+        <SongDialog
+          {...dialog}
+          playlistId={playlist._id}
+          existingIds={songs.map((s) => s.id)}
+          onDone={(next) => {
+            setSongs(next);
+            setDialog(null);
+          }}
+          onClose={() => setDialog(null)}
+        />
+      )}
     </div>
   );
 }
