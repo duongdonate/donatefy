@@ -16,6 +16,7 @@ import { accumulateWheel, clampStep } from "../landing/stepper";
 import { fanTransform, libraryOrder, totalDuration } from "./libraryMath";
 import PlaylistMenu from "./PlaylistMenu";
 
+const CREATE = "__create";
 const W = "clamp(170px, min(24cqw, 34vh), 340px)";
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 const minutes = (sec) => `${Math.max(1, Math.round(sec / 60))} phút`;
@@ -33,8 +34,10 @@ export default function LibraryPage() {
   const playingId = song ? currentPlaylist?._id : null;
 
   const items = useMemo(() => [...libraryOrder(playlists, playingId), null], [playlists, playingId]); // null = thẻ Tạo
-  const [cur, setCur] = useState(0);
-  const at = Math.min(cur, items.length - 1);
+  const keyOf = (it) => it?._id ?? CREATE;
+  const [selId, setSelId] = useState(null); // id bìa giữa; CREATE = thẻ Tạo; null = bìa đầu
+  const found = selId ? items.findIndex((it) => keyOf(it) === selId) : 0;
+  const at = Math.max(found, 0);
   const p = items[at];
   const [songsById, setSongsById] = useState({});
   const [renaming, setRenaming] = useState(false);
@@ -42,10 +45,11 @@ export default function LibraryPage() {
   const [busy, setBusy] = useState(false);
   const strip = useRef(null);
   const atRef = useRef(0);
-  const lenRef = useRef(1);
+  const itemsRef = useRef(items);
+  const requested = useRef(new Set());
   const locked = useRef(false);
   atRef.current = at;
-  lenRef.current = items.length;
+  itemsRef.current = items;
 
   // Tải danh sách khi vào trang (Sidebar v1 không còn trong shell v2)
   useEffect(() => {
@@ -60,12 +64,12 @@ export default function LibraryPage() {
   }, [dispatch, showToast]);
 
   const go = useCallback((n) => {
-    const to = clampStep(n, lenRef.current);
+    const to = clampStep(n, itemsRef.current.length);
     if (locked.current || to === atRef.current) return;
     locked.current = true;
     setTimeout(() => (locked.current = false), 450);
     setRenaming(false);
-    setCur(to);
+    setSelId(keyOf(itemsRef.current[to]));
   }, []);
 
   // Lăn chuột: cộng dồn, một cú một bìa (cùng mẫu với landing)
@@ -92,7 +96,7 @@ export default function LibraryPage() {
   }, [go]);
 
   const onKeyDown = (e) => {
-    if (inField(e.target) || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+    if (inField(e.target) || e.target.closest?.("[role=menu]") || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
     e.preventDefault();
     go(atRef.current + (e.key === "ArrowRight" ? 1 : -1));
   };
@@ -109,7 +113,10 @@ export default function LibraryPage() {
 
   // Số phút của bìa giữa
   useEffect(() => {
-    if (p?._id && p.videos?.length && !songsById[p._id]) loadSongs(p._id).catch(() => {});
+    const id = p?._id;
+    if (!id || !p.videos?.length || songsById[id] || requested.current.has(id)) return;
+    requested.current.add(id);
+    loadSongs(id).catch(() => requested.current.delete(id));
   }, [p, songsById, loadSongs]);
 
   const play = async () => {
@@ -132,7 +139,7 @@ export default function LibraryPage() {
     try {
       const made = await playlistService.create({ name });
       dispatch(addPlaylist(made));
-      setCur(libraryOrder([...playlists, made], playingId).findIndex((x) => x._id === made._id));
+      setSelId(made._id);
       showToast(`Đã tạo playlist "${made.name}"`);
     } catch {
       showToast("Tạo playlist thất bại, thử lại sau nha");
@@ -147,7 +154,9 @@ export default function LibraryPage() {
     if (name === p.name) return setRenaming(false);
     try {
       const updated = await playlistService.rename(p._id, name);
-      dispatch(setAllPlaylists(playlists.map((x) => (x._id === p._id ? { ...x, name: updated?.name ?? name } : x))));
+      const next = { ...p, name: updated?.name ?? name };
+      dispatch(setAllPlaylists(playlists.map((x) => (x._id === p._id ? next : x))));
+      if (currentPlaylist?._id === p._id) dispatch(setCurrentPlaylist({ ...currentPlaylist, name: next.name }));
       setRenaming(false);
     } catch {
       showToast("Đổi tên thất bại, thử lại sau nha");
@@ -158,6 +167,7 @@ export default function LibraryPage() {
     if (!(await confirm(`Xoá playlist "${p.name}"?`))) return;
     try {
       await playlistService.delete(p._id);
+      setSelId(keyOf(items[at + 1] ?? items[at - 1]));
       dispatch(removePlaylist(p._id));
       showToast("Đã xoá playlist");
     } catch {
