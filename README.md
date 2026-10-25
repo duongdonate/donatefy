@@ -59,3 +59,11 @@
 - Cơ chế giao tiếp: RESTful API
 
 > Link github Backend: https://github.com/duongdonate/donatefy-backend.
+
+## Phát hành (Vercel + Render Free)
+
+- `vercel.json` chuyển tiếp `/api`, `/upload`, `/uploads` sang `https://donatefy-backend.onrender.com` nên cookie phiên là cùng site.
+- Vercel: `VITE_API_URL` để **rỗng**, `VITE_GOOGLE_CLIENT_ID` (Client ID Google).
+- Render: `GOOGLE_CLIENT_ID`, `BASE_URL`, `FRONTEND_URL`.
+- Google Cloud Console → Authorized JavaScript origins: thêm domain Vercel chính thức; link xem thử (preview) mỗi lần deploy có domain riêng nên cũng phải thêm nếu muốn thử Google ở đó.
+- Render Free ngủ sau một lúc không có người dùng: app chờ tối đa 60 giây (hiện "Quán đang mở cửa, chờ xíu nha…"), chỉ 401 mới về `/login`.

@@ -9,6 +9,7 @@ import FlyingMascot, { useMascotSize } from "../../mascot/FlyingMascot";
 import { cornerXY, pickWanderSpot } from "../../mascot/flight";
 import { AUTH_LINES } from "../../mascot/lines";
 import AvatarPicker from "./AvatarPicker";
+import GoogleButton from "./GoogleButton";
 import { mapAuthError, validateAuth, validateAvatar } from "./authForm";
 
 const WANDER_MS = 5000;
@@ -69,7 +70,7 @@ function useWander(cardRef) {
 }
 
 export default function AuthPage({ mode }) {
-  const { login, register } = useAuth();
+  const { login, register, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const t = TEXT[mode];
@@ -83,6 +84,7 @@ export default function AuthPage({ mode }) {
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [hasGoogle, setHasGoogle] = useState(true);
   const sending = useRef(false);
 
   // Đổi chế độ: xoá lỗi, giữ tên đăng nhập
@@ -123,6 +125,27 @@ export default function AuthPage({ mode }) {
     if (field) document.getElementById(`auth-${field}`)?.focus();
   };
 
+  const onGoogle = async (credential) => {
+    if (sending.current) return;
+    sending.current = true;
+    setBusy(true);
+    setFormError("");
+    const res = await loginWithGoogle(credential);
+    if (res.success) return; // GuestOnly tự chuyển trang
+    setFormError(res.message);
+    sending.current = false;
+    setBusy(false);
+  };
+
+  const google = <GoogleButton onCredential={onGoogle} onAvailable={setHasGoogle} />;
+  const divider = hasGoogle && (
+    <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-[.2em] text-ink-soft">
+      <span className="h-px flex-1 bg-current opacity-25" />
+      hoặc
+      <span className="h-px flex-1 bg-current opacity-25" />
+    </div>
+  );
+
   return (
     <main className="bg-cafe relative grid min-h-screen place-items-center overflow-hidden px-4 py-16 text-ink">
       <div aria-hidden="true" className="pointer-events-none absolute -left-40 -top-32 h-[520px] w-[520px] rounded-full bg-matcha-1 opacity-70 blur-[90px]" />
@@ -137,6 +160,12 @@ export default function AuthPage({ mode }) {
 
       <Glass ref={card} aria-busy={busy || undefined} className="relative w-full max-w-md overflow-hidden rounded-[32px] p-8">
         <h1 className="mb-6 text-center text-3xl font-extrabold tracking-[-.03em]">{t.title}</h1>
+        {mode === "login" && (
+          <>
+            {google}
+            {divider}
+          </>
+        )}
         <form noValidate onSubmit={onSubmit} className="flex flex-col items-center space-y-4">
           {mode === "register" && <AvatarPicker file={avatar} onChange={pickAvatar} error={errors.avatar} disabled={busy} />}
           <Field id="auth-username" label="Tên đăng nhập" error={errors.username}>
@@ -189,6 +218,17 @@ export default function AuthPage({ mode }) {
             {t.submit}
           </Button>
         </form>
+        {mode === "register" && (
+          <>
+            {divider}
+            {google}
+            {hasGoogle && (
+              <p className="mt-2 text-center text-xs text-ink-soft">
+                Đăng ký bằng Google sẽ dùng luôn tên và ảnh Google của bạn, một chạm là xong.
+              </p>
+            )}
+          </>
+        )}
         <p className="mt-4 text-center text-sm text-ink-soft">
           {t.ask}{" "}
           <button

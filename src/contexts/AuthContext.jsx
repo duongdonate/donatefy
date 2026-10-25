@@ -90,6 +90,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithGoogle = async (credential) => {
+    try {
+      const { access_token } = await axiosClient.post("/api/auth/google", { credential });
+      await startSession(access_token);
+      return { success: true, message: "Đăng nhập thành công" };
+    } catch (error) {
+      console.error("Google login failed:", error);
+      return { success: false, message: error?.message || "Đăng nhập Google thất bại" };
+    }
+  };
+
   const register = async (username, password, avatar) => {
     try {
       const { access_token } = await axiosClient.post("/api/auth/register", {
@@ -123,7 +134,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, loading, waking }}>
+    <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, loading, waking }}>
       {children}
     </AuthContext.Provider>
   );

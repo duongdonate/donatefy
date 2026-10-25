@@ -1,3 +1,8 @@
 {
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://donatefy-backend.onrender.com/api/:path*" },
+    { "source": "/upload/:path*", "destination": "https://donatefy-backend.onrender.com/upload/:path*" },
+    { "source": "/uploads/:path*", "destination": "https://donatefy-backend.onrender.com/uploads/:path*" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
