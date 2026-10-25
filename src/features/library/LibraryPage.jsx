@@ -383,17 +383,15 @@ export default function LibraryPage() {
             </>
           ) : (
             <>
-              <h2 className="text-2xl font-extrabold tracking-tight">
-                Tạo playlist mới
-              </h2>
-              <form onSubmit={create} className="mt-3 flex items-center gap-3">
+              <form onSubmit={create} className="flex flex-col items-center gap-3">
                 <input
                   name="name"
                   maxLength={60}
+                  defaultValue="Playlist mới"
                   placeholder="Tên playlist"
                   aria-label="Tên playlist mới"
                   autoComplete="off"
-                  className="h-10 w-64 max-w-full rounded-xl border border-white/25 bg-white/10 px-3 text-sm outline-none focus:border-matcha-1"
+                  className="h-10 w-72 max-w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
                 />
                 <Button type="submit" disabled={busy}>
                   Tạo
