@@ -47,7 +47,7 @@ export function moveItem(list, index, delta) {
 
 const TYPING = ["INPUT", "TEXTAREA", "SELECT"];
 const OWN_KEYS = [" ", "ArrowLeft", "ArrowRight"]; // nút / thanh trượt tự xử lý các phím này
-const KEYS = { " ": "toggle", ArrowLeft: "back5", ArrowRight: "fwd5", m: "mute", M: "mute", q: "queue", Q: "queue", "/": "search" };
+const KEYS = { " ": "toggle", ArrowLeft: "back5", ArrowRight: "fwd5", m: "mute", M: "mute", q: "queue", Q: "queue" };
 
 export function hotkeyAction(e) {
   const t = e.target ?? {};

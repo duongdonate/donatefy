@@ -242,6 +242,6 @@ test("totalDuration", () => assert.equal(totalDuration([{ duration: 60 }, {}, { 
 
 ## Ghi chú
 
-- GĐ4b (tìm kiếm, bài đã thích) làm sau GĐ3 (phân quyền theo người dùng ở backend).
+- GĐ4b (tìm kiếm, bài đã thích) đã bỏ (25/10/2026).
 - Đổi thứ tự bài trong playlist: không làm (bạn chốt 23/10).
 - `playlistService.update` (PUT, backend không có) giữ nguyên, không dùng.

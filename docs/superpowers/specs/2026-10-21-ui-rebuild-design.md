@@ -4,6 +4,8 @@
 > Nguồn: [docs/report/donatefy-v2-plan.md](../../report/donatefy-v2-plan.md) (gọi tắt **"tài liệu v2"**, chứa mã FR/NFR/TC) và bản mẫu trong `.superpowers/brainstorm/`.
 > Kế hoạch theo đợt: `tasks/task.md`, `tasks/todo.md` (chỉ có trên máy, `tasks/` nằm trong `.gitignore`).
 >
+> **Ghi chú thay đổi:** 25/10/2026: bỏ hẳn Tìm kiếm và Bài đã thích (GĐ4b) và gợi ý cùng kênh (FR-43); các mã FR/NFR liên quan để trống, không đánh số lại.
+>
 > Tài liệu này **không chép lại** danh sách yêu cầu của tài liệu v2. Nó ghi những gì cần thêm để build đúng: chỗ nào lấy số đo từ đâu, hành vi từng màn, cách nối với code hiện có, và những gì đã chốt sau tài liệu v2.
 
 ---
@@ -39,7 +41,7 @@ Lý do làm bây giờ: lõi phát nhạc vừa được sửa ổn định (đ�
 - Test hiện có là file `*.test.js` chạy bằng `node` (dùng `node:assert`), không có Vitest.
 - Backend ở repo riêng `E:\music-player-app-master\backend`, CORS chỉ cho đúng `FRONTEND_URL`. Link xem thử Vercel gọi API được chỉ sau khi sửa CORS (việc B4).
 - Nhánh: làm trên `v2/<tên>` cắt từ `v2/main`; chỉ merge `v2/main` vào `main` lúc phát hành, nên `donatefy.vercel.app` giữ v1 tới ngày đó.
-- **Thứ tự frontend (đã chốt):** GĐ1 → GĐ2 → **GĐ5 Now Playing + hàng chờ** → **GĐ4 Thư viện, playlist, tìm kiếm** → GĐ6. Trong GĐ5, nút Thư viện trên rail và nút "Mở thư viện" tạm dẫn về giao diện v1 (trang chủ có sidebar playlist, `/playlist/:id` v1) cho tới khi GĐ4 xong. Builder chọn đường dẫn tạm, miễn tạo và mở được playlist.
+- **Thứ tự frontend (đã chốt):** GĐ1 → GĐ2 → **GĐ5 Now Playing + hàng chờ** → **GĐ4 Thư viện, playlist** → GĐ6. Trong GĐ5, nút Thư viện trên rail và nút "Mở thư viện" tạm dẫn về giao diện v1 (trang chủ có sidebar playlist, `/playlist/:id` v1) cho tới khi GĐ4 xong. Builder chọn đường dẫn tạm, miễn tạo và mở được playlist.
 - Mỗi đợt build để app **vẫn chạy được**; màn mới thay hẳn route cũ khi xong, không để hai giao diện song song trong cùng một route.
 
 ## 4. Hệ thiết kế
@@ -85,9 +87,8 @@ Nguồn hình: `matcappa-smiski-v3.html`. Quy định: tài liệu v2 mục 3.3.
 
 Theo tài liệu v2 mục 5.1. Bổ sung cách làm:
 
-- `/library`, `/playlist/:id`, `/search` là **lớp phủ**. Khi mở từ trong app thì truyền `state.background = location`, rồi render `<Routes location={background}>` cho trang nền và một `<Routes>` thứ hai cho lớp phủ. Khi mở thẳng link (không có `background`), trang nền mặc định là `/listen`.
-- Nút Back của trình duyệt đóng lớp phủ. Esc và ✕ cũng đóng (gọi `navigate(-1)` nếu đến từ trong app, ngược lại `navigate('/listen')`).
-- Chưa đăng nhập mà vào trang cần đăng nhập: chuyển tới `/login`, lưu `state.from`; đăng nhập xong quay lại đúng chỗ. Đây là ca quan trọng vì `shareUrl` của backend trỏ về `/playlist/:id`.
+- `/playlists` và `/playlists/:id` là **trang thường** trong `AppShell`, với Music Layer ở đáy (không còn là lớp phủ, không có `/search`). Chỉ hàng chờ là lớp phủ.
+- Chưa đăng nhập mà vào trang cần đăng nhập: chuyển tới `/login`, lưu `state.from`; đăng nhập xong quay lại đúng chỗ. Đây là ca quan trọng vì `shareUrl` của backend trỏ về trang chi tiết playlist.
 - Đã đăng nhập mà vào `/login` hoặc `/register`: chuyển về `/listen` (bỏ độ trễ 800ms của v1 nếu không còn lý do).
 - `/dev/ui` chỉ có khi `import.meta.env.DEV`.
 - Landing tải bằng `React.lazy` và không kéo theo code trình phát. `MusicPlayer` hiện mount ở `main.jsx`, nên phải xem lại để landing không tải `react-player` (xem mục 12).
@@ -108,7 +109,7 @@ Bản mẫu `visual-direction-v3.html` cho **trung tâm, dock, header, rail**. H
 - **Luôn hiện** (đã chốt), không ẩn theo idle.
 - Thanh âm lượng: kéo bằng chuột/chạm, ↑/↓ mỗi lần 5%, `role="slider"`. Gọi `setVolume`; tắt tiếng gọi `toggleMute`. Lưu mức âm lượng giữa các lần mở.
 
-**Header + rail:** ẩn mặc định; chuột di chuyển, chạm màn hình hoặc focus bàn phím thì trượt vào; đứng yên 2,5 giây thì ẩn, trừ khi chuột đang nằm trên thanh hoặc focus đang ở bên trong. Rail gồm Trang chủ (`/listen`), Thư viện, Bài đã thích. Nút "+" trong bản mẫu bỏ, vì tạo playlist nằm trong Thư viện.
+**Header + rail:** ẩn mặc định; chuột di chuyển, chạm màn hình hoặc focus bàn phím thì trượt vào; đứng yên 2,5 giây thì ẩn, trừ khi chuột đang nằm trên thanh hoặc focus đang ở bên trong. Rail gồm Trang chủ (`/listen`), Thư viện. Nút "+" trong bản mẫu bỏ, vì tạo playlist nằm trong Thư viện.
 
 **Trung tâm:** dòng nhỏ viết hoa `TÊN PLAYLIST · vị trí/tổng` (thêm `· Shuffle` khi bật); tên bài (marquee có sẵn khi tràn); nghệ sĩ; đĩa + cần đọc; thanh tiến trình tua được (`role="slider"`, ←/→ 5 giây) và thời gian. Đổi bài: chữ và nhãn đĩa mờ đi rồi hiện lại (~220ms).
 
@@ -127,14 +128,14 @@ Bản mẫu `queue-overlay.html` (đã duyệt hoàn chỉnh). Tài liệu v2 m�
 - Dưới thanh tiến trình của bìa lớn: Shuffle, Lặp (tắt → tất cả → một bài, `cycleRepeat`). Lặp tất cả thì cuối danh sách có mục "Sau đó phát lại từ đầu".
 - Mở thì giữ focus trong lớp phủ; đóng thì trả focus về nút Hàng chờ.
 
-### 7.5 Thư viện `/library` (đã chốt: A · Xoè bìa)
+### 7.5 Thư viện `/playlists` (đã chốt: A · Xoè bìa)
 Bản mẫu `playlists-options.html` phần **A**, với 2 thay đổi đã chốt:
 1. **Bỏ hiệu ứng đĩa than trượt ra** khỏi bìa.
 2. **Không có ô tìm, không sắp xếp.** Thứ tự cố định: playlist đang phát trước, rồi mới nhất trước.
 
-Lớp phủ tối, tập trung 1 playlist ở giữa, các bìa khác xoè hai bên. Lướt bằng ‹ ›, ←/→, lăn chuột trên dải bìa, hoặc bấm bìa bên cạnh. Dưới bìa giữa: tên, số bài · tổng thời lượng, nút Phát, Mở (→ `/playlist/:id`), ⋯ (đổi tên / xoá, xoá có `useConfirm`). Bìa cuối là "Tạo playlist": bấm thì hiện ô nhập tên (1–60 ký tự) ngay tại chỗ. Nhãn "Đang phát" cho playlist đang phát. **Bìa playlist là ảnh** (đã chốt, khác bản mẫu A vốn dùng màu trơn): giữ cách backend đang làm, gán ngẫu nhiên một ảnh từ thư mục ảnh bìa lúc tạo, cố định từ đó. Thư viện, chi tiết playlist (bìa, nhãn đĩa, nền mờ) đều dùng ảnh này. Không đổi schema.
+Trang nền tối, tập trung 1 playlist ở giữa, các bìa khác xoè hai bên. Lướt bằng ‹ ›, ←/→, lăn chuột trên dải bìa, hoặc bấm bìa bên cạnh. Dưới bìa giữa: tên, số bài · tổng thời lượng, nút Phát, Mở (→ `/playlists/:id`), ⋯ (đổi tên / xoá, xoá có `useConfirm`). Bìa cuối là "Tạo playlist": bấm thì hiện ô nhập tên (1–60 ký tự) ngay tại chỗ. Nhãn "Đang phát" cho playlist đang phát. **Bìa playlist là ảnh** (đã chốt, khác bản mẫu A vốn dùng màu trơn): giữ cách backend đang làm, gán ngẫu nhiên một ảnh từ thư mục ảnh bìa lúc tạo, cố định từ đó. Thư viện, chi tiết playlist (bìa, nhãn đĩa, nền mờ) đều dùng ảnh này. Không đổi schema.
 
-### 7.6 Chi tiết playlist `/playlist/:id`
+### 7.6 Chi tiết playlist `/playlists/:id`
 Bản mẫu `playlist-detail-grid.html`. Tài liệu v2 mục 6.6. Bổ sung:
 - Đây là lớp phủ **sáng** (kính), khác với hàng chờ và thư viện.
 - Nút trên thẻ (▶, ✕, ⋮⋮) hiện khi rê chuột **và** khi thẻ có focus, để dùng được bằng Tab. Trên màn cảm ứng thì luôn hiện ▶ và ⋯.
@@ -145,15 +146,7 @@ Bản mẫu `playlist-detail-grid.html`. Tài liệu v2 mục 6.6. Bổ sung:
   - **Lưu** bằng API thêm bài của playlist (`POST /api/playlist/:id/add-song`, **không** dùng `/songs/info`). Backend được mở rộng để nhận thêm `name`, `artist`, `thumbnail` tuỳ chọn.
   - **Chỗ lưu (đã chốt: riêng cho từng playlist):** `CustomSong` giữ nguyên là bản gốc dùng chung (khoá theo mã video, dữ liệu từ YouTube). `CustomPlaylist.videos` đổi từ mảng mã video thành mảng `{ id, name?, artist?, thumbnail? }`; trường trống thì lấy theo `CustomSong`. API trả danh sách bài của playlist phải trộn sẵn hai lớp này. Script chuyển dữ liệu cũ (B1) đổi chuỗi `"abc"` thành `{ id: "abc" }`. Tui đề xuất thêm: sửa tên/bìa của bài đã có trong playlist bằng chính hộp này (mở từ nút ⋯ trên thẻ), lưu qua `PATCH /api/playlists/:id` (B5). Frontend sửa đường dẫn đang sai (`/api/playlists/:id/add-song/` → đúng route backend).
 
-### 7.7 Tìm kiếm `/search`
-Chưa có bản mẫu riêng. Dùng lớp phủ kính sáng, ô tìm lớn ở trên, danh sách kết quả dạng dòng (ảnh 16:9 nhỏ, tên, kênh, thời lượng, 3 nút). Hành vi theo tài liệu v2 mục 6.7. Backend đã có `GET /search` và `/history` (GET, POST, DELETE, DELETE `/:query`). "Thêm vào hàng chờ" và "Phát tiếp theo" cần reducer mới (T45).
-
-**"Phát ngay" một bài lẻ (đã chốt, áp cho tìm kiếm và Bài đã thích):** không gọi `playContext`, mà chèn bài ngay sau bài đang phát rồi nhảy tới nó (reducer mới `playNow`, đúng cả khi shuffle bật, có test). Phát xong thì tiếp tục chồng đĩa cũ. Dòng trên đĩa và nhãn "Đang phát" trong Thư viện giữ playlist cũ. Nếu hàng chờ đang trống thì hàng chờ chỉ có bài đó, dòng trên đĩa hiện "Tìm kiếm" hoặc "Bài đã thích". Bài đã có trong hàng chờ thì nhảy tới bản đã có, không chèn trùng.
-
-### 7.8 Bài đã thích `/liked`
-Dùng lại màn chi tiết playlist ở chế độ không đổi tên / không xoá. Cần API liked ở backend (B5).
-
-### 7.9 404
+### 7.7 404
 Matcappa `hug-knees`: "Ơ, bàn này chưa có ai đặt…", nút "Về quán" → `/`.
 
 ## 8. Nối với code hiện có
@@ -229,7 +222,6 @@ Bố cục dưới 768px do tui đề xuất, **bạn đã chấp nhận (22/10)
 - Test giữ kiểu `node` + `node:assert`, thêm `npm test`.
 - Tách `MusicPlayer` thành bộ phát ẩn + `PlaybackTimeContext` mới (mục 8).
 - Xem trước bài thêm mới lấy ở client (oEmbed + ảnh `i.ytimg.com`), không tốn quota.
-- `playNow` khi hàng chờ trống / bài đã có trong hàng chờ (mục 7.7).
 - Sửa tên / bìa bài đã có trong playlist qua nút ⋯ trên thẻ (mục 7.6).
 - Bỏ nút "+" trên rail (tạo playlist nằm trong Thư viện).
 - Lưới bài 3 cột ở 768–1023px.

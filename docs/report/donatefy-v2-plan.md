@@ -4,6 +4,8 @@
 >
 > Phiên bản tài liệu: 1.0 · Ngày lập: 21/10/2026 · Người phụ trách: Hải Dương
 > Tài liệu liên quan: [Báo cáo nhìn lại v1](donatefy-v1-review.md) · Bản mẫu giao diện trong `.superpowers/brainstorm/`
+>
+> **Ghi chú thay đổi:** 25/10/2026: bỏ hẳn Tìm kiếm và Bài đã thích (GĐ4b) và gợi ý cùng kênh (FR-43); các mã FR/NFR liên quan để trống, không đánh số lại.
 
 ---
 
@@ -42,7 +44,7 @@ Donatefy v1 là một ứng dụng nghe nhạc YouTube chạy được, có trì
 | Có bản sắc riêng, nhìn là nhận ra | Bộ thiết kế matcha + kính mờ + đĩa than + mascot Matcappa áp đồng bộ cho mọi trang |
 | Trải nghiệm nghe tập trung | Màn phát nhạc chỉ còn đĩa than, dock ảnh bìa và một thanh kính; nút phụ tự ẩn |
 | Dùng được trên mọi màn hình | Hiển thị đúng từ 360px (điện thoại) đến 1920px |
-| Dữ liệu riêng tư cho từng người | Playlist, lịch sử, bài yêu thích gắn với tài khoản; API kiểm tra quyền |
+| Dữ liệu riêng tư cho từng người | Playlist gắn với tài khoản; API kiểm tra quyền |
 | Chất lượng ổn định | 8 testcase chính qua; không lỗi console; Lighthouse Accessibility ≥ 90 |
 
 **Thời gian dự kiến:** 21/10/2026 → **31/12/2026** (khoảng 10 tuần, làm bán thời gian).
@@ -61,7 +63,7 @@ Donatefy v1 là một ứng dụng nghe nhạc YouTube chạy được, có trì
 | **Hooks** (`useLocalStorage`, `useDebounce`, `useConfirm`…) và **contexts** (Auth, Theme, Toast) | Dùng chung được cho giao diện mới |
 | **Marquee kiểu Spotify** (`utils/marquee.js`) | Đã hoàn thiện ở đợt 2 |
 | **Hàng chờ kéo thả, kéo giãn** (`reorderUpNext`, `playAt`) | Logic dùng lại cho lớp phủ hàng chờ mới |
-| **Đường dẫn `/playlist/:id`** | Backend đã trả `shareUrl` theo dạng này; đổi sẽ làm hỏng link chia sẻ |
+| **Đường dẫn chi tiết playlist** | Backend đã trả `shareUrl`; trang chi tiết nay ở `/playlists/:id` (đổi 25/10, xem mục 5.1) |
 | **Công nghệ:** React 19, Vite, Tailwind, framer-motion, react-player, lucide-react | Không đổi stack, tránh rủi ro |
 | **Backend** Express + MongoDB, API docs OpenAPI | Chỉ bổ sung phân quyền và dữ liệu theo người dùng |
 
@@ -75,7 +77,7 @@ Donatefy v1 là một ứng dụng nghe nhạc YouTube chạy được, có trì
 | Màn chính | Sidebar + nội dung + thanh phát ở đáy | **Now Playing toàn màn hình**: đĩa than ở giữa, dock ảnh bìa ở đáy, header và rail tự ẩn |
 | Điều khiển | Thanh ngang ở đáy | **Thanh kính dọc bên phải** (Shuffle, Hàng chờ, âm lượng dọc) |
 | Hàng chờ | Panel cố định bên phải | **Lớp phủ kính**, ảnh bìa bay từ dock lên |
-| Thư viện | Danh sách trong sidebar | Lớp phủ mở từ rail |
+| Thư viện | Danh sách trong sidebar | Trang `/playlists` trong AppShell, mở từ rail |
 | Chi tiết playlist | Bảng / lưới | **Lưới thẻ ảnh 16:9**, rê chuột hiện nút, kéo thả đổi chỗ |
 | Tải trang | Loader chung | **Chasen đánh matcha** (vòng 0,8s, quẹt 0,3s) |
 | Linh vật | Không có | **Matcappa** đi cùng người dùng |
@@ -219,13 +221,11 @@ Yellowtail không có dấu tiếng Việt, tuyệt đối không dùng cho câu
 | `/login` | Đăng nhập | Công khai | Đã đăng nhập thì chuyển về `/listen` |
 | `/register` | Đăng ký | Công khai | Cùng trang với đăng nhập, đổi tab |
 | `/listen` | **Now Playing** (giao diện chính) | Cần đăng nhập | Thay cho `/` của v1 |
-| `/library` | Thư viện playlist | Cần đăng nhập | Lớp phủ trên Now Playing |
-| `/playlist/:id` | Chi tiết playlist | Cần đăng nhập (chủ playlist) | Giữ nguyên đường dẫn v1 cho link chia sẻ |
-| `/liked` | Bài đã thích | Cần đăng nhập | Giai đoạn 4 |
-| `/search` | Tìm kiếm | Cần đăng nhập | Lớp phủ, mở bằng phím `/` |
+| `/playlists` | Thư viện playlist | Cần đăng nhập | Trang thường trong AppShell, Music Layer ở đáy |
+| `/playlists/:id` | Chi tiết playlist | Cần đăng nhập (chủ playlist) | Trang thường trong AppShell, Music Layer ở đáy |
 | `*` | Không tìm thấy (404) | Công khai | Matcappa ngồi ôm gối, nút về quán |
 
-**Lớp phủ có đường dẫn riêng.** `/library`, `/playlist/:id`, `/search` mở **đè lên** Now Playing chứ không thay trang. Vì vậy nhạc không bị ngắt khi chuyển trang, và nút Back của trình duyệt đóng lớp phủ.
+**Thư viện và chi tiết playlist là trang thường** (`/playlists`, `/playlists/:id`) nằm trong AppShell, không còn là lớp phủ. **Music Layer** (trình phát) luôn ở đáy nên nhạc không bị ngắt khi chuyển trang. Chỉ hàng chờ vẫn là lớp phủ.
 
 ### 5.2 Sơ đồ
 
@@ -235,12 +235,9 @@ flowchart TD
   G -- Chưa --> A["/login · /register"]
   G -- Rồi --> N
   A -->|Thành công| N["/listen · Now Playing"]
-  N -->|Rail: Thư viện| LIB["/library"]
-  N -->|Rail: Bài đã thích| LK["/liked"]
-  N -->|Phím / hoặc icon tìm| S["/search"]
-  LIB -->|Mở playlist| P["/playlist/:id"]
+  N -->|Rail: Thư viện| LIB["/playlists"]
+  LIB -->|Mở playlist| P["/playlists/:id"]
   P -->|Phát| N
-  S -->|Thêm vào playlist| P
   N -->|Dock: bấm bìa| N
   N -->|Thanh kính: Hàng chờ| Q[["Lớp phủ hàng chờ"]]
   X["* 404"] -->|Về quán| L
@@ -281,8 +278,8 @@ flowchart TD
 
 | Vùng | Nội dung | Hành vi |
 |---|---|---|
-| **Header** (trên) | Logo, ô tìm kiếm, avatar + menu tài khoản, đổi sáng/tối | Hiện khi rê chuột, đứng yên 2,5 giây thì tự ẩn |
-| **Rail** (trái) | Trang chủ, Thư viện, Bài đã thích | Tự ẩn cùng header |
+| **Header** (trên) | Logo, avatar + menu tài khoản, đổi sáng/tối | Hiện khi rê chuột, đứng yên 2,5 giây thì tự ẩn |
+| **Rail** (trái) | Trang chủ, Thư viện | Tự ẩn cùng header |
 | **Trung tâm** | Tên bài, nghệ sĩ, playlist + vị trí (vd `HEHEHEHE · 3/10`); **đĩa than** có ảnh bìa; cần đọc; thanh tiến trình + thời gian | Đĩa quay khi phát; cần đọc nhấc khi dừng |
 | **Thanh kính phải** (phương án C) | Shuffle, Hàng chờ, âm lượng dọc + % | Kéo âm lượng; bấm icon loa để tắt tiếng |
 | **Dock** (đáy) | Nút bài trước / sau; 5 bìa (bài giữa là bài đang phát, có nút ▶/❚❚) | Bấm bìa bên cạnh để chuyển bài; bìa hai bên nghiêng như dock |
@@ -303,15 +300,15 @@ flowchart TD
 - **Bàn phím:** Alt + ↑/↓ đổi thứ tự bài đang chọn.
 - **Bản mẫu:** `queue-overlay.html`.
 
-### 6.5 Thư viện (`/library`)
+### 6.5 Thư viện (`/playlists`)
 
-- Lớp phủ mở từ nút Thư viện trên rail, hiển thị mọi playlist của người dùng.
-- **Đã chốt: A · Xoè bìa** (bản mẫu `playlists-options.html`), **bỏ hiệu ứng đĩa than trượt ra**: lớp phủ tối kiểu Groove, mỗi lúc tập trung một playlist ở giữa; lướt bằng ‹ ›, ←/→, lăn chuột hoặc bấm bìa bên cạnh.
+- Trang thường trong AppShell, mở từ nút Thư viện trên rail, hiển thị mọi playlist của người dùng.
+- **Đã chốt: A · Xoè bìa** (bản mẫu `playlists-options.html`), **bỏ hiệu ứng đĩa than trượt ra**: trang nền tối kiểu Groove, mỗi lúc tập trung một playlist ở giữa; lướt bằng ‹ ›, ←/→, lăn chuột hoặc bấm bìa bên cạnh.
 - Bìa cuối là **Tạo playlist**; menu ⋯ để đổi tên / xoá.
 - **Không có ô tìm và sắp xếp** (chấp nhận vì số playlist thường ít). Thứ tự: playlist đang phát trước, rồi mới nhất.
 - Playlist đang phát có nhãn "Đang phát".
 
-### 6.6 Chi tiết playlist (`/playlist/:id`)
+### 6.6 Chi tiết playlist (`/playlists/:id`)
 
 <p align="center"><img src="images/v2-playlist-grid.jpg" width="420" alt="Chi tiết playlist dạng lưới"></p>
 
@@ -327,20 +324,7 @@ flowchart TD
 - **Playlist trống:** Matcappa ngồi ôm gối và hướng dẫn dán link.
 - **Bản mẫu:** `playlist-detail-grid.html`.
 
-### 6.7 Tìm kiếm (`/search`)
-
-- Lớp phủ kính; mở bằng phím `/` hoặc icon kính lúp trên header.
-- Gõ thì tìm sau 400ms (debounce); cần tối thiểu 2 ký tự.
-- **Chưa gõ gì:** hiện lịch sử tìm kiếm của chính người dùng, mỗi mục có nút xoá, kèm nút "Xoá hết".
-- **Mỗi kết quả:** nút phát ngay, nút thêm vào hàng chờ, nút thêm vào playlist (chọn playlist).
-- Dán thẳng một link YouTube vào ô tìm thì nhận ra là link và đưa lên đầu kết quả.
-
-### 6.8 Bài đã thích (`/liked`)
-
-- Giao diện như chi tiết playlist, nhưng là danh sách đặc biệt không xoá được.
-- Thả tim ở dock, ở kết quả tìm kiếm và ở thẻ bài.
-
-### 6.9 Trang 404 và trang lỗi
+### 6.7 Trang 404 và trang lỗi
 
 - Matcappa ngồi ôm gối: "Ơ, bàn này chưa có ai đặt…"; nút **Về quán**.
 - Lỗi mạng hoặc server: toast nhẹ ở góc, kèm nút Thử lại; không hiện lỗi kỹ thuật cho người dùng.
@@ -371,7 +355,7 @@ Ký hiệu độ ưu tiên: **P0** bắt buộc cho bản phát hành · **P1** 
 | FR-13 | Lặp: tắt / cả danh sách / một bài | P0 |
 | FR-14 | Âm lượng 0–100%, tắt tiếng, nhớ mức âm lượng giữa các lần mở | P0 |
 | FR-15 | Bài bị YouTube chặn thì tự chuyển bài kế; lỗi liên tiếp 3 bài thì dừng và báo | P0 |
-| FR-16 | Phím tắt: Space (phát/dừng), ←/→ (tua 5 giây), Shift + ←/→ (bài trước/sau), M (tắt tiếng), Q (hàng chờ), `/` (tìm kiếm) | P1 |
+| FR-16 | Phím tắt: Space (phát/dừng), ←/→ (tua 5 giây), Shift + ←/→ (bài trước/sau), M (tắt tiếng), Q (hàng chờ) | P1 |
 | FR-17 | Điều khiển từ màn hình khoá và phím media của máy (Media Session API): tên bài, ảnh bìa, các nút | P1 |
 | FR-18 | Nhớ bài và vị trí đang nghe; mở lại thì sẵn sàng "nghe tiếp" (không tự phát) | P2 |
 
@@ -398,17 +382,7 @@ Ký hiệu độ ưu tiên: **P0** bắt buộc cho bản phát hành · **P1** 
 | FR-36 | Chỉ chủ playlist mới xem và sửa được | P0 |
 | FR-37 | Chia sẻ playlist: sao chép link; người nhận xem được ở chế độ chỉ đọc | P2 |
 
-### 7.5 Tìm kiếm và khám phá
-
-| Mã | Yêu cầu | Ưu tiên |
-|---|---|---|
-| FR-40 | Tìm video YouTube theo từ khoá (≥ 2 ký tự), tối đa 20 kết quả | P0 |
-| FR-41 | Lịch sử tìm kiếm **theo từng người dùng**, xoá từng mục hoặc xoá hết | P1 |
-| FR-42 | Nhận ra link YouTube (`youtube.com/watch?v=`, `youtu.be/`, `music.youtube.com`) dán vào ô tìm | P1 |
-| FR-43 | Gợi ý bài cùng kênh với bài đang phát | P2 |
-| FR-44 | Thích / bỏ thích bài; trang Bài đã thích | P1 |
-
-### 7.6 Mascot và hướng dẫn
+### 7.5 Mascot và hướng dẫn
 
 | Mã | Yêu cầu | Ưu tiên |
 |---|---|---|
@@ -417,7 +391,7 @@ Ký hiệu độ ưu tiên: **P0** bắt buộc cho bản phát hành · **P1** 
 | FR-52 | Mascot xuất hiện ở trạng thái trống (thư viện trống, playlist trống, chưa phát gì) và trang 404 | P1 |
 | FR-53 | Lần đầu vào `/listen`: 3 bước hướng dẫn ngắn do Matcappa dẫn, có nút Bỏ qua, chỉ hiện một lần | P2 |
 
-### 7.7 Giao diện chung
+### 7.6 Giao diện chung
 
 | Mã | Yêu cầu | Ưu tiên |
 |---|---|---|
@@ -443,7 +417,6 @@ Ký hiệu độ ưu tiên: **P0** bắt buộc cho bản phát hành · **P1** 
 | NFR-09 | Bảo mật | Token làm mới nằm trong cookie `httpOnly`; mọi API dữ liệu kiểm tra quyền sở hữu | Testcase TC-07 |
 | NFR-10 | Bảo mật | Không lưu mật khẩu ở client; không log token | Đọc code |
 | NFR-11 | Ổn định | Không lỗi đỏ trong console ở mọi luồng chính | Thử tay mỗi đợt |
-| NFR-12 | Quota | Tìm kiếm cache 10 phút; debounce 400ms; không tìm khi < 2 ký tự | Đọc code + log `X-Cache` |
 
 ---
 
@@ -494,13 +467,6 @@ sequenceDiagram
   R-->>Y: url bài kế tiếp theo thứ tự mới
 ```
 
-### 9.4 Thêm bài từ tìm kiếm
-
-1. Bấm `/` → lớp phủ tìm kiếm → gõ "lofi chill".
-2. Sau 400ms hiện kết quả; rê chuột vào một kết quả → bấm "+ Playlist" → chọn "Đêm muộn".
-3. Toast: *Đã thả "Lofi Chill Mix" vào chồng đĩa Đêm muộn.*
-4. Esc đóng lớp phủ, nhạc vẫn phát không ngắt.
-
 ---
 
 ## 10. Thay đổi ở backend
@@ -510,21 +476,18 @@ sequenceDiagram
 | Collection | Thay đổi |
 |---|---|
 | `CustomPlaylist` | `userId` **bắt buộc**; thêm `cover` (cố định lúc tạo), `updatedAt`, `isPublic` (cho chia sẻ) |
-| `SearchHistory` | `userId` bắt buộc; mỗi người tối đa 50 mục |
-| `LikedSong` *(mới)* | `userId`, `videoId`, `likedAt`; chỉ mục duy nhất theo cặp (`userId`, `videoId`) |
 | `RefreshToken` *(mới)* | `userId`, mã băm token, hạn dùng; xoá khi đăng xuất |
 | `CustomSong` | Giữ nguyên; tra cứu bằng `$in` thay vì tải toàn bộ |
 
-**Dữ liệu cũ:** playlist và lịch sử chưa có `userId` sẽ được gán cho một tài khoản chỉ định bằng script chuyển đổi; chạy thử trên bản sao database trước.
+**Dữ liệu cũ:** playlist chưa có `userId` sẽ được gán cho một tài khoản chỉ định bằng script chuyển đổi; chạy thử trên bản sao database trước.
 
 ### 10.2 API
 
 | Việc                                         | Chi tiết                                                                                                                                                    |
 | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Middleware `checkAuth` cho mọi route dữ liệu | Playlist, history, liked: chỉ thao tác trên dữ liệu của chính người gọi; không phải chủ thì trả 404                                                         |
+| Middleware `checkAuth` cho mọi route dữ liệu | Playlist: chỉ thao tác trên dữ liệu của chính người gọi; không phải chủ thì trả 404                                                         |
 | Làm mới token                                | `POST /api/auth/refresh` (đọc cookie `httpOnly`), `POST /api/auth/logout`                                                                                   |
 | Playlist                                     | `PATCH /api/playlists/:id` (đổi tên, sắp xếp bài); thống nhất `/api/playlists/:id/songs` thay cho `/api/playlist/:id/add-song` (giữ route cũ một thời gian) |
-| Liked                                        | `GET/POST/DELETE /api/liked`                                                                                                                                |
 | Sửa lỗi đã biết                              | `getSongs` báo 404 khi playlist không tồn tại; đọc thư mục ảnh bìa một lần lúc khởi động; bỏ import `yamljs` thừa                                           |
 | CORS                                         | Cho phép `FRONTEND_URL` và đúng các link xem thử Vercel của project (không mở `*.vercel.app`)                                                               |
 | Kiểu trả về                                  | Dần thống nhất về dạng `{ status, message, data }` của helper `Res`                                                                                         |
@@ -549,16 +512,15 @@ src/
 │   ├── auth/            # AuthPage, SignInForm, SignUpForm
 │   ├── player/          # NowPlaying, Vinyl, Tonearm, Dock, GlassBar, ProgressBar
 │   ├── queue/           # QueueOverlay, QueueItem
-│   ├── library/         # LibraryOverlay, PlaylistCover
-│   ├── playlist/        # PlaylistDetail, SongTile, AddSongsDialog
-│   └── search/          # SearchOverlay, SearchResult
-├── layouts/             # AppShell (header + rail + vùng lớp phủ), PublicLayout
+│   ├── library/         # LibraryPage, PlaylistCover
+│   └── playlist/        # PlaylistDetail, SongTile, AddSongsDialog
+├── layouts/             # AppShell (header + rail + Music Layer + vùng lớp phủ), PublicLayout
 └── routes/              # AppRouter (định tuyến lớp phủ, chặn trang cần đăng nhập)
 ```
 
 ### 11.2 Nguyên tắc
 
-- **Tách dữ liệu server khỏi trạng thái trình phát.** Dữ liệu từ API (playlist, kết quả tìm kiếm) dùng RTK Query, có sẵn trong Redux Toolkit, để có cache và tự tải lại. Redux slice chỉ giữ trạng thái trình phát.
+- **Tách dữ liệu server khỏi trạng thái trình phát.** Dữ liệu từ API (playlist) dùng RTK Query, có sẵn trong Redux Toolkit, để có cache và tự tải lại. Redux slice chỉ giữ trạng thái trình phát.
 - **Trình phát nằm ở `AppShell`** và không bao giờ bị huỷ khi đổi trang, nên nhạc không ngắt.
 - **Định tuyến lớp phủ:** dùng `location.state.background` của React Router để vẽ lớp phủ đè lên trang nền.
 - **Mỗi component dưới 200 dòng;** quá thì tách nhỏ.
@@ -636,7 +598,7 @@ gantt
 
 | Việc | Kết quả mong đợi |
 |---|---|
-| `userId` cho playlist và lịch sử; script chuyển dữ liệu cũ | Mỗi người chỉ thấy dữ liệu của mình |
+| `userId` cho playlist; script chuyển dữ liệu cũ | Mỗi người chỉ thấy dữ liệu của mình |
 | `checkAuth` cho mọi route dữ liệu; refresh token qua cookie `httpOnly` | Testcase TC-07 qua |
 | Bìa playlist cố định; sửa `getSongs`; đọc thư mục ảnh một lần | Hết lỗi đã liệt kê trong báo cáo v1 |
 | CORS cho link xem thử | Bản xem thử gọi được API |
@@ -646,10 +608,8 @@ gantt
 
 | Việc | Kết quả mong đợi |
 |---|---|
-| Lớp phủ Thư viện (theo phương án đã chốt) | Tạo, mở, đổi tên, xoá playlist |
+| Trang Thư viện `/playlists` (theo phương án đã chốt) | Tạo, mở, đổi tên, xoá playlist |
 | Chi tiết playlist dạng lưới 16:9 | Kéo thả, gỡ bài (có hoàn tác), thêm bài nhiều link |
-| Tìm kiếm dạng lớp phủ + lịch sử theo người dùng | FR-40 → FR-42 |
-| Bài đã thích | FR-44 |
 
 #### GĐ5 · Now Playing và Hàng chờ: 18/11 → 01/12 (làm trước GĐ4)
 
@@ -686,7 +646,7 @@ gantt
 | 3 | Landing + Đăng nhập chạy trên link xem thử | 17/11 |
 | 4 | Backend phân quyền, dữ liệu theo người dùng, API docs cập nhật | 21/11 |
 | 5 | Now Playing, hàng chờ, phím tắt, Media Session | 01/12 |
-| 6 | Thư viện, chi tiết playlist, tìm kiếm, bài đã thích | 15/12 |
+| 6 | Thư viện, chi tiết playlist | 15/12 |
 | 7 | Bản hoàn thiện: responsive, truy cập, hiệu năng, kiểm thử đạt | 26/12 |
 | 8 | **Donatefy v2.0 lên `donatefy.vercel.app`** | **31/12** |
 
@@ -740,7 +700,7 @@ gantt
 ### 14.2 Hạn chế
 
 - **Kính mờ tốn tài nguyên:** `backdrop-filter` có thể làm máy yếu giật; phải giới hạn số lớp kính.
-- **Lệ thuộc YouTube:** video bị chặn nhúng, quota 10.000 đơn vị/ngày (≈ 100 lượt tìm), điều khoản YouTube có thể thay đổi.
+- **Lệ thuộc YouTube:** video bị chặn nhúng, quota 10.000 đơn vị/ngày (chỉ dùng khi thêm bài: lấy thông tin video, 1 đơn vị/lần), điều khoản YouTube có thể thay đổi.
 - **Không phát nền trên iOS:** trình duyệt điện thoại thường dừng video YouTube khi khoá màn hình.
 - **Giao diện "khác lạ" cần làm quen:** người quen Spotify có thể mất vài giây tìm nút (cần hướng dẫn lần đầu FR-53).
 - **Một người làm:** lịch dễ trễ khi bận; một số mục P2 có thể phải dời.
@@ -752,7 +712,7 @@ gantt
 
 | Rủi ro | Khả năng | Ảnh hưởng | Cách xử lý |
 |---|---|---|---|
-| Hết quota YouTube API | Trung bình | Cao: không tìm được bài | Cache 10 phút, debounce, tối thiểu 2 ký tự; theo dõi quota; xin tăng quota nếu cần |
+| Hết quota YouTube API | Thấp | Trung bình: không thêm được bài mới | Chỉ gọi API khi thêm bài (1 đơn vị/lần); theo dõi quota; xin tăng quota nếu cần |
 | Kính mờ, hoạt ảnh làm giật trên máy yếu | Trung bình | Trung bình | Giới hạn lớp kính; chỉ animate `transform` / `opacity`; tắt blur khi phát hiện máy yếu |
 | Chuyển dữ liệu cũ sang `userId` làm mất dữ liệu | Thấp | Cao | Sao lưu database; chạy thử trên bản sao; script có chế độ chạy thử |
 | Link xem thử không gọi được API (CORS) | Cao (nếu chưa sửa) | Trung bình | Làm phần CORS sớm trong GĐ3 |
@@ -823,8 +783,9 @@ python -m http.server 5178 --bind 127.0.0.1
 |---|---|
 | Now Playing | Màn hình đang phát nhạc, giao diện chính của v2 |
 | Dock | Dải ảnh bìa ở đáy màn hình, như thanh dock của macOS |
-| Rail | Cột nút dọc bên trái (Trang chủ, Thư viện, Bài đã thích) |
-| Lớp phủ (overlay) | Màn hình mở đè lên Now Playing, đóng lại thì về đúng chỗ cũ |
+| Rail | Cột nút dọc bên trái (Trang chủ, Thư viện) |
+| Lớp phủ (overlay) | Màn hình mở đè lên Now Playing (nay chỉ còn hàng chờ), đóng lại thì về đúng chỗ cũ |
+| Music Layer | Lớp trình phát luôn ở đáy AppShell, giữ nhạc không ngắt khi đổi trang |
 | Kính mờ (glassmorphism) | Khối nền trong suốt, làm mờ phần phía sau |
 | Media Session | API trình duyệt cho phép điều khiển nhạc từ màn hình khoá, phím media |
 | Link xem thử (preview) | Đường dẫn Vercel tự tạo cho mỗi nhánh, dùng để duyệt trước khi phát hành |

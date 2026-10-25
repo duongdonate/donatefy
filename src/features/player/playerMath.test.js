@@ -57,7 +57,7 @@ test("phím tắt", () => {
   assert.equal(k("ArrowLeft", { shiftKey: true }), "previous");
   assert.equal(k("M"), "mute");
   assert.equal(k("q"), "queue");
-  assert.equal(k("/"), "search");
+  assert.equal(k("/"), null);
   assert.equal(k("m", { target: input }), null);
   assert.equal(k(" ", { target: btn }), null);
   assert.equal(k("ArrowLeft", { target: slider }), null);
