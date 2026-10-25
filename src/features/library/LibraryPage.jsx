@@ -57,6 +57,7 @@ export default function LibraryPage() {
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [newName, setNewName] = useState("");
   const strip = useRef(null);
   const atRef = useRef(0);
   const itemsRef = useRef(items);
@@ -154,15 +155,14 @@ export default function LibraryPage() {
 
   const create = async (e) => {
     e.preventDefault();
-    const name = e.currentTarget.elements.name.value.trim();
-    if (!name || name.length > 60)
-      return showToast("Tên playlist dài 1–60 ký tự nha ~");
-    if (busy) return;
+    const name = newName.trim();
+    if (!name || busy) return; // nút Tạo đã khoá khi rỗng; maxLength chặn quá 60
     setBusy(true);
     try {
       const made = await playlistService.create({ name });
       dispatch(addPlaylist(made));
       setSelId(made._id);
+      setNewName("");
       showToast(`Đã tạo playlist "${made.name}"`);
     } catch {
       showToast("Tạo playlist thất bại, thử lại sau nha");
@@ -383,17 +383,30 @@ export default function LibraryPage() {
             </>
           ) : (
             <>
-              <form onSubmit={create} className="flex flex-col items-center gap-3">
-                <input
-                  name="name"
-                  maxLength={60}
-                  defaultValue="Playlist mới"
-                  placeholder="Tên playlist"
-                  aria-label="Tên playlist mới"
-                  autoComplete="off"
-                  className="h-10 w-72 max-w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
-                />
-                <Button type="submit" disabled={busy}>
+              <form
+                onSubmit={create}
+                className="flex flex-col items-center gap-3"
+              >
+                <div className="w-72 max-w-full">
+                  <input
+                    name="name"
+                    maxLength={60}
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    placeholder="Tên playlist"
+                    aria-label="Tên playlist mới"
+                    aria-describedby="new-playlist-count"
+                    autoComplete="off"
+                    className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
+                  />
+                  <p id="new-playlist-count" className="mt-1 flex justify-between gap-2 text-xs">
+                    <span className="text-red-400">
+                      {newName && !newName.trim() ? "Tên không được chỉ có khoảng trắng" : ""}
+                    </span>
+                    <span className="text-white/50">{newName.length}/60</span>
+                  </p>
+                </div>
+                <Button type="submit" disabled={busy || !newName.trim()}>
                   Tạo
                 </Button>
               </form>
