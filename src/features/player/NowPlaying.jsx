@@ -1,4 +1,4 @@
-// /listen: màn Now Playing (visual-direction-v3.html, bỏ 2 khối điều khiển 3D)
+// /listen: màn Now Playing (visual-direction-v3.html, bỏ 2 khối điều khiển 3D), chia bố cục theo thiết bị
 import { AnimatePresence, motion, MotionConfig } from "framer-motion";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -8,13 +8,44 @@ import useHotkeys from "../../hooks/useHotkeys";
 import QueueOverlay from "../queue/QueueOverlay";
 import Marquee from "../../components/Marquee";
 import { Button, Vinyl } from "../../components";
+import { useDevice, useScreen } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
 import Matcappa from "../../mascot/Matcappa";
 import { usePlaybackTime } from "./PlaybackTime";
-import Dock from "./Dock";
+import Dock, { dockHeight } from "./Dock";
 import ProgressBar from "./ProgressBar";
 import Tonearm from "./Tonearm";
 
-const DECK = "min(34vw, 46vh, 420px)";
+const NOTCH_SPACE = 64; // chừa đỉnh cho notch để tên bài không bị che
+const PROGRESS_HEIGHT = 60; // thanh tiến trình + hai mốc giờ
+
+// Số liệu từng máy: lề, khung tối đa, chữ tên bài, có mascot không, đĩa tối đa
+const LAYOUT = {
+  [DEVICE.MOBILE]: { side: 16, bottom: 16, frame: Infinity, titleSize: 24, titleLines: 1, mascot: false, discMax: 420 },
+  [DEVICE.TABLET]: { side: 24, bottom: 24, frame: Infinity, titleSize: 36, titleLines: 2, mascot: true, discMax: 420 },
+  [DEVICE.DESKTOP]: { side: 32, bottom: 24, frame: 1600, titleSize: 48, titleLines: 2, mascot: true, discMax: 720 },
+};
+const TITLE_BLOCK = { 1: 90, 2: 130 }; // chiều cao khối chữ trên cùng theo số dòng tên bài
+const SHORT_SCREEN = 720; // màn thấp hơn mức này (hoặc zoom lớn) thì tên bài chỉ 1 dòng để chừa chỗ cho đĩa
+const DISC_MIN = 120;
+
+const titleLinesFor = (layout, height) => (height < SHORT_SCREEN ? 1 : layout.titleLines);
+
+// Cỡ đĩa: vừa phần còn lại theo chiều cao, không quá một phần bề ngang khung
+function discSize(device, { width, height }, layout, titleLines) {
+  const frameWidth = Math.min(width, layout.frame) - layout.side * 2;
+  const reserved =
+    NOTCH_SPACE + TITLE_BLOCK[titleLines] + PROGRESS_HEIGHT + dockHeight(device, width) + layout.bottom + 48;
+  const byHeight = height - reserved;
+  switch (device) {
+    case DEVICE.MOBILE:
+      return Math.max(DISC_MIN, Math.min(frameWidth * 0.82, byHeight, layout.discMax)); // chừa mép phải cho cần đĩa
+    case DEVICE.TABLET:
+      return Math.max(DISC_MIN, Math.min(frameWidth * 0.45, byHeight, layout.discMax));
+    case DEVICE.DESKTOP:
+      return Math.max(DISC_MIN, Math.min(frameWidth * 0.45, byHeight, layout.discMax));
+  }
+}
 
 export default function NowPlaying() {
   const song = useSelector(getCurrentSong);
@@ -26,6 +57,8 @@ export default function NowPlaying() {
   const { currentTime, duration, seek, previous, next, togglePlay } = usePlaybackTime();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const device = useDevice();
+  const screen = useScreen();
   const clampSeek = (t) => seek(Math.min(duration, Math.max(0, t)));
 
   // FR-16; "/" (tìm kiếm) để GĐ4
@@ -39,57 +72,100 @@ export default function NowPlaying() {
     queue: () => song && dispatch(toggleQueue()),
   });
 
+  const layout = LAYOUT[device];
+  const titleLines = titleLinesFor(layout, screen.height);
+  const disc = discSize(device, screen, layout, titleLines);
+  const context = song
+    ? `${playlist?.name ?? "Hàng chờ"} · ${position + 1}/${order.length}${shuffle ? " · Shuffle" : ""}`
+    : "Chưa có bài nào";
+
   return (
     // reducedMotion="user": bật giảm chuyển động thì bìa không bay, đĩa không trượt
     <MotionConfig reducedMotion="user">
-      <div className="relative flex h-full flex-col items-center px-6 pb-[clamp(140px,18vw,210px)] pt-[clamp(24px,5vh,56px)]">
-        <motion.div
-          key={song?._id ?? "none"}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.22 }}
-          className="w-full max-w-3xl text-center"
-        >
-          <div className="text-[13px] font-semibold uppercase tracking-[.14em] text-ink-soft">
-            {song ? `${playlist?.name ?? "Hàng chờ"} · ${position + 1}/${order.length}${shuffle ? " · Shuffle" : ""}` : "Chưa có bài nào"}
-          </div>
-          {song && (
-            <>
-              <Marquee className="mt-1 text-[clamp(24px,3.6vw,48px)] font-extrabold leading-tight tracking-[-.03em]">
-                {song.name}
-              </Marquee>
-              <div className="text-[clamp(14px,1.5vw,18px)] text-ink-soft">{song.artist}</div>
-            </>
-          )}
-        </motion.div>
+      <div
+        className="relative mx-auto flex h-full w-full flex-col items-center"
+        style={{
+          maxWidth: layout.frame,
+          paddingLeft: layout.side,
+          paddingRight: layout.side,
+          paddingTop: NOTCH_SPACE,
+          paddingBottom: PROGRESS_HEIGHT + dockHeight(device, screen.width) + layout.bottom,
+        }}
+      >
+        <SongTitle songKey={song?._id} context={context} song={song} size={layout.titleSize} lines={titleLines} />
 
         <div className="flex flex-1 flex-col items-center justify-center">
-          <div className="relative mt-6" style={{ width: DECK, height: DECK }}>
-            <Vinyl
-              size={420}
-              spinning={song ? isPlaying : true}
-              duration={song ? 6 : 18}
-              label={song?.thumbnail ? `url(${song.thumbnail}) center/cover` : undefined}
-              style={{ width: "100%", height: "100%" }}
-            />
-            <Tonearm down={!!song && isPlaying} />
-            {/* Mascot ôm đĩa bay cạnh đĩa (không nói chuyện) */}
-            <Matcappa pose="hug-vinyl" propeller="spin" size={120} className="absolute bottom-[-4%] right-[96%]" />
-          </div>
-          {song ? (
-            <ProgressBar currentTime={currentTime} duration={duration} onSeek={seek} className="mt-6" style={{ width: DECK }} />
-          ) : (
+          <Deck size={disc} song={song} isPlaying={isPlaying} mascot={layout.mascot} />
+          {!song && (
             <Button className="mt-8" onClick={() => navigate("/playlists")}>
               Mở thư viện
             </Button>
           )}
         </div>
-        {/* tạm: Task 3 chia theo thiết bị */}
-        <div className="absolute inset-x-4 bottom-6 z-10 mx-auto max-w-[1200px]">
+
+        {/* Thanh tiến trình + dock dính đáy, cùng bề ngang */}
+        <div className="absolute z-10 flex flex-col gap-1" style={{ left: layout.side, right: layout.side, bottom: layout.bottom }}>
+          {song && (
+            <ProgressBar
+              currentTime={currentTime}
+              duration={duration}
+              onSeek={seek}
+              alwaysThumb={device === DEVICE.MOBILE}
+              className="px-2"
+            />
+          )}
           <Dock />
         </div>
         <AnimatePresence>{showQueue && song && <QueueOverlay key="queue" />}</AnimatePresence>
       </div>
     </MotionConfig>
+  );
+}
+
+// Dòng ngữ cảnh + tên bài + ca sĩ. Một dòng thì chạy chữ, hai dòng thì xuống dòng rồi cắt "…"
+function SongTitle({ songKey, context, song, size, lines }) {
+  const titleStyle = { fontSize: size };
+  const titleCls = "mt-1 font-extrabold leading-tight tracking-[-.03em]";
+  return (
+    <motion.div
+      key={songKey ?? "none"}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.22 }}
+      className="w-full max-w-4xl text-center"
+    >
+      <div className="text-[13px] font-semibold uppercase tracking-[.14em] text-ink-soft">{context}</div>
+      {song && (
+        <>
+          {lines === 1 ? (
+            <div style={titleStyle}>
+              <Marquee className={titleCls}>{song.name}</Marquee>
+            </div>
+          ) : (
+            <h1 className={`${titleCls} line-clamp-2`} style={titleStyle}>
+              {song.name}
+            </h1>
+          )}
+          <div className="text-base text-ink-soft">{song.artist}</div>
+        </>
+      )}
+    </motion.div>
+  );
+}
+
+// Đĩa + cần đĩa, mascot ôm đĩa bay cạnh (không nói chuyện)
+function Deck({ size, song, isPlaying, mascot }) {
+  return (
+    <div data-deck className="relative" style={{ width: size, height: size }}>
+      <Vinyl
+        size={420}
+        spinning={song ? isPlaying : true}
+        duration={song ? 6 : 18}
+        label={song?.thumbnail ? `url(${song.thumbnail}) center/cover` : undefined}
+        style={{ width: "100%", height: "100%" }}
+      />
+      <Tonearm down={!!song && isPlaying} />
+      {mascot && <Matcappa pose="hug-vinyl" propeller="spin" size={120} className="absolute bottom-[-4%] right-[96%]" />}
+    </div>
   );
 }

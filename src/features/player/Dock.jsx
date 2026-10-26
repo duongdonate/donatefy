@@ -20,6 +20,12 @@ const DOCK = {
   [DEVICE.DESKTOP]: { cells: 5, cover: (w) => clamp(80, w * 0.065, 110), heightRatio: 1.7, navSize: 48, sideSize: 40 },
 };
 
+// Chiều cao dock (px) để trang tính chỗ còn lại cho đĩa
+export function dockHeight(device, width) {
+  const layout = DOCK[device];
+  return layout.cover(width) * layout.heightRatio;
+}
+
 export default function Dock() {
   const device = useDevice();
   const { width } = useScreen();
