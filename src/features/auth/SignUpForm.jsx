@@ -11,12 +11,11 @@ import PasswordInput from "./PasswordInput";
 import { validateAvatar } from "./authForm";
 import useAuthSubmit from "./useAuthSubmit";
 
-export default function SignUpForm({ username, setUsername, busy, setBusy, onToggle }) {
+export default function SignUpForm({ username, setUsername, hasGoogle, setHasGoogle, busy, setBusy, onToggle }) {
   const { register } = useAuth();
   const { errors, setErrors, formError, submit, google } = useAuthSubmit(setBusy);
   const [password, setPassword] = useState("");
   const [avatar, setAvatar] = useState(null);
-  const [hasGoogle, setHasGoogle] = useState(true);
 
   // Ảnh sai định dạng / quá nặng: báo lỗi, không nhận
   const pickAvatar = (file) => {

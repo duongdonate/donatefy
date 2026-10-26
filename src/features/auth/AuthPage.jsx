@@ -25,6 +25,8 @@ export default function AuthPage({ mode }) {
 
   // Đổi chế độ thì form cũ unmount (xoá lỗi, mật khẩu); tên đăng nhập giữ ở đây nên còn nguyên
   const [username, setUsername] = useState("");
+  // Google có tải được hay không giữ ở đây: đổi form không phải dò lại, đường "hoặc" không nháy
+  const [hasGoogle, setHasGoogle] = useState(true);
   const [busy, setBusy] = useState(false);
   const onToggle = (to) => navigate(to, { replace: true, state: location.state });
   const Form = mode === "login" ? SignInForm : SignUpForm;
@@ -43,7 +45,7 @@ export default function AuthPage({ mode }) {
 
       <Glass ref={card} aria-busy={busy || undefined} className="relative w-full max-w-md overflow-hidden rounded-[32px] p-8">
         <h1 className="mb-6 text-center text-3xl font-extrabold tracking-[-.03em]">{t.title}</h1>
-        <Form username={username} setUsername={setUsername} busy={busy} setBusy={setBusy} onToggle={onToggle} />
+        <Form username={username} setUsername={setUsername} hasGoogle={hasGoogle} setHasGoogle={setHasGoogle} busy={busy} setBusy={setBusy} onToggle={onToggle} />
 
         {busy && (
           <div className="absolute inset-0 z-10 grid place-items-center content-center gap-1 bg-[rgba(244,241,223,.6)] text-center backdrop-blur-[10px] dark:bg-[rgba(24,32,20,.6)]">

@@ -9,11 +9,10 @@ import PasswordInput from "./PasswordInput";
 import AuthToggle from "./AuthToggle";
 import useAuthSubmit from "./useAuthSubmit";
 
-export default function SignInForm({ username, setUsername, busy, setBusy, onToggle }) {
+export default function SignInForm({ username, setUsername, hasGoogle, setHasGoogle, busy, setBusy, onToggle }) {
   const { login } = useAuth();
   const { errors, formError, submit, google } = useAuthSubmit(setBusy);
   const [password, setPassword] = useState("");
-  const [hasGoogle, setHasGoogle] = useState(true);
 
   return (
     <>
