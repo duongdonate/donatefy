@@ -137,7 +137,7 @@ export default function AuthPage({ mode }) {
     setBusy(false);
   };
 
-  const google = <GoogleButton onCredential={onGoogle} onAvailable={setHasGoogle} />;
+  const google = <GoogleButton onCredential={onGoogle} onAvailable={setHasGoogle} disabled={busy} />;
   const divider = hasGoogle && (
     <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-[.2em] text-ink-soft">
       <span className="h-px flex-1 bg-current opacity-25" />

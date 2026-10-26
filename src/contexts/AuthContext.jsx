@@ -103,9 +103,9 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const loginWithGoogle = async (credential) => {
+  const loginWithGoogle = async (accessToken) => {
     try {
-      const { access_token } = await axiosClient.post("/api/auth/google", { credential });
+      const { access_token } = await axiosClient.post("/api/auth/google", { access_token: accessToken });
       await startSession(access_token);
       return { success: true, message: "Đăng nhập thành công" };
     } catch (error) {
