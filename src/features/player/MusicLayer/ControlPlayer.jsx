@@ -2,8 +2,8 @@ import { Play, Pause, SkipBack, SkipForward, Repeat, Repeat1, Shuffle } from "lu
 import { memo } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
-import { getIsPlaying, getIsShuffle, getRepeat } from "../../app/selectors";
-import { toggleShuffle, cycleRepeat } from "../../app/slices/playerSlice";
+import { getIsPlaying, getIsShuffle, getRepeat } from "../../../app/selectors";
+import { toggleShuffle, cycleRepeat } from "../../../app/slices/playerSlice";
 
 function ControlPlayer({ onPlayPause, onNext, onPrevious }) {
   const isPlaying = useSelector(getIsPlaying);

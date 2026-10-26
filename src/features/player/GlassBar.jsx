@@ -3,7 +3,7 @@ import { ListMusic, Shuffle, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getIsMuted, getIsShowQueue, getIsShuffle, getVolume } from "../../app/selectors";
 import { setVolume, toggleMute, toggleQueue, toggleShuffle } from "../../app/slices/playerSlice";
-import { Glass, IconButton } from "../../design";
+import { Glass, IconButton } from "../../components";
 import VolumeSlider from "./VolumeSlider";
 
 export default function GlassBar() {

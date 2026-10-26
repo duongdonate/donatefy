@@ -1,6 +1,6 @@
 // Form đăng ký: avatar, tên, mật khẩu → "hoặc" → Google
 import { useState } from "react";
-import { Button } from "../../design";
+import { Button } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import AuthToggle from "./AuthToggle";
 import AvatarPicker from "./AvatarPicker";

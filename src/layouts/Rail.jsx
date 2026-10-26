@@ -1,7 +1,7 @@
 import { Home, Library } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
-import { Glass } from "../design";
-import { focusRing } from "../design/Button";
+import { Glass } from "../components";
+import { focusRing } from "../components/Button";
 
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [

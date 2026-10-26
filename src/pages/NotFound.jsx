@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Button } from "../design";
+import { Button } from "../components";
 import Matcappa from "../mascot/Matcappa";
 
 export default function NotFound() {

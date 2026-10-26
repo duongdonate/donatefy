@@ -1,16 +1,16 @@
 import { Maximize2 } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { getCurrentSong } from "../../app/selectors";
-import { usePlaybackTime } from "../../features/player/PlaybackTime";
+import { getCurrentSong } from "../../../app/selectors";
+import { usePlaybackTime } from "../PlaybackTime";
 
 import ProgressMusicBar from "./ProgressMusicBar";
 import ControlPlayer from "./ControlPlayer";
 import AdditionalControls from "./AdditionalControls";
-import Marquee from "../Marquee";
+import Marquee from "../../../components/Marquee";
 
 // Music Layer: thanh phát dính đáy. Chỉ là giao diện; việc phát nằm ở PlayerEngine.
-const MusicPlayer = () => {
+const MusicLayer = () => {
   const currentSong = useSelector(getCurrentSong);
   const { currentTime, duration, seek, previous, next, togglePlay } = usePlaybackTime();
   const navigate = useNavigate();
@@ -70,4 +70,4 @@ const MusicPlayer = () => {
   );
 };
 
-export default MusicPlayer;
+export default MusicLayer;

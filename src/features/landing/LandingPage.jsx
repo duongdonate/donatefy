@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { resetPlayer } from "../../app/slices/playerSlice";
-import { Glass } from "../../design";
+import { Glass } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import { SCENES } from "./scenes";
 import { LOCK_MS, MASCOT_SPOTS, accumulateWheel, clampStep, fitScale, stepFromKey, swipeDir } from "./stepper";

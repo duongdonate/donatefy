@@ -1,7 +1,7 @@
 // Thông báo nổi giữa đáy màn hình, sát trên Music Layer, đè lên mọi lớp (z cao nhất app đang là 50)
 import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
-import Toast from "../components/Toast/Toast";
+import Toast from "../components/Toast";
 
 export const ToastContext = createContext(null);
 

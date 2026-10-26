@@ -2,7 +2,7 @@
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import useToast from "../../hooks/useToast";
-import { Button, Glass, IconButton, Vinyl } from "../../design";
+import { Button, Glass, IconButton, Vinyl } from "../../components";
 import useDebounce from "../../hooks/useDebounce";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";

@@ -1,6 +1,6 @@
 // Nội dung 3 bước của landing (landing-mascot.html)
 import { Play } from "lucide-react";
-import { Button, Glass, Vinyl } from "../../design";
+import { Button, Glass, Vinyl } from "../../components";
 import { PageLoader } from "../../components/Loader";
 
 const d = (s) => ({ "--d": `${s}s` });

@@ -7,7 +7,7 @@ import { toggleMute, toggleQueue } from "../../app/slices/playerSlice";
 import useHotkeys from "../../hooks/useHotkeys";
 import QueueOverlay from "../queue/QueueOverlay";
 import Marquee from "../../components/Marquee";
-import { Button, Vinyl } from "../../design";
+import { Button, Vinyl } from "../../components";
 import Matcappa from "../../mascot/Matcappa";
 import { usePlaybackTime } from "./PlaybackTime";
 import Dock from "./Dock";

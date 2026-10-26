@@ -1,7 +1,7 @@
 // Menu ⋯ của playlist ở giữa dải bìa: Đổi tên / Xoá
 import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { IconButton } from "../../design";
+import { IconButton } from "../../components";
 
 export default function PlaylistMenu({
   onRename,

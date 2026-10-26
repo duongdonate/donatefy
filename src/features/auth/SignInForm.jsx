@@ -1,6 +1,6 @@
 // Form đăng nhập: Google → "hoặc" → tên, mật khẩu
 import { useState } from "react";
-import { Button } from "../../design";
+import { Button } from "../../components";
 import { useAuth } from "../../contexts/AuthContext";
 import Field, { TextInput } from "./Field";
 import GoogleButton from "./GoogleButton";

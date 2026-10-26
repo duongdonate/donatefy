@@ -1,7 +1,7 @@
 // Trang trưng bày component v2, chỉ có khi chạy dev (/dev/ui)
 import { ListMusic, Moon, Shuffle, Sun, Volume2 } from "lucide-react";
 import { useState } from "react";
-import { Button, Glass, IconButton, Vinyl } from "../design";
+import { Button, Glass, IconButton, Vinyl } from "../components";
 import { useTheme } from "../contexts/ThemeContext";
 import { PageLoader } from "../components/Loader";
 import Matcappa from "../mascot/Matcappa";

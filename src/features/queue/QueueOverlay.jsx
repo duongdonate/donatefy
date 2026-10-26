@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { getCurrentPlaylist, getCurrentSong, getIsPlaying, getIsShuffle, getRepeat } from "../../app/selectors";
 import { cycleRepeat, playAt, reorderUpNext, toggleQueue, toggleShuffle } from "../../app/slices/playerSlice";
-import { Glass, IconButton, Vinyl } from "../../design";
+import { Glass, IconButton, Vinyl } from "../../components";
 import { usePlaybackTime } from "../player/PlaybackTime";
 import { moveItem } from "../player/playerMath";
 import { DraggableRow, StaticRow } from "./QueueRow";

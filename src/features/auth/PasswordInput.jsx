@@ -1,7 +1,7 @@
 // Ô mật khẩu có nút mắt ẩn / hiện
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import { IconButton } from "../../design";
+import { IconButton } from "../../components";
 import { TextInput } from "./Field";
 
 export default function PasswordInput(props) {

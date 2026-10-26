@@ -17,7 +17,7 @@ import {
 } from "../../app/slices/playlistSlice";
 import { playContext } from "../../app/slices/playerSlice";
 import useToast from "../../hooks/useToast";
-import { Button, IconButton } from "../../design";
+import { Button, IconButton } from "../../components";
 import useConfirm from "../../hooks/useConfirm";
 import Matcappa from "../../mascot/Matcappa";
 import playlistService from "../../services/api/playlistService";

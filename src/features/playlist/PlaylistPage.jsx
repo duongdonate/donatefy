@@ -7,8 +7,8 @@ import { getCurrentPlaylist, getCurrentSong, getIsShuffle } from "../../app/sele
 import { playContext, toggleShuffle } from "../../app/slices/playerSlice";
 import { setCurrentPlaylist } from "../../app/slices/playlistSlice";
 import useToast from "../../hooks/useToast";
-import { Button } from "../../design";
-import { focusRing } from "../../design/Button";
+import { Button } from "../../components";
+import { focusRing } from "../../components/Button";
 import Matcappa from "../../mascot/Matcappa";
 import NotFound from "../../pages/NotFound";
 import playlistService from "../../services/api/playlistService";

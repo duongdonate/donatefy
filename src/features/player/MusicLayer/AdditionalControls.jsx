@@ -7,13 +7,13 @@ import {
   getIsShowLyrics,
   getVolume,
   getIsMuted,
-} from "../../app/selectors";
+} from "../../../app/selectors";
 import {
   toggleQueue,
   toggleLyrics,
   setVolume,
   toggleMute,
-} from "../../app/slices/playerSlice";
+} from "../../../app/slices/playerSlice";
 
 function AdditionalControls() {
   const showQueue = useSelector(getIsShowQueue);

@@ -7,7 +7,7 @@ import NowPlaying from "../features/player/NowPlaying";
 import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
 // Music Layer tải sẵn (nhẹ, không kéo react-player): lazy riêng làm cả trang nháy loader khi rời /listen
-import MusicPlayer from "../components/MusicPlayer";
+import MusicLayer from "../features/player/MusicLayer/MusicLayer";
 import { PageLoader } from "../components/Loader";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -61,7 +61,7 @@ function PlayerLayout() {
       <PlayerEngine>
         <Outlet />
         {/* /listen đã là bản mở rộng của Music Layer */}
-        {pathname !== "/listen" && <MusicPlayer />}
+        {pathname !== "/listen" && <MusicLayer />}
       </PlayerEngine>
     </Suspense>
   );

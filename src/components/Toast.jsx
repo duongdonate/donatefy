@@ -1,7 +1,7 @@
 // Một thông báo dạng viên kính (kiểu UndoBar cũ), có thể kèm một nút hành động
 import { motion } from "framer-motion";
-import { Glass } from "../../design";
-import { focusRing } from "../../design/Button";
+import Glass from "./Glass";
+import { focusRing } from "./Button";
 
 export default function Toast({ message, action, onAction }) {
   return (

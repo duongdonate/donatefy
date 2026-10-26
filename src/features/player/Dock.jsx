@@ -4,7 +4,7 @@ import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getIsPlaying, getIsShowQueue, getRepeat } from "../../app/selectors";
 import { playAt } from "../../app/slices/playerSlice";
-import { Glass, IconButton } from "../../design";
+import { Glass, IconButton } from "../../components";
 import { usePlaybackTime } from "./PlaybackTime";
 import { dockWindow } from "./playerMath";
 

@@ -1,6 +1,6 @@
 // useConfirm.js
 import { useCallback } from "react";
-import { Button } from "../design";
+import { Button } from "../components";
 import usePopup from "./usePopup";
 
 export default function useConfirm() {

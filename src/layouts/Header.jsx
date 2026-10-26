@@ -1,5 +1,5 @@
 import { LogOut, Moon, Sun } from "lucide-react";
-import { Glass, IconButton } from "../design";
+import { Glass, IconButton } from "../components";
 import Matcappa from "../mascot/Matcappa";
 import Avatar from "../components/Avatar";
 import { useAuth } from "../contexts/AuthContext";

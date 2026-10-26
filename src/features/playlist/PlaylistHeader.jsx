@@ -1,5 +1,5 @@
 import { Play, Plus, Shuffle } from "lucide-react";
-import { Button } from "../../design";
+import { Button } from "../../components";
 import { totalDuration } from "../library/libraryMath";
 
 const fmtTotal = (sec) =>

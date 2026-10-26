@@ -2,7 +2,7 @@
 // bấm thì mở popup OAuth và trả access token. Script Google lỗi / thiếu client id → không render gì, cha ẩn luôn đường "hoặc".
 import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
 import { useEffect, useState } from "react";
-import { focusRing } from "../../design/Button";
+import { focusRing } from "../../components/Button";
 
 const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 

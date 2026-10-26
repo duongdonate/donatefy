@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Glass } from "../../design";
+import { Glass } from "../../components";
 import { PageLoader } from "../../components/Loader";
 import FlyingMascot from "../../mascot/FlyingMascot";
 import { AUTH_LINES } from "../../mascot/lines";

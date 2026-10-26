@@ -2,7 +2,7 @@
 import { createContext, useState, useCallback, useEffect, useRef } from "react";
 import { X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Glass, IconButton } from "../design";
+import { Glass, IconButton } from "../components";
 
 export const PopupContext = createContext();
 

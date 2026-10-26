@@ -1,5 +1,5 @@
 import { Play } from "lucide-react";
-import { focusRing } from "../../design/Button";
+import { focusRing } from "../../components/Button";
 import PlaylistMenu from "../library/PlaylistMenu";
 import formatDuration from "../../utils/formatDuration";
 

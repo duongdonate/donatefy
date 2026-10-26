@@ -1,4 +1,4 @@
-import formatDuration from "../../utils/formatDuration";
+import formatDuration from "../../../utils/formatDuration";
 import { motion } from "framer-motion";
 
 function ProgressMusicBar({
