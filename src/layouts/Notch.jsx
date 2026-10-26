@@ -19,6 +19,7 @@ import { DEVICE } from "../utils/device";
 import ListenIcon from "./notch/ListenIcon";
 import MiniPlayer from "./notch/MiniPlayer";
 import NotchDots from "./notch/NotchDots";
+import NotchWave from "./notch/NotchWave";
 import NowPlayingCard from "./notch/NowPlayingCard";
 import { CARD, cardsFor, openCard, restingCard, stepCard, visibleCard } from "./notchCards";
 
@@ -48,8 +49,10 @@ const PANEL_FX = {
   open: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1], delay: 0.15 } },
   closed: { opacity: 0, scale: 0.9, transition: { duration: 0.12, ease: "easeIn" } },
 };
-const SLIDE = 24; // px thẻ trượt khi chuyển
-const SWITCH = { type: "spring", stiffness: 300, damping: 32 };
+// Chuyển thẻ: thẻ mới trượt vào từ phía lướt, thẻ cũ chỉ mờ đi nhanh (không trượt ngược) cho đỡ chồng hình giật
+const SLIDE = 24; // px
+const SWITCH_IN = { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] };
+const SWITCH_OUT = { duration: 0.14, ease: "easeOut" };
 
 const canHover = () => window.matchMedia?.("(hover: hover)").matches;
 const onDark = "!text-[#eef3e6] hover:!bg-white/10";
@@ -214,7 +217,7 @@ export default function Notch({ open, onOpenChange }) {
                 <NotchLink key={link.to} {...link} size={layout.button} />
               ))}
             </div>
-            <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />
+            {hasSong ? <NotchWave /> : <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />}
             <div className="flex items-center gap-1">
               <IconButton size={layout.button} label={isDark ? "Chuyển sang sáng" : "Chuyển sang tối"} onClick={toggleTheme} className={onDark}>
                 {isDark ? <Sun size={20} /> : <Moon size={20} />}
@@ -254,7 +257,7 @@ export default function Notch({ open, onOpenChange }) {
             onPointerUp={onSwipeUp}
             style={{ touchAction: "pan-y" }}
           >
-            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[shown] ?? "auto" }} transition={SWITCH}>
+            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[shown] ?? "auto" }} transition={SWITCH_IN}>
               {panelCards.map((c, i) => (
                 <motion.div
                   key={c}
@@ -264,14 +267,16 @@ export default function Notch({ open, onOpenChange }) {
                   className="absolute inset-x-0 top-0"
                   inert={c !== shown}
                   initial={false}
-                  animate={{ opacity: c === shown ? 1 : 0, x: c === shown ? 0 : i < selIndex ? -SLIDE : SLIDE }}
-                  transition={SWITCH}
+                  style={{ willChange: "transform, opacity" }}
+                  animate={c === shown ? { opacity: 1, x: 0 } : { opacity: 0, x: i < selIndex ? -SLIDE : SLIDE }}
+                  transition={c === shown ? SWITCH_IN : { opacity: SWITCH_OUT, x: { duration: 0, delay: SWITCH_OUT.duration } }} // mờ xong mới đặt sẵn sang bên cho lần trượt vào sau
                 >
                   {c === CARD.NOW ? <NowPlayingCard /> : <AccountCard user={user} onLogout={logout} />}
                 </motion.div>
               ))}
             </motion.div>
-            <NotchDots cards={cards} current={shown ?? card} onPick={pick} />
+            {/* chỉ chấm cho thẻ trong khung mở: điện thoại thẻ nhạc đã luôn hiện ở viên nên chỉ còn 1 thẻ → không chấm */}
+            <NotchDots cards={panelCards} current={shown ?? card} onPick={pick} />
           </motion.div>
         )}
       </div>
