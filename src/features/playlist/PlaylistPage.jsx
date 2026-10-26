@@ -9,6 +9,8 @@ import { setCurrentPlaylist } from "../../app/slices/playlistSlice";
 import useToast from "../../hooks/useToast";
 import { Button } from "../../components";
 import { focusRing } from "../../components/Button";
+import { useDevice } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
 import Matcappa from "../../mascot/Matcappa";
 import NotFound from "../../pages/NotFound";
 import playlistService from "../../services/api/playlistService";
@@ -21,7 +23,16 @@ import SongTile from "./SongTile";
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-matcha-4 bg-transparent text-sm font-bold text-matcha-1 hover:bg-white/20 ${focusRing}`;
 
+// Số liệu trang playlist theo thiết bị: lề, khung tối đa, số cột lưới bài, cỡ bìa đầu trang.
+// Mobile cuộn cả trang (khối tiêu đề cao), máy lớn chỉ cuộn lưới bài.
+const PLAYLIST = {
+  [DEVICE.MOBILE]: { padX: 16, padTop: 72, frame: Infinity, cols: 2, gap: 12, cover: 120, stacked: true, scrollWhole: true },
+  [DEVICE.TABLET]: { padX: 24, padTop: 80, frame: Infinity, cols: 3, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+  [DEVICE.DESKTOP]: { padX: 32, padTop: 88, frame: 1280, cols: 4, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+};
+
 export default function PlaylistPage() {
+  const device = useDevice();
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -125,21 +136,25 @@ export default function PlaylistPage() {
     setSongs((cur) => insertAt(cur, p.song, p.index));
   };
 
+  const layout = PLAYLIST[device];
+
   return (
     <>
       {/* Phủ kín như Thư viện: absolute inset-0, đệm riêng tránh header/rail/Music Layer */}
       <section
         aria-label={playlist.name}
-        className={`absolute inset-0 flex flex-col overflow-clip pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${currentSong ? "pb-28" : "pb-4"}`}
-        style={{ background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
+        className={`absolute inset-0 text-[#eef3e6] [container-type:inline-size] ${layout.scrollWhole ? "overflow-y-auto overflow-x-hidden" : "overflow-clip"} ${currentSong ? "pb-28" : "pb-4"}`}
+        style={{ paddingLeft: layout.padX, paddingRight: layout.padX, paddingTop: layout.padTop, background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
       >
-        <div className="shrink-0 px-8">
+        {/* Khung giữa: desktop tối đa 1280px */}
+        <div className={`relative mx-auto flex w-full flex-col ${layout.scrollWhole ? "" : "h-full"}`} style={{ maxWidth: layout.frame }}>
+        <div className="shrink-0">
           <Button variant="ghost" size="sm" aria-label="Về thư viện" onClick={() => navigate("/playlists")} className="!text-[#eef3e6] hover:!bg-white/10">
             <ArrowLeft size={16} aria-hidden="true" /> Thư viện
           </Button>
         </div>
-        <PlaylistHeader playlist={playlist} songs={songs} onPlay={() => playFrom(0)} onShuffle={onShuffle} onAdd={onAdd} />
-        <div className="mt-4 min-h-0 flex-1 overflow-y-auto overflow-x-hidden px-8 pb-6">
+        <PlaylistHeader playlist={playlist} songs={songs} onPlay={() => playFrom(0)} onShuffle={onShuffle} onAdd={onAdd} cover={layout.cover} stacked={layout.stacked} />
+        <div className={`mt-4 pb-6 ${layout.scrollWhole ? "" : "min-h-0 flex-1 overflow-y-auto overflow-x-hidden"}`}>
           {songs.length === 0 ? (
             <div className="grid h-full place-items-center text-center">
               <div className="flex flex-col items-center gap-3">
@@ -156,7 +171,7 @@ export default function PlaylistPage() {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+            <div className="grid" style={{ gridTemplateColumns: `repeat(${layout.cols}, minmax(0, 1fr))`, gap: layout.gap }}>
               {songs.map((s, i) => (
                 <SongTile
                   key={s.id}
@@ -173,6 +188,7 @@ export default function PlaylistPage() {
               </button>
             </div>
           )}
+        </div>
         </div>
       </section>
       {dialog && (
