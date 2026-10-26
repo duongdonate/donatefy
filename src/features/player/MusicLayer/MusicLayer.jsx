@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getCurrentSong, getIsPlaying } from "../../../app/selectors";
 import { useDevice } from "../../../contexts/DeviceContext";
 import { DEVICE } from "../../../utils/device";
+import useTyping from "../../../hooks/useTyping";
 import { usePlaybackTime } from "../PlaybackTime";
 
 import ProgressMusicBar from "./ProgressMusicBar";
@@ -17,8 +18,9 @@ import { IconButton } from "../../../components";
 const MusicLayer = () => {
   const device = useDevice();
   const currentSong = useSelector(getCurrentSong);
+  const typing = useTyping(); // mobile đang gõ: ẩn để bàn phím không đẩy thanh đè lên ô nhập
 
-  if (!currentSong) return null;
+  if (!currentSong || typing) return null;
 
   switch (device) {
     case DEVICE.MOBILE:

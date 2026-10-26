@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import { getCurrentSong } from "../app/selectors";
 import { useDevice } from "../contexts/DeviceContext";
 import useIdle from "../hooks/useIdle";
+import useTyping from "../hooks/useTyping";
 import { DEVICE } from "../utils/device";
 import Notch from "./Notch";
 
@@ -20,6 +21,9 @@ export default function AppShell({ children }) {
   const pad = !!useSelector(getCurrentSong) && pathname !== "/listen";
   // Giữ notch khi chuột ở trên, focus bàn phím ở bên trong, hoặc notch đang mở
   const idle = useIdle(2500, { hold: hover || focusIn || notchOpen });
+  // Mobile đang gõ: ẩn notch nhường chỗ cho bàn phím
+  const typing = useTyping();
+  const hidden = idle || typing;
 
   // Bấm chuột cũng để lại focus trên nút; chỉ tính focus bàn phím, nếu không notch không bao giờ ẩn
   const holdProps = {
@@ -35,7 +39,7 @@ export default function AppShell({ children }) {
     <div className="bg-cafe relative isolate h-dvh w-screen overflow-hidden text-ink">
       {device !== DEVICE.MOBILE && <Blobs />}
 
-      <div className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center ${chrome} ${idle ? "-translate-y-[120%] opacity-0" : ""}`}>
+      <div className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center ${chrome} ${hidden ? "-translate-y-[120%] opacity-0" : ""}`}>
         <div {...holdProps} className="pointer-events-auto">
           <Notch open={notchOpen} onOpenChange={setNotchOpen} />
         </div>

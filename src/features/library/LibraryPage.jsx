@@ -495,6 +495,7 @@ export default function LibraryPage() {
                     value={draft}
                     maxLength={60}
                     aria-label="Tên playlist"
+                    enterKeyHint="done"
                     onChange={(e) => setDraft(e.target.value)}
                     onBlur={() => setRenaming(false)}
                     onKeyDown={(e) => {
@@ -565,6 +566,7 @@ export default function LibraryPage() {
                       aria-label="Tên playlist mới"
                       aria-describedby="new-playlist-count"
                       autoComplete="off"
+                      enterKeyHint="done"
                       className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
                     />
                     <p
