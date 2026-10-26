@@ -1,8 +1,5 @@
 // Khung v2: nền quán + notch điều hướng dính mép trên, tự ẩn khi đứng yên
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
-import { getCurrentSong } from "../app/selectors";
 import { useDevice } from "../contexts/DeviceContext";
 import useIdle from "../hooks/useIdle";
 import useTyping from "../hooks/useTyping";
@@ -16,11 +13,9 @@ export default function AppShell({ children }) {
   const [hover, setHover] = useState(false);
   const [focusIn, setFocusIn] = useState(false);
   const [notchOpen, setNotchOpen] = useState(false);
-  // Chừa đáy cho Music Layer (không hiện ở /listen)
-  const { pathname } = useLocation();
-  const pad = !!useSelector(getCurrentSong) && pathname !== "/listen";
   // Giữ notch khi chuột ở trên, focus bàn phím ở bên trong, hoặc notch đang mở
-  const idle = useIdle(2500, { hold: hover || focusIn || notchOpen });
+  // Điện thoại: notch (có thẻ nhạc mỏng) luôn hiện
+  const idle = useIdle(2500, { hold: device === DEVICE.MOBILE || hover || focusIn || notchOpen });
   // Mobile đang gõ: ẩn notch nhường chỗ cho bàn phím
   const typing = useTyping();
   const hidden = idle || typing;
@@ -46,7 +41,7 @@ export default function AppShell({ children }) {
         </div>
       </div>
 
-      <main className={`relative h-full w-full ${pad ? "pb-28" : ""}`}>{children}</main>
+      <main className="relative h-full w-full">{children}</main>
     </div>
   );
 }

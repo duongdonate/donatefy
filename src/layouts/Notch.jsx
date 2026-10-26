@@ -2,9 +2,12 @@
 // Thu gọn: Trang chủ, Thư viện | theme, avatar. Mở rộng: thẻ tài khoản có Đăng xuất.
 // Đợt sau sẽ thêm thẻ "bài đang phát" vào phần mở rộng.
 import { motion } from "framer-motion";
-import { Disc3, Library, LogOut, Moon, Sun } from "lucide-react";
+import { Library, LogOut, Moon, Sun } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
+import { getCurrentSong } from "../app/selectors";
+import { swipeDir } from "../features/landing/stepper";
 import { IconButton } from "../components";
 import Avatar from "../components/Avatar";
 import { focusRing } from "../components/Button";
@@ -13,18 +16,24 @@ import { useDevice, useScreen } from "../contexts/DeviceContext";
 import { useTheme } from "../contexts/ThemeContext";
 import useLogout from "../hooks/useLogout";
 import { DEVICE } from "../utils/device";
+import ListenIcon from "./notch/ListenIcon";
+import MiniPlayer from "./notch/MiniPlayer";
+import NotchDots from "./notch/NotchDots";
+import NotchWave from "./notch/NotchWave";
+import NowPlayingCard from "./notch/NowPlayingCard";
+import { CARD, cardsFor, openCard, restingCard, stepCard, visibleCard } from "./notchCards";
 
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [
-  { to: "/listen", label: "Đang phát", Icon: Disc3 },
+  { to: "/listen", label: "Đang phát", Icon: ListenIcon },
   { to: "/playlists", label: "Thư viện", Icon: Library, also: "/playlists/" },
 ];
 
 // Số liệu notch theo thiết bị: cỡ nút, bề ngang khung mở (cũng là bề ngang viên thu gọn ở điện thoại), mở bằng rê chuột không
 const NOTCH = {
   [DEVICE.MOBILE]: { button: 44, openWidth: (w) => Math.min(w - 32, 384), fullPill: true, hoverOpen: false },
-  [DEVICE.TABLET]: { button: 40, openWidth: () => 400, fullPill: false, hoverOpen: true },
-  [DEVICE.DESKTOP]: { button: 40, openWidth: () => 420, fullPill: false, hoverOpen: true },
+  [DEVICE.TABLET]: { button: 40, openWidth: () => 440, fullPill: false, hoverOpen: true },
+  [DEVICE.DESKTOP]: { button: 40, openWidth: () => 460, fullPill: false, hoverOpen: true },
 };
 
 // Kiểu "giọt chất lỏng" (mẫu D): nền là viên nhỏ + giọt lớn qua bộ lọc goo (làm nhoè rồi cắt ngưỡng → hai mép dính liền khi giãn).
@@ -36,10 +45,14 @@ const DROP = {
   open: { y: "0%", scaleX: 1, scaleY: 1, transition: { type: "spring", stiffness: 220, damping: 22 } },
   closed: { y: "-80%", scaleX: 0.5, scaleY: 0.6, transition: { duration: 0.46, ease: [0.65, 0, 0.35, 1], delay: 0.04 } },
 };
-const CARD = {
+const PANEL_FX = {
   open: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1], delay: 0.15 } },
   closed: { opacity: 0, scale: 0.9, transition: { duration: 0.12, ease: "easeIn" } },
 };
+// Chuyển thẻ: thẻ mới trượt vào từ phía lướt, thẻ cũ chỉ mờ đi nhanh (không trượt ngược) cho đỡ chồng hình giật
+const SLIDE = 24; // px
+const SWITCH_IN = { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] };
+const SWITCH_OUT = { duration: 0.14, ease: "easeOut" };
 
 const canHover = () => window.matchMedia?.("(hover: hover)").matches;
 const onDark = "!text-[#eef3e6] hover:!bg-white/10";
@@ -50,20 +63,32 @@ export default function Notch({ open, onOpenChange }) {
   const { user } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const logout = useLogout();
+  const hasSong = !!useSelector(getCurrentSong);
+  const onListen = useLocation().pathname === "/listen";
   const root = useRef(null);
-  const nav = useRef(null);
+  const head = useRef(null);
   const avatarBtn = useRef(null);
   const openedByHover = useRef(false);
+  const swipeStart = useRef(null);
+  const cardEls = useRef({});
   const [pill, setPill] = useState({ width: 0, height: 0 });
+  const [cardHeights, setCardHeights] = useState({});
+  const [card, setCard] = useState(CARD.ACCOUNT); // giữ thẻ cuối cả khi đóng để lúc thu lại không bị trống
 
   const layout = NOTCH[device];
   const hoverOpen = layout.hoverOpen && canHover();
   const width = layout.openWidth(screenWidth);
-  const expanded = open && !!user;
+  const cards = cardsFor({ hasSong, onListen, loggedIn: !!user });
+  const resting = restingCard({ device, hasSong, onListen });
+  // Điện thoại: thẻ đang phát chính là thẻ nhạc mỏng ở viên, khung mở không vẽ lại
+  const panelCards = cards.filter((c) => c !== resting);
+  const shown = visibleCard(cards, resting, card);
+  const expanded = open && shown !== null;
+  const panelKey = panelCards.join();
 
-  // Viên nền thu gọn ôm đúng hàng icon
+  // Viên nền thu gọn ôm đúng hàng icon (+ thẻ nhạc mỏng ở điện thoại)
   useLayoutEffect(() => {
-    const el = nav.current;
+    const el = head.current;
     const measure = () => setPill({ width: el.offsetWidth, height: el.offsetHeight });
     measure();
     const ro = new ResizeObserver(measure);
@@ -71,10 +96,35 @@ export default function Notch({ open, onOpenChange }) {
     return () => ro.disconnect();
   }, []);
 
+  // Chiều cao từng thẻ để khung mở co giãn theo thẻ đang chọn (giọt nền bám theo khung)
+  useLayoutEffect(() => {
+    const els = Object.entries(cardEls.current).filter(([, el]) => el);
+    const measure = () => setCardHeights(Object.fromEntries(els.map(([k, el]) => [k, el.offsetHeight])));
+    measure();
+    const ro = new ResizeObserver(measure);
+    els.forEach(([, el]) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [panelKey]);
+
   const setOpen = (next, byHover = false) => {
     openedByHover.current = next && byHover;
     onOpenChange(next);
   };
+
+  // Chọn thẻ qua chấm / lướt; điện thoại chọn "đang phát" = về viên có thẻ nhạc mỏng
+  const pick = (c) => {
+    if (c === resting) return setOpen(false);
+    setCard(c);
+  };
+
+  // Thẻ đang chọn biến mất (hết bài, vào /listen, đổi sang cỡ điện thoại): khung hiện ngay thẻ còn lại (shown);
+  // đang mở bằng rê chuột hoặc hết thẻ thì đóng luôn
+  useEffect(() => {
+    if (shown === card) return;
+    if (open && (openedByHover.current || shown === null)) setOpen(false);
+    if (shown) setCard(shown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shown]);
 
   // Đóng bằng Esc (trả focus về avatar) hoặc bấm ra ngoài
   useEffect(() => {
@@ -97,12 +147,39 @@ export default function Notch({ open, onOpenChange }) {
     };
   }, [open, onOpenChange]);
 
+  const onHoverEnter = () => {
+    if (!hoverOpen || open) return;
+    const c = openCard(panelCards, "hover");
+    if (!c) return;
+    setCard(c);
+    setOpen(true, true);
+  };
+  const onAvatar = () => {
+    if (open && shown === CARD.ACCOUNT) return setOpen(false);
+    setCard(CARD.ACCOUNT);
+    if (!open) setOpen(true);
+  };
+
+  // Lướt ngang trên khung thẻ; bỏ qua khi bắt đầu trên thanh tiến trình (đang tua)
+  const onSwipeDown = (e) => {
+    swipeStart.current = e.target.closest('[role="slider"]') ? null : e.clientX;
+  };
+  const onSwipeUp = (e) => {
+    if (swipeStart.current === null) return;
+    const dir = swipeDir(swipeStart.current, e.clientX);
+    swipeStart.current = null;
+    if (dir) pick(stepCard(cards, shown ?? card, dir));
+  };
+
+  const selIndex = panelCards.indexOf(shown);
+
   return (
     <div
       ref={root}
       className="pointer-events-none relative text-[#eef3e6]"
       style={{ width }}
-      onMouseLeave={() => openedByHover.current && setOpen(false)}
+      // đang giữ chuột (kéo thanh tiến trình ra ngoài) thì chưa đóng
+      onMouseLeave={(e) => openedByHover.current && e.buttons === 0 && setOpen(false)}
     >
       <svg width="0" height="0" className="absolute" aria-hidden="true">
         <filter id={GOO_ID}>
@@ -131,52 +208,75 @@ export default function Notch({ open, onOpenChange }) {
         />
       </div>
 
-      {/* Lớp nội dung: hàng icon luôn ở giữa, thẻ tài khoản hiện khi mở */}
-      <div className="relative flex flex-col items-center px-3 pb-3">
-        <nav
-          ref={nav}
-          aria-label="Điều hướng"
-          className="pointer-events-auto flex items-center justify-between gap-1 px-3 py-2"
-          style={{ width: layout.fullPill ? "100%" : undefined }}
-          onMouseEnter={() => hoverOpen && !open && setOpen(true, true)}
-        >
-          <div className="flex items-center gap-1">
-            {LINKS.map((link) => (
-              <NotchLink key={link.to} {...link} size={layout.button} />
-            ))}
-          </div>
-          <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />
-          <div className="flex items-center gap-1">
-            <IconButton size={layout.button} label={isDark ? "Chuyển sang sáng" : "Chuyển sang tối"} onClick={toggleTheme} className={onDark}>
-              {isDark ? <Sun size={20} /> : <Moon size={20} />}
-            </IconButton>
-            {user && (
-              <button
-                ref={avatarBtn}
-                type="button"
-                aria-label="Tài khoản"
-                aria-haspopup="true"
-                aria-expanded={open}
-                onClick={() => setOpen(!open)}
-                className={`grid place-items-center rounded-full ${focusRing}`}
-                style={{ width: layout.button, height: layout.button }}
-              >
-                <Avatar size={layout.button - 10} />
-              </button>
-            )}
-          </div>
-        </nav>
+      {/* Lớp nội dung; "dark" để thanh tiến trình và chữ phụ lấy màu cho nền tối */}
+      <div className="dark relative flex flex-col items-center px-3 pb-3">
+        <div ref={head} className="pointer-events-auto" style={{ width: layout.fullPill ? "100%" : undefined }}>
+          <nav aria-label="Điều hướng" className="flex items-center justify-between gap-1 px-3 py-2" onMouseEnter={onHoverEnter}>
+            <div className="flex items-center gap-1">
+              {LINKS.map((link) => (
+                <NotchLink key={link.to} {...link} size={layout.button} />
+              ))}
+            </div>
+            {hasSong ? <NotchWave /> : <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />}
+            <div className="flex items-center gap-1">
+              <IconButton size={layout.button} label={isDark ? "Chuyển sang sáng" : "Chuyển sang tối"} onClick={toggleTheme} className={onDark}>
+                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              </IconButton>
+              {user && (
+                <button
+                  ref={avatarBtn}
+                  type="button"
+                  aria-label="Tài khoản"
+                  aria-haspopup="true"
+                  aria-expanded={expanded && shown === CARD.ACCOUNT}
+                  onClick={onAvatar}
+                  className={`grid place-items-center rounded-full ${focusRing}`}
+                  style={{ width: layout.button, height: layout.button }}
+                >
+                  <Avatar size={layout.button - 10} />
+                </button>
+              )}
+            </div>
+          </nav>
+          {resting && (
+            <div className="px-1 pb-1">
+              <MiniPlayer />
+            </div>
+          )}
+        </div>
 
-        {user && (
+        {panelCards.length > 0 && (
           // luôn có trong DOM để giọt nền biết chiều cao khung mở; khi đóng thì ẩn và không bấm / tab tới được
           <motion.div
             className={`w-full ${expanded ? "pointer-events-auto" : ""}`}
             inert={!expanded}
             initial={false}
             animate={expanded ? "open" : "closed"}
-            variants={CARD}
+            variants={PANEL_FX}
+            onPointerDown={onSwipeDown}
+            onPointerUp={onSwipeUp}
+            style={{ touchAction: "pan-y" }}
           >
-            <AccountCard user={user} onLogout={logout} />
+            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[shown] ?? "auto" }} transition={SWITCH_IN}>
+              {panelCards.map((c, i) => (
+                <motion.div
+                  key={c}
+                  ref={(el) => {
+                    cardEls.current[c] = el;
+                  }}
+                  className="absolute inset-x-0 top-0"
+                  inert={c !== shown}
+                  initial={false}
+                  style={{ willChange: "transform, opacity" }}
+                  animate={c === shown ? { opacity: 1, x: 0 } : { opacity: 0, x: i < selIndex ? -SLIDE : SLIDE }}
+                  transition={c === shown ? SWITCH_IN : { opacity: SWITCH_OUT, x: { duration: 0, delay: SWITCH_OUT.duration } }} // mờ xong mới đặt sẵn sang bên cho lần trượt vào sau
+                >
+                  {c === CARD.NOW ? <NowPlayingCard /> : <AccountCard user={user} onLogout={logout} />}
+                </motion.div>
+              ))}
+            </motion.div>
+            {/* chỉ chấm cho thẻ trong khung mở: điện thoại thẻ nhạc đã luôn hiện ở viên nên chỉ còn 1 thẻ → không chấm */}
+            <NotchDots cards={panelCards} current={shown ?? card} onPick={pick} />
           </motion.div>
         )}
       </div>

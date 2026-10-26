@@ -138,7 +138,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
     }
   };
 
-  // Gắn ra body: nếu nằm trong khung trang (isolate) thì Music Layer z-40 ở ngoài sẽ đè lên đáy hộp
+  // Gắn ra body: nếu nằm trong khung trang (isolate) thì lớp z cao ở ngoài (notch) sẽ đè lên hộp
   return createPortal(
     <div
       className={`fixed inset-0 z-50 bg-[rgba(5,8,4,.5)] ${layout.overlay}`}

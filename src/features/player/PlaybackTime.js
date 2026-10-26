@@ -1,4 +1,4 @@
-// Thời gian phát + lệnh tua / chuyển bài dùng chung cho Music Layer, Now Playing, phím tắt.
+// Thời gian phát + lệnh tua / chuyển bài dùng chung cho notch, Now Playing, phím tắt.
 // Thời gian đổi nhiều lần mỗi giây nên ở context, không đưa vào Redux.
 import { createContext, useContext } from "react";
 

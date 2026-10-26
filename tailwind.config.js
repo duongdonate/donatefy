@@ -71,6 +71,11 @@ module.exports = {
         },
       },
       keyframes: {
+        // sóng nhạc notch: co giãn theo trục dọc (transform, nhẹ hơn đổi height)
+        wave: {
+          "0%, 100%": { transform: "scaleY(.25)" },
+          "50%": { transform: "scaleY(1)" },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -89,6 +94,7 @@ module.exports = {
         },
       },
       animation: {
+        wave: "wave 0.9s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },

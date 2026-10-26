@@ -1,4 +1,4 @@
-// true khi đang gõ trên mobile (focus nằm trong ô nhập): để ẩn tạm notch / Music Layer nhường chỗ cho bàn phím.
+// true khi đang gõ trên mobile (focus nằm trong ô nhập): để ẩn tạm notch nhường chỗ cho bàn phím.
 // Khi vừa focus vào ô thì cuộn ô đó ra giữa vùng còn thấy, đợi bàn phím mở xong.
 import { useEffect, useState } from "react";
 import { useDevice } from "../contexts/DeviceContext";
