@@ -292,10 +292,10 @@ export default function LibraryPage() {
 
   return (
     <>
-      {/* Phủ kín màn hình (main có pb-28 khi có nhạc, absolute inset-0 vẫn phủ cả phần đệm); đệm riêng để không chui dưới header/rail/Music Layer */}
+      {/* Phủ kín màn hình; đệm riêng để không chui dưới notch */}
       <section
         aria-label="Thư viện playlist"
-        className={`absolute inset-0 overflow-clip text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
+        className={`absolute inset-0 overflow-clip text-[#eef3e6] [container-type:inline-size] pb-4`}
         style={{
           paddingLeft: layout.padX,
           paddingRight: layout.padX,

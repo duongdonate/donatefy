@@ -140,10 +140,10 @@ export default function PlaylistPage() {
 
   return (
     <>
-      {/* Phủ kín như Thư viện: absolute inset-0, đệm riêng tránh header/rail/Music Layer */}
+      {/* Phủ kín như Thư viện: absolute inset-0, đệm riêng tránh notch */}
       <section
         aria-label={playlist.name}
-        className={`absolute inset-0 text-[#eef3e6] [container-type:inline-size] ${layout.scrollWhole ? "overflow-y-auto overflow-x-hidden" : "overflow-clip"} ${currentSong ? "pb-28" : "pb-4"}`}
+        className={`absolute inset-0 text-[#eef3e6] [container-type:inline-size] ${layout.scrollWhole ? "overflow-y-auto overflow-x-hidden" : "overflow-clip"} pb-4`}
         style={{ paddingLeft: layout.padX, paddingRight: layout.padX, paddingTop: layout.padTop, background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
       >
         {/* Khung giữa: desktop tối đa 1280px */}

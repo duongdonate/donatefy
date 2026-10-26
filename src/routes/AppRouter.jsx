@@ -5,8 +5,6 @@ import LibraryPage from "../features/library/LibraryPage";
 import PlaylistPage from "../features/playlist/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
 import NotFound from "../pages/NotFound";
-// Music Layer tải sẵn (nhẹ, không kéo react-player): lazy riêng làm cả trang nháy loader khi rời /listen
-import MusicLayer from "../features/player/MusicLayer/MusicLayer";
 import { PageLoader } from "../components/Loader";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -53,15 +51,12 @@ function GuestOnly() {
   return <Outlet />;
 }
 
-// Nhạc chạy song song mọi trang trong app; Music Layer dính đáy
+// Nhạc chạy song song mọi trang trong app; điều khiển nhạc nằm trên notch
 function PlayerLayout() {
-  const { pathname } = useLocation();
   return (
     <Suspense fallback={<FullLoader />}>
       <PlayerEngine>
         <Outlet />
-        {/* /listen đã là bản mở rộng của Music Layer */}
-        {pathname !== "/listen" && <MusicLayer />}
       </PlayerEngine>
     </Suspense>
   );
