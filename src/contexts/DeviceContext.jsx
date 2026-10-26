@@ -12,8 +12,14 @@ export function DeviceProvider({ children }) {
 
   useEffect(() => {
     const onResize = () => setScreen(readScreen());
+    // Nghe thêm 2 mốc thiết bị: vài trình duyệt (giả lập máy, xoay màn) đổi cỡ mà không bắn "resize"
+    const queries = ["(min-width: 768px)", "(min-width: 1280px)"].map((q) => window.matchMedia(q));
     window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    queries.forEach((q) => q.addEventListener("change", onResize));
+    return () => {
+      window.removeEventListener("resize", onResize);
+      queries.forEach((q) => q.removeEventListener("change", onResize));
+    };
   }, []);
 
   const device = deviceFromWidth(screen.width);

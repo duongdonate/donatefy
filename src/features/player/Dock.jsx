@@ -1,44 +1,85 @@
-// Dock: băng chuyền bìa quanh bài đang phát (visual-direction-v3.html)
+// Dock: băng chuyền bìa quanh bài đang phát (visual-direction-v3.html), hai bên là Shuffle/Hàng chờ và âm lượng
 import { motion } from "framer-motion";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getIsPlaying, getIsShowQueue, getRepeat } from "../../app/selectors";
 import { playAt } from "../../app/slices/playerSlice";
 import { Glass, IconButton } from "../../components";
+import { useDevice, useScreen } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
+import { ShuffleQueueButtons, VolumeInline, VolumePopover } from "./DockControls";
 import { usePlaybackTime } from "./PlaybackTime";
 import { dockWindow } from "./playerMath";
 
-const C = "clamp(64px, 9vw, 110px)"; // cạnh một bìa
+const clamp = (min, v, max) => Math.min(max, Math.max(min, v));
 
-export default function Dock({ size = 5 }) {
+// Số liệu dock theo thiết bị: số bìa hiện, cạnh một bìa (px), chiều cao dock so với bìa, cỡ nút
+const DOCK = {
+  [DEVICE.MOBILE]: { cells: 1, cover: () => 56, heightRatio: 1.45, navSize: 44, sideSize: 40 },
+  [DEVICE.TABLET]: { cells: 5, cover: (w) => clamp(64, w * 0.08, 96), heightRatio: 1.7, navSize: 48, sideSize: 40 },
+  [DEVICE.DESKTOP]: { cells: 5, cover: (w) => clamp(80, w * 0.065, 110), heightRatio: 1.7, navSize: 48, sideSize: 40 },
+};
+
+export default function Dock() {
+  const device = useDevice();
+  const { width } = useScreen();
+  const position = useSelector((s) => s.player.position);
+  if (position < 0) return null;
+
+  const layout = DOCK[device];
+  const cover = layout.cover(width);
+  const center = <CoverStrip cells={layout.cells} cover={cover} navSize={layout.navSize} />;
+
+  switch (device) {
+    case DEVICE.MOBILE:
+      return (
+        <DockShell height={cover * layout.heightRatio} gap="gap-1.5" padding="px-2">
+          <ShuffleQueueButtons size={layout.sideSize} />
+          {center}
+          <VolumePopover size={layout.sideSize} />
+        </DockShell>
+      );
+    case DEVICE.TABLET:
+    case DEVICE.DESKTOP:
+      return (
+        <DockShell height={cover * layout.heightRatio} gap="gap-3" padding="px-4">
+          <ShuffleQueueButtons size={layout.sideSize} />
+          {center}
+          <VolumeInline />
+        </DockShell>
+      );
+  }
+}
+
+function DockShell({ height, gap, padding, children }) {
+  return (
+    <Glass className={`flex w-full items-center rounded-[28px] ${gap} ${padding}`} style={{ height }}>
+      {children}
+    </Glass>
+  );
+}
+
+// ‹ dải bìa (bìa đang phát + nút phát/dừng nổi giữa) ›
+function CoverStrip({ cells: size, cover: C, navSize }) {
   const dispatch = useDispatch();
   const isPlaying = useSelector(getIsPlaying);
   const repeat = useSelector(getRepeat);
   const showQueue = useSelector(getIsShowQueue);
   const { queue, order, position } = useSelector((s) => s.player);
   const { previous, next, togglePlay } = usePlaybackTime();
-  if (position < 0) return null;
 
   const cells = dockWindow(order.length, position, size);
   const atEnd = position === order.length - 1 && repeat !== "all";
-  const navCls = "!h-12 !w-12 shrink-0 bg-white/50 shadow-[0_6px_14px_-6px_rgba(0,0,0,.3)] dark:bg-white/10";
+  const navCls = "shrink-0 bg-white/50 shadow-[0_6px_14px_-6px_rgba(0,0,0,.3)] dark:bg-white/10";
+  // Chỉ một bìa thì không cần làm mờ hai mép
+  const fade = size > 1 ? "linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent)" : undefined;
 
   return (
-    <Glass
-      className="absolute inset-x-[12%] bottom-6 z-10 flex items-center gap-3 rounded-[28px] px-4"
-      style={{ height: `calc(${C} * 1.7)` }}
-    >
-      <IconButton label="Bài trước" onClick={previous} className={navCls}>
+    <>
+      <IconButton size={navSize} label="Bài trước" onClick={previous} className={navCls}>
         <SkipBack size={22} fill="currentColor" />
       </IconButton>
-      <div
-        className="relative h-full flex-1"
-        style={{
-          perspective: `calc(${C} * 5.5)`,
-          maskImage: "linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent)",
-          WebkitMaskImage: "linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent)",
-        }}
-      >
+      <div className="relative h-full min-w-0 flex-1" style={{ perspective: C * 5.5, maskImage: fade, WebkitMaskImage: fade }}>
         {cells.map(({ pos, offset }) => {
           const song = queue[order[pos]];
           const a = Math.abs(offset), now = offset === 0;
@@ -55,10 +96,10 @@ export default function Dock({ size = 5 }) {
               }`}
               style={{
                 width: C,
-                marginLeft: `calc(${C} / -2)`,
-                marginTop: `calc(${C} / -2)`,
+                marginLeft: -C / 2,
+                marginTop: -C / 2,
                 zIndex: 10 - a,
-                transform: `translateX(calc(${C} * ${offset * 0.82})) translateZ(calc(${C} * ${now ? 0.33 : -a * 0.28})) rotateY(${-Math.sign(offset) * Math.min(a, 1) * 40}deg) scale(${now ? 1.12 : 1})`,
+                transform: `translateX(${C * offset * 0.82}px) translateZ(${C * (now ? 0.33 : -a * 0.28)}px) rotateY(${-Math.sign(offset) * Math.min(a, 1) * 40}deg) scale(${now ? 1.12 : 1})`,
                 filter: offset < 0 ? "saturate(.45) brightness(.92)" : undefined,
               }}
             >
@@ -86,9 +127,9 @@ export default function Dock({ size = 5 }) {
           {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
         </button>
       </div>
-      <IconButton label="Bài sau" onClick={next} disabled={atEnd} className={navCls}>
+      <IconButton size={navSize} label="Bài sau" onClick={next} disabled={atEnd} className={navCls}>
         <SkipForward size={22} fill="currentColor" />
       </IconButton>
-    </Glass>
+    </>
   );
 }

@@ -29,13 +29,6 @@ export function dockWindow(orderLength, position, size = 5) {
   return out;
 }
 
-// Thanh trượt dọc (dưới = 0), bỏ `inset` hai đầu như bản mẫu
-export function valueFromPointer(clientY, rect, inset = 0.1) {
-  const bottom = rect.top + rect.height;
-  const v = (bottom - clientY - rect.height * inset) / (rect.height * (1 - 2 * inset));
-  return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100;
-}
-
 // Thanh ngang (trái = 0): vị trí con trỏ thành tỉ lệ 0..1
 export function ratioFromPointerX(clientX, rect) {
   if (!rect.width) return 0;

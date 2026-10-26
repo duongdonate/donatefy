@@ -4,7 +4,6 @@ import AppShell from "../layouts/AppShell";
 import LibraryPage from "../features/library/LibraryPage";
 import PlaylistPage from "../features/playlist/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
-import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
 // Music Layer tải sẵn (nhẹ, không kéo react-player): lazy riêng làm cả trang nháy loader khi rời /listen
 import MusicLayer from "../features/player/MusicLayer/MusicLayer";
@@ -107,7 +106,7 @@ export default function AppRouter() {
             <Route
               path="/listen"
               element={
-                <AppShell right={<GlassBar />}>
+                <AppShell>
                   <NowPlaying />
                 </AppShell>
               }

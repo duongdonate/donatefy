@@ -84,7 +84,10 @@ export default function NowPlaying() {
             </Button>
           )}
         </div>
-        <Dock />
+        {/* tạm: Task 3 chia theo thiết bị */}
+        <div className="absolute inset-x-4 bottom-6 z-10 mx-auto max-w-[1200px]">
+          <Dock />
+        </div>
         <AnimatePresence>{showQueue && song && <QueueOverlay key="queue" />}</AnimatePresence>
       </div>
     </MotionConfig>

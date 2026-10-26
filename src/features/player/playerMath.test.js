@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep } from "./playerMath.js";
 
 test("ratioFromPointerX: kẹp 0..1", () => {
   const rect = { left: 100, width: 200 };
@@ -44,14 +44,6 @@ test("dock 5 ô, sát hai đầu và hàng chờ ngắn", () => {
   assert.deepEqual(dockWindow(2, 1).map((d) => d.pos), [0, 1]);
   assert.deepEqual(dockWindow(3, 1, 3).map((d) => d.pos), [0, 1, 2]);
   assert.deepEqual(dockWindow(0, -1), []);
-});
-
-test("thanh trượt dọc", () => {
-  const rect = { top: 100, height: 200 };
-  assert.equal(valueFromPointer(300, rect), 0);
-  assert.equal(valueFromPointer(100, rect), 1);
-  assert.equal(valueFromPointer(200, rect), 0.5);
-  assert.equal(valueFromPointer(500, rect), 0);
 });
 
 test("đổi chỗ", () => {
