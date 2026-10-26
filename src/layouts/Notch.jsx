@@ -20,7 +20,7 @@ import ListenIcon from "./notch/ListenIcon";
 import MiniPlayer from "./notch/MiniPlayer";
 import NotchDots from "./notch/NotchDots";
 import NowPlayingCard from "./notch/NowPlayingCard";
-import { CARD, cardsFor, fallbackCard, openCard, restingCard, stepCard } from "./notchCards";
+import { CARD, cardsFor, openCard, restingCard, stepCard, visibleCard } from "./notchCards";
 
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [
@@ -79,8 +79,9 @@ export default function Notch({ open, onOpenChange }) {
   const resting = restingCard({ device, hasSong, onListen });
   // Điện thoại: thẻ đang phát chính là thẻ nhạc mỏng ở viên, khung mở không vẽ lại
   const panelCards = cards.filter((c) => c !== resting);
-  const expanded = open && panelCards.includes(card);
-  const cardsKey = cards.join();
+  const shown = visibleCard(cards, resting, card);
+  const expanded = open && shown !== null;
+  const panelKey = panelCards.join();
 
   // Viên nền thu gọn ôm đúng hàng icon (+ thẻ nhạc mỏng ở điện thoại)
   useLayoutEffect(() => {
@@ -100,7 +101,7 @@ export default function Notch({ open, onOpenChange }) {
     const ro = new ResizeObserver(measure);
     els.forEach(([, el]) => ro.observe(el));
     return () => ro.disconnect();
-  }, [cardsKey, resting]);
+  }, [panelKey]);
 
   const setOpen = (next, byHover = false) => {
     openedByHover.current = next && byHover;
@@ -113,14 +114,14 @@ export default function Notch({ open, onOpenChange }) {
     setCard(c);
   };
 
-  // Thẻ đang chọn biến mất (hết bài, vào /listen): về thẻ còn lại; đang mở bằng rê chuột thì đóng luôn
+  // Thẻ đang chọn biến mất (hết bài, vào /listen, đổi sang cỡ điện thoại): khung hiện ngay thẻ còn lại (shown);
+  // đang mở bằng rê chuột hoặc hết thẻ thì đóng luôn
   useEffect(() => {
-    if (cards.includes(card)) return;
-    if (open && openedByHover.current) setOpen(false);
-    const next = fallbackCard(cards, card);
-    if (next) setCard(next);
+    if (shown === card) return;
+    if (open && (openedByHover.current || shown === null)) setOpen(false);
+    if (shown) setCard(shown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cardsKey]);
+  }, [shown]);
 
   // Đóng bằng Esc (trả focus về avatar) hoặc bấm ra ngoài
   useEffect(() => {
@@ -151,7 +152,7 @@ export default function Notch({ open, onOpenChange }) {
     setOpen(true, true);
   };
   const onAvatar = () => {
-    if (open && card === CARD.ACCOUNT) return setOpen(false);
+    if (open && shown === CARD.ACCOUNT) return setOpen(false);
     setCard(CARD.ACCOUNT);
     if (!open) setOpen(true);
   };
@@ -164,10 +165,10 @@ export default function Notch({ open, onOpenChange }) {
     if (swipeStart.current === null) return;
     const dir = swipeDir(swipeStart.current, e.clientX);
     swipeStart.current = null;
-    if (dir) pick(stepCard(cards, card, dir));
+    if (dir) pick(stepCard(cards, shown ?? card, dir));
   };
 
-  const selIndex = panelCards.indexOf(card);
+  const selIndex = panelCards.indexOf(shown);
 
   return (
     <div
@@ -224,7 +225,7 @@ export default function Notch({ open, onOpenChange }) {
                   type="button"
                   aria-label="Tài khoản"
                   aria-haspopup="true"
-                  aria-expanded={expanded && card === CARD.ACCOUNT}
+                  aria-expanded={expanded && shown === CARD.ACCOUNT}
                   onClick={onAvatar}
                   className={`grid place-items-center rounded-full ${focusRing}`}
                   style={{ width: layout.button, height: layout.button }}
@@ -253,7 +254,7 @@ export default function Notch({ open, onOpenChange }) {
             onPointerUp={onSwipeUp}
             style={{ touchAction: "pan-y" }}
           >
-            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[card] ?? "auto" }} transition={SWITCH}>
+            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[shown] ?? "auto" }} transition={SWITCH}>
               {panelCards.map((c, i) => (
                 <motion.div
                   key={c}
@@ -261,16 +262,16 @@ export default function Notch({ open, onOpenChange }) {
                     cardEls.current[c] = el;
                   }}
                   className="absolute inset-x-0 top-0"
-                  inert={c !== card}
+                  inert={c !== shown}
                   initial={false}
-                  animate={{ opacity: c === card ? 1 : 0, x: c === card ? 0 : i < selIndex ? -SLIDE : SLIDE }}
+                  animate={{ opacity: c === shown ? 1 : 0, x: c === shown ? 0 : i < selIndex ? -SLIDE : SLIDE }}
                   transition={SWITCH}
                 >
                   {c === CARD.NOW ? <NowPlayingCard /> : <AccountCard user={user} onLogout={logout} />}
                 </motion.div>
               ))}
             </motion.div>
-            <NotchDots cards={cards} current={card} onPick={pick} />
+            <NotchDots cards={cards} current={shown ?? card} onPick={pick} />
           </motion.div>
         )}
       </div>

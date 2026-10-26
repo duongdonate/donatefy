@@ -32,3 +32,9 @@ export function fallbackCard(cards, current) {
 export function restingCard({ device, hasSong, onListen }) {
   return device === DEVICE.MOBILE && hasSong && !onListen ? CARD.NOW : null;
 }
+
+// Thẻ hiện trong khung mở: bỏ thẻ đã nằm ở viên (thẻ nhạc mỏng), thẻ đang chọn mất thì về thẻ còn lại.
+// Tính ngay lúc vẽ để không có khung hình nào trỏ vào thẻ đã mất
+export function visibleCard(cards, resting, current) {
+  return fallbackCard(cards.filter((c) => c !== resting), current);
+}

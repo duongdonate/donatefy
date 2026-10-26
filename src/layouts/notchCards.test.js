@@ -2,7 +2,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { DEVICE } from "../utils/device.js";
-import { cardsFor, openCard, stepCard, fallbackCard, restingCard } from "./notchCards.js";
+import { cardsFor, openCard, stepCard, fallbackCard, restingCard, visibleCard } from "./notchCards.js";
 
 test("cardsFor: có bài ngoài /listen thì 2 thẻ, /listen hoặc chưa có bài thì chỉ tài khoản", () => {
   assert.deepEqual(cardsFor({ hasSong: true, onListen: false, loggedIn: true }), ["now", "account"]);
@@ -35,4 +35,11 @@ test("restingCard: chỉ điện thoại có bài ngoài /listen mới có thẻ
   assert.equal(restingCard({ device: DEVICE.MOBILE, hasSong: true, onListen: true }), null);
   assert.equal(restingCard({ device: DEVICE.MOBILE, hasSong: false, onListen: false }), null);
   assert.equal(restingCard({ device: DEVICE.DESKTOP, hasSong: true, onListen: false }), null);
+});
+
+test("visibleCard: thẻ hiện trong khung mở luôn là thẻ còn tồn tại (bỏ thẻ nhạc mỏng của viên)", () => {
+  assert.equal(visibleCard(["now", "account"], null, "now"), "now");
+  assert.equal(visibleCard(["now", "account"], "now", "now"), "account"); // tablet → điện thoại khi đang ở thẻ đang phát
+  assert.equal(visibleCard(["account"], null, "now"), "account"); // hết bài
+  assert.equal(visibleCard([], null, "account"), null); // đăng xuất
 });
