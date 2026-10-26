@@ -67,3 +67,9 @@ export function hotkeyAction(e) {
   return KEYS[e.key] ?? null;
 }
 
+
+// Cỡ đĩa: không quá `limit`; chỗ theo chiều cao không đủ `min` thì ẩn đĩa (0) thay vì ép to đè lên chữ
+export function fitDisc(byHeight, limit, min) {
+  if (byHeight < min) return 0;
+  return Math.min(limit, byHeight);
+}

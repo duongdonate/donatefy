@@ -142,6 +142,8 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
   return createPortal(
     <div
       className={`fixed inset-0 z-50 bg-[rgba(5,8,4,.5)] ${layout.overlay}`}
+      // iOS: đẩy tấm lên trên bàn phím (Android đã co cửa sổ nên keyboard = 0)
+      style={device === DEVICE.MOBILE ? { paddingBottom: screen.keyboard } : undefined}
       onMouseDown={(e) => e.target === e.currentTarget && closeRef.current()}
     >
       <Glass
@@ -156,7 +158,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
         blur={30}
         className={`w-full overflow-y-auto !border-white/15 !bg-[rgba(40,48,36,.72)] p-6 text-[#eef3e6] ${layout.sheet}`}
         // Mobile: cao tối đa phần màn còn thấy (bàn phím mở thì innerHeight nhỏ lại)
-        style={device === DEVICE.MOBILE ? { maxHeight: screen.height - 16 } : undefined}
+        style={device === DEVICE.MOBILE ? { maxHeight: screen.height - screen.keyboard - 16 } : undefined}
       >
         <div className="flex items-center gap-3">
           <h3 id="song-dlg-title" className="text-xl font-extrabold">{isAdd ? "Thêm bài" : "Sửa bài"}</h3>

@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep, fitDisc } from "./playerMath.js";
 
 test("ratioFromPointerX: kẹp 0..1", () => {
   const rect = { left: 100, width: 200 };
@@ -76,3 +76,10 @@ test("phím tắt", () => {
   assert.equal(k("x"), null);
 });
 
+
+test("fitDisc: đủ chỗ thì lấy nhỏ nhất, thiếu chỗ thì ẩn đĩa (0) thay vì đè lên chữ", () => {
+  assert.equal(fitDisc(400, 300, 120), 300);
+  assert.equal(fitDisc(200, 300, 120), 200);
+  assert.equal(fitDisc(119, 300, 120), 0);
+  assert.equal(fitDisc(-40, 300, 120), 0);
+});

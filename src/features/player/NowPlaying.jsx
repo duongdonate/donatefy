@@ -13,6 +13,7 @@ import { DEVICE } from "../../utils/device";
 import Matcappa from "../../mascot/Matcappa";
 import { usePlaybackTime } from "./PlaybackTime";
 import Dock, { dockHeight } from "./Dock";
+import { fitDisc } from "./playerMath";
 import ProgressBar from "./ProgressBar";
 import Tonearm from "./Tonearm";
 
@@ -31,7 +32,7 @@ const DISC_MIN = 120;
 
 const titleLinesFor = (layout, height) => (height < SHORT_SCREEN ? 1 : layout.titleLines);
 
-// Cỡ đĩa: vừa phần còn lại theo chiều cao, không quá một phần bề ngang khung
+// Cỡ đĩa: vừa phần còn lại theo chiều cao, không quá một phần bề ngang khung; màn quá thấp (zoom lớn, xoay ngang) thì 0 = ẩn đĩa
 function discSize(device, { width, height }, layout, titleLines) {
   const frameWidth = Math.min(width, layout.frame) - layout.side * 2;
   const reserved =
@@ -39,11 +40,10 @@ function discSize(device, { width, height }, layout, titleLines) {
   const byHeight = height - reserved;
   switch (device) {
     case DEVICE.MOBILE:
-      return Math.max(DISC_MIN, Math.min(frameWidth * 0.82, byHeight, layout.discMax)); // chừa mép phải cho cần đĩa
+      return fitDisc(byHeight, Math.min(frameWidth * 0.82, layout.discMax), DISC_MIN); // chừa mép phải cho cần đĩa
     case DEVICE.TABLET:
-      return Math.max(DISC_MIN, Math.min(frameWidth * 0.45, byHeight, layout.discMax));
     case DEVICE.DESKTOP:
-      return Math.max(DISC_MIN, Math.min(frameWidth * 0.45, byHeight, layout.discMax));
+      return fitDisc(byHeight, Math.min(frameWidth * 0.45, layout.discMax), DISC_MIN);
   }
 }
 
@@ -94,8 +94,8 @@ export default function NowPlaying() {
       >
         <SongTitle songKey={song?._id} context={context} song={song} size={layout.titleSize} lines={titleLines} />
 
-        <div className="flex flex-1 flex-col items-center justify-center">
-          <Deck size={disc} song={song} isPlaying={isPlaying} mascot={layout.mascot} />
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden">
+          {disc > 0 && <Deck size={disc} song={song} isPlaying={isPlaying} mascot={layout.mascot} />}
           {!song && (
             <Button className="mt-8" onClick={() => navigate("/playlists")}>
               Mở thư viện
