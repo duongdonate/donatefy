@@ -2,7 +2,7 @@
 // Thu gọn: Trang chủ, Thư viện | theme, avatar. Mở rộng: thẻ tài khoản có Đăng xuất.
 // Đợt sau sẽ thêm thẻ "bài đang phát" vào phần mở rộng.
 import { motion } from "framer-motion";
-import { Disc3, Library, LogOut, Moon, Sun } from "lucide-react";
+import { Library, LogOut, Moon, Sun } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { IconButton } from "../components";
@@ -13,10 +13,11 @@ import { useDevice, useScreen } from "../contexts/DeviceContext";
 import { useTheme } from "../contexts/ThemeContext";
 import useLogout from "../hooks/useLogout";
 import { DEVICE } from "../utils/device";
+import ListenIcon from "./notch/ListenIcon";
 
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [
-  { to: "/listen", label: "Đang phát", Icon: Disc3 },
+  { to: "/listen", label: "Đang phát", Icon: ListenIcon },
   { to: "/playlists", label: "Thư viện", Icon: Library, also: "/playlists/" },
 ];
 
