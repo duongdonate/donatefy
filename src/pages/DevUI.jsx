@@ -42,13 +42,10 @@ export default function DevUI() {
 
   if (shell)
     return (
-      <AppShell
-        right={
-          <IconButton label="Đóng AppShell" onClick={() => setShell(false)}>
-            ✕
-          </IconButton>
-        }
-      >
+      <AppShell>
+        <IconButton label="Đóng AppShell" onClick={() => setShell(false)} className="absolute right-4 top-4 z-40">
+          ✕
+        </IconButton>
         <div className="grid h-full place-items-center">
           <Matcappa size={200} />
         </div>
