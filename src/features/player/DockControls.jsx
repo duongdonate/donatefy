@@ -7,15 +7,18 @@ import { setVolume, toggleMute, toggleQueue, toggleShuffle } from "../../app/sli
 import { Glass, IconButton } from "../../components";
 import VolumeSlider from "./VolumeSlider";
 
-export function ShuffleQueueButtons({ size = 40 }) {
+// showShuffle=false: điện thoại chỉ giữ Hàng chờ cho hai bên dock cân nhau
+export function ShuffleQueueButtons({ size = 40, showShuffle = true }) {
   const dispatch = useDispatch();
   const shuffle = useSelector(getIsShuffle);
   const showQueue = useSelector(getIsShowQueue);
   return (
     <div className="flex shrink-0 items-center gap-1">
-      <IconButton size={size} label="Trộn bài" pressed={shuffle} onClick={() => dispatch(toggleShuffle())}>
-        <Shuffle size={20} />
-      </IconButton>
+      {showShuffle && (
+        <IconButton size={size} label="Trộn bài" pressed={shuffle} onClick={() => dispatch(toggleShuffle())}>
+          <Shuffle size={20} />
+        </IconButton>
+      )}
       <IconButton
         size={size}
         data-queue-toggle
@@ -46,14 +49,14 @@ function useVolume() {
 }
 
 // Desktop / tablet: loa + thanh ngang + phần trăm nằm ngay trong dock
-export function VolumeInline() {
+export function VolumeInline({ sliderWidth = 120 }) {
   const v = useVolume();
   return (
     <div className="flex shrink-0 items-center gap-2">
       <IconButton label={v.muted ? "Bật tiếng" : "Tắt tiếng"} onClick={v.toggleMute}>
         <v.Icon size={20} />
       </IconButton>
-      <VolumeSlider value={v.volume} muted={v.muted} onChange={v.change} width={120} />
+      <VolumeSlider value={v.volume} muted={v.muted} onChange={v.change} width={sliderWidth} />
       <b className="w-9 text-right text-xs tabular-nums text-matcha-4 dark:text-matcha-1">{v.percentText}</b>
     </div>
   );

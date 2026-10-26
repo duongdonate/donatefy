@@ -47,7 +47,8 @@ function OldPlaylist() {
 function GuestOnly() {
   const { user, loading } = useAuth();
   const from = useLocation().state?.from;
-  if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/listen"} replace />;
+  // Đăng nhập xong vào Thư viện trước (người mới chưa có bài nào để nghe); có link cũ thì quay về đó
+  if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/playlists"} replace />;
   if (loading) return <FullLoader />;
   return <Outlet />;
 }

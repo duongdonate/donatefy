@@ -26,6 +26,17 @@ const LAYOUT = {
   [DEVICE.DESKTOP]: { pad: 48, frame: 1600, cover: (w) => clamp(240, w * 0.2, 320), titleSize: 40, gripSize: 28 },
 };
 
+// Chiều cao phần chữ dưới bìa ở cột trái (Đang phát, tên 2 dòng, ca sĩ, thanh chạy, hàng nút Trộn / Lặp) + tiêu đề trang
+const INFO_BELOW_COVER = 250;
+const HEADER_HEIGHT = 84;
+const COVER_MIN = 120;
+
+// Bìa cột trái: theo bề ngang, nhưng không cao quá phần còn lại để hàng nút Trộn / Lặp luôn thấy
+function coverSize(layout, width, height) {
+  const byHeight = height - layout.pad * 2 - HEADER_HEIGHT - INFO_BELOW_COVER;
+  return Math.max(COVER_MIN, Math.min(layout.cover(Math.min(width, layout.frame)), byHeight));
+}
+
 function QBtn({ pressed, onClick, children }) {
   return (
     <button
@@ -45,7 +56,7 @@ export default function QueueOverlay() {
   const dispatch = useDispatch();
   const store = useStore();
   const device = useDevice();
-  const { width } = useScreen();
+  const { width, height } = useScreen();
   const song = useSelector(getCurrentSong);
   const playlist = useSelector(getCurrentPlaylist);
   const { order, position } = useSelector((s) => s.player);
@@ -104,7 +115,7 @@ export default function QueueOverlay() {
         <div className="mx-auto flex h-full w-full flex-col gap-6" style={{ maxWidth: layout.frame, padding: layout.pad }}>
           {header}
           <div className="flex min-h-0 flex-1 gap-8">
-            <NowPlayingPanel cover={layout.cover(Math.min(width, layout.frame))} />
+            <NowPlayingPanel cover={coverSize(layout, width, height)} />
             <QueueList gripSize={layout.gripSize} className="min-h-0 flex-1 p-5" />
           </div>
         </div>

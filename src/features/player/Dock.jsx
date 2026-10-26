@@ -9,15 +9,20 @@ import { useDevice, useScreen } from "../../contexts/DeviceContext";
 import { DEVICE } from "../../utils/device";
 import { ShuffleQueueButtons, VolumeInline, VolumePopover } from "./DockControls";
 import { usePlaybackTime } from "./PlaybackTime";
-import { dockWindow } from "./playerMath";
+import { dockWindow, fitCells, stripWidth } from "./playerMath";
 
 const clamp = (min, v, max) => Math.min(max, Math.max(min, v));
 
-// Số liệu dock theo thiết bị: số bìa hiện, cạnh một bìa (px), chiều cao dock so với bìa, cỡ nút
+// Số liệu dock theo thiết bị:
+// - maxCells: số bìa tối đa (desktop 5, tablet 3, điện thoại 1); thiếu chỗ thì tự bỏ đều hai bên (fitCells)
+// - cover: cạnh một bìa theo bề ngang màn; heightRatio: chiều cao dock so với bìa
+// - navSize: nút ‹ ›; sideSize: nút hai cụm bên; padX / gap: lề trong và khe giữa 3 cột
+// - sideWidth: bề ngang chừa cho MỖI cột bên (lấy cột rộng hơn) để 2 cột bên bằng nhau, cột giữa luôn đúng tâm
+// - sliderWidth: thanh âm lượng ngang (null = dạng nút bung ở điện thoại)
 const DOCK = {
-  [DEVICE.MOBILE]: { cells: 1, cover: () => 56, heightRatio: 1.45, navSize: 44, sideSize: 40 },
-  [DEVICE.TABLET]: { cells: 5, cover: (w) => clamp(64, w * 0.08, 96), heightRatio: 1.7, navSize: 48, sideSize: 40 },
-  [DEVICE.DESKTOP]: { cells: 5, cover: (w) => clamp(80, w * 0.065, 110), heightRatio: 1.7, navSize: 48, sideSize: 40 },
+  [DEVICE.MOBILE]: { maxCells: 1, cover: () => 56, heightRatio: 1.45, navSize: 44, sideSize: 40, padX: 8, gap: 6, sideWidth: 40, sliderWidth: null },
+  [DEVICE.TABLET]: { maxCells: 3, cover: (w) => clamp(64, w * 0.08, 96), heightRatio: 1.7, navSize: 48, sideSize: 40, padX: 16, gap: 12, sideWidth: 172, sliderWidth: 80 },
+  [DEVICE.DESKTOP]: { maxCells: 5, cover: (w) => clamp(80, w * 0.065, 110), heightRatio: 1.7, navSize: 48, sideSize: 40, padX: 16, gap: 12, sideWidth: 212, sliderWidth: 120 },
 };
 
 // Chiều cao dock (px) để trang tính chỗ còn lại cho đĩa
@@ -26,47 +31,52 @@ export function dockHeight(device, width) {
   return layout.cover(width) * layout.heightRatio;
 }
 
-export default function Dock() {
+// width: bề ngang dock (px), trang truyền xuống để tính số bìa vừa chỗ
+export default function Dock({ width: dockWidth }) {
   const device = useDevice();
-  const { width } = useScreen();
+  const { width: screenWidth } = useScreen();
   const position = useSelector((s) => s.player.position);
   if (position < 0) return null;
 
   const layout = DOCK[device];
-  const cover = layout.cover(width);
-  const center = <CoverStrip cells={layout.cells} cover={cover} navSize={layout.navSize} />;
+  const cover = layout.cover(screenWidth);
+  // Chỗ còn cho dải bìa = dock − lề − 2 cột bên − 2 khe cột − 2 nút ‹ › − 2 khe quanh dải
+  const budget = dockWidth - layout.padX * 2 - layout.sideWidth * 2 - layout.gap * 2 - layout.navSize * 2 - layout.gap * 2;
+  const cells = fitCells(budget, cover, layout.maxCells);
+  const center = <CoverStrip cells={cells} cover={cover} navSize={layout.navSize} stripWidth={stripWidth(cover, cells)} gap={layout.gap} />;
+
+  // Hai cột bên cùng bề ngang (minmax(sideWidth, 1fr)) nên cột giữa (‹ bìa ›) luôn đúng tâm dock = thẳng hàng với đĩa
+  const shell = (left, right) => (
+    <Glass
+      className="grid w-full items-center rounded-[28px]"
+      style={{
+        height: cover * layout.heightRatio,
+        paddingLeft: layout.padX,
+        paddingRight: layout.padX,
+        columnGap: layout.gap,
+        gridTemplateColumns: `minmax(${layout.sideWidth}px, 1fr) auto minmax(${layout.sideWidth}px, 1fr)`,
+      }}
+    >
+      <div className="justify-self-start">{left}</div>
+      <div className="flex h-full items-center" style={{ columnGap: layout.gap }}>
+        {center}
+      </div>
+      <div className="justify-self-end">{right}</div>
+    </Glass>
+  );
 
   switch (device) {
     case DEVICE.MOBILE:
-      return (
-        <DockShell height={cover * layout.heightRatio} gap="gap-1.5" padding="px-2">
-          <ShuffleQueueButtons size={layout.sideSize} />
-          {center}
-          <VolumePopover size={layout.sideSize} />
-        </DockShell>
-      );
+      // Điện thoại: trái chỉ Hàng chờ, phải nút loa (cân hai bên); Trộn bài có trong lớp phủ Hàng chờ
+      return shell(<ShuffleQueueButtons size={layout.sideSize} showShuffle={false} />, <VolumePopover size={layout.sideSize} />);
     case DEVICE.TABLET:
     case DEVICE.DESKTOP:
-      return (
-        <DockShell height={cover * layout.heightRatio} gap="gap-3" padding="px-4">
-          <ShuffleQueueButtons size={layout.sideSize} />
-          {center}
-          <VolumeInline />
-        </DockShell>
-      );
+      return shell(<ShuffleQueueButtons size={layout.sideSize} />, <VolumeInline sliderWidth={layout.sliderWidth} />);
   }
 }
 
-function DockShell({ height, gap, padding, children }) {
-  return (
-    <Glass className={`flex w-full items-center rounded-[28px] ${gap} ${padding}`} style={{ height }}>
-      {children}
-    </Glass>
-  );
-}
-
 // ‹ dải bìa (bìa đang phát + nút phát/dừng nổi giữa) ›
-function CoverStrip({ cells: size, cover: C, navSize }) {
+function CoverStrip({ cells: size, cover: C, navSize, stripWidth }) {
   const dispatch = useDispatch();
   const isPlaying = useSelector(getIsPlaying);
   const repeat = useSelector(getRepeat);
@@ -85,7 +95,7 @@ function CoverStrip({ cells: size, cover: C, navSize }) {
       <IconButton size={navSize} label="Bài trước" onClick={previous} className={navCls}>
         <SkipBack size={22} fill="currentColor" />
       </IconButton>
-      <div className="relative h-full min-w-0 flex-1" style={{ perspective: C * 5.5, maskImage: fade, WebkitMaskImage: fade }}>
+      <div className="relative h-full shrink-0" style={{ width: stripWidth, perspective: C * 5.5, maskImage: fade, WebkitMaskImage: fade }}>
         {cells.map(({ pos, offset }) => {
           const song = queue[order[pos]];
           const a = Math.abs(offset), now = offset === 0;

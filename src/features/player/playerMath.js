@@ -73,3 +73,17 @@ export function fitDisc(byHeight, limit, min) {
   if (byHeight < min) return 0;
   return Math.min(limit, byHeight);
 }
+
+// Dải bìa dock: n bìa xoè, bìa cạnh nhau lệch 0.82 bìa; cộng 0.3 bìa cho bìa giữa phóng to 1.12 và bóng
+const COVER_STEP = 0.82;
+export function stripWidth(cover, cells) {
+  return Math.round(cover * (1 + (cells - 1) * COVER_STEP + 0.3));
+}
+
+// Số bìa lẻ lớn nhất (5 → 3 → 1) vừa `budget` px, bỏ đều hai bên; luôn giữ ít nhất bìa đang phát
+export function fitCells(budget, cover, maxCells) {
+  for (const n of [5, 3]) {
+    if (n <= maxCells && stripWidth(cover, n) <= budget) return n;
+  }
+  return 1;
+}

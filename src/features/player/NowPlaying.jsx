@@ -22,21 +22,19 @@ const PROGRESS_HEIGHT = 60; // thanh tiến trình + hai mốc giờ
 
 // Số liệu từng máy: lề, khung tối đa, chữ tên bài, có mascot không, đĩa tối đa
 const LAYOUT = {
-  [DEVICE.MOBILE]: { side: 16, bottom: 16, frame: Infinity, titleSize: 24, titleLines: 1, mascot: false, discMax: 420 },
-  [DEVICE.TABLET]: { side: 24, bottom: 24, frame: Infinity, titleSize: 36, titleLines: 2, mascot: true, discMax: 420 },
-  [DEVICE.DESKTOP]: { side: 32, bottom: 24, frame: 1600, titleSize: 48, titleLines: 2, mascot: true, discMax: 720 },
+  [DEVICE.MOBILE]: { side: 16, bottom: 16, frame: Infinity, titleSize: 24, mascot: false, discMax: 420 },
+  [DEVICE.TABLET]: { side: 24, bottom: 24, frame: Infinity, titleSize: 36, mascot: true, discMax: 420 },
+  [DEVICE.DESKTOP]: { side: 32, bottom: 24, frame: 1600, titleSize: 48, mascot: true, discMax: 720 },
 };
-const TITLE_BLOCK = { 1: 90, 2: 130 }; // chiều cao khối chữ trên cùng theo số dòng tên bài
-const SHORT_SCREEN = 720; // màn thấp hơn mức này (hoặc zoom lớn) thì tên bài chỉ 1 dòng để chừa chỗ cho đĩa
+const TITLE_BLOCK = 90; // chiều cao khối chữ trên cùng (ngữ cảnh + tên bài 1 dòng + ca sĩ)
 const DISC_MIN = 120;
 
-const titleLinesFor = (layout, height) => (height < SHORT_SCREEN ? 1 : layout.titleLines);
 
 // Cỡ đĩa: vừa phần còn lại theo chiều cao, không quá một phần bề ngang khung; màn quá thấp (zoom lớn, xoay ngang) thì 0 = ẩn đĩa
-function discSize(device, { width, height }, layout, titleLines) {
+function discSize(device, { width, height }, layout) {
   const frameWidth = Math.min(width, layout.frame) - layout.side * 2;
   const reserved =
-    NOTCH_SPACE + TITLE_BLOCK[titleLines] + PROGRESS_HEIGHT + dockHeight(device, width) + layout.bottom + 48;
+    NOTCH_SPACE + TITLE_BLOCK + PROGRESS_HEIGHT + dockHeight(device, width) + layout.bottom + 48;
   const byHeight = height - reserved;
   switch (device) {
     case DEVICE.MOBILE:
@@ -73,8 +71,8 @@ export default function NowPlaying() {
   });
 
   const layout = LAYOUT[device];
-  const titleLines = titleLinesFor(layout, screen.height);
-  const disc = discSize(device, screen, layout, titleLines);
+  const disc = discSize(device, screen, layout);
+  const dockWidth = Math.min(screen.width, layout.frame) - layout.side * 2; // dock rộng bằng khung trừ lề
   const context = song
     ? `${playlist?.name ?? "Hàng chờ"} · ${position + 1}/${order.length}${shuffle ? " · Shuffle" : ""}`
     : "Chưa có bài nào";
@@ -92,9 +90,9 @@ export default function NowPlaying() {
           paddingBottom: PROGRESS_HEIGHT + dockHeight(device, screen.width) + layout.bottom,
         }}
       >
-        <SongTitle songKey={song?._id} context={context} song={song} size={layout.titleSize} lines={titleLines} />
+        <SongTitle songKey={song?._id} context={context} song={song} size={layout.titleSize} />
 
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
           {disc > 0 && <Deck size={disc} song={song} isPlaying={isPlaying} mascot={layout.mascot} />}
           {!song && (
             <Button className="mt-8" onClick={() => navigate("/playlists")}>
@@ -114,7 +112,7 @@ export default function NowPlaying() {
               className="px-2"
             />
           )}
-          <Dock />
+          <Dock width={dockWidth} />
         </div>
         <AnimatePresence>{showQueue && song && <QueueOverlay key="queue" />}</AnimatePresence>
       </div>
@@ -122,10 +120,8 @@ export default function NowPlaying() {
   );
 }
 
-// Dòng ngữ cảnh + tên bài + ca sĩ. Một dòng thì chạy chữ, hai dòng thì xuống dòng rồi cắt "…"
-function SongTitle({ songKey, context, song, size, lines }) {
-  const titleStyle = { fontSize: size };
-  const titleCls = "mt-1 font-extrabold leading-tight tracking-[-.03em]";
+// Dòng ngữ cảnh + tên bài + ca sĩ. Tên bài luôn 1 hàng; dài hơn khung thì chạy chữ (Marquee)
+function SongTitle({ songKey, context, song, size }) {
   return (
     <motion.div
       key={songKey ?? "none"}
@@ -137,15 +133,9 @@ function SongTitle({ songKey, context, song, size, lines }) {
       <div className="text-[13px] font-semibold uppercase tracking-[.14em] text-ink-soft">{context}</div>
       {song && (
         <>
-          {lines === 1 ? (
-            <div style={titleStyle}>
-              <Marquee className={titleCls}>{song.name}</Marquee>
-            </div>
-          ) : (
-            <h1 className={`${titleCls} line-clamp-2`} style={titleStyle}>
-              {song.name}
-            </h1>
-          )}
+          <h1 style={{ fontSize: size }}>
+            <Marquee className="mt-1 font-extrabold leading-tight tracking-[-.03em]">{song.name}</Marquee>
+          </h1>
           <div className="text-base text-ink-soft">{song.artist}</div>
         </>
       )}

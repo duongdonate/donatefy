@@ -26,9 +26,9 @@ const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounde
 // Số liệu trang playlist theo thiết bị: lề, khung tối đa, số cột lưới bài, cỡ bìa đầu trang.
 // Mobile cuộn cả trang (khối tiêu đề cao), máy lớn chỉ cuộn lưới bài.
 const PLAYLIST = {
-  [DEVICE.MOBILE]: { padX: 16, padTop: 72, frame: Infinity, cols: 2, gap: 12, cover: 120, stacked: true, scrollWhole: true },
-  [DEVICE.TABLET]: { padX: 24, padTop: 80, frame: Infinity, cols: 3, gap: 16, cover: 144, stacked: false, scrollWhole: false },
-  [DEVICE.DESKTOP]: { padX: 32, padTop: 88, frame: 1280, cols: 4, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+  [DEVICE.MOBILE]: { padX: 16, padTop: 64, frame: Infinity, cols: 2, gap: 12, cover: 120, stacked: true, scrollWhole: true },
+  [DEVICE.TABLET]: { padX: 24, padTop: 64, frame: Infinity, cols: 3, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+  [DEVICE.DESKTOP]: { padX: 32, padTop: 64, frame: 1280, cols: 4, gap: 16, cover: 144, stacked: false, scrollWhole: false },
 };
 
 export default function PlaylistPage() {

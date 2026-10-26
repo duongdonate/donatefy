@@ -40,7 +40,8 @@ export default function AppShell({ children }) {
       {device !== DEVICE.MOBILE && <Blobs />}
 
       <div className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center ${chrome} ${hidden ? "-translate-y-[120%] opacity-0" : ""}`}>
-        <div {...holdProps} className="pointer-events-auto">
+        {/* không bắt chuột: notch chỉ bật bắt chuột ở phần đang thấy (khung mở rộng to hơn phần thu gọn) */}
+        <div {...holdProps}>
           <Notch open={notchOpen} onOpenChange={setNotchOpen} />
         </div>
       </div>

@@ -1,7 +1,7 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep, fitDisc } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep, fitDisc, stripWidth, fitCells } from "./playerMath.js";
 
 test("ratioFromPointerX: kẹp 0..1", () => {
   const rect = { left: 100, width: 200 };
@@ -82,4 +82,18 @@ test("fitDisc: đủ chỗ thì lấy nhỏ nhất, thiếu chỗ thì ẩn đĩ
   assert.equal(fitDisc(200, 300, 120), 200);
   assert.equal(fitDisc(119, 300, 120), 0);
   assert.equal(fitDisc(-40, 300, 120), 0);
+});
+
+test("stripWidth: bề ngang dải n bìa xoè (mỗi bìa lệch 0.82 bìa, chừa chỗ bìa giữa phóng 1.12)", () => {
+  assert.equal(stripWidth(100, 1), 130);
+  assert.equal(stripWidth(100, 3), 294);
+  assert.equal(stripWidth(100, 5), 458);
+});
+
+test("fitCells: số bìa lẻ lớn nhất vừa chỗ, bỏ đều hai bên, không quá mức của thiết bị", () => {
+  assert.equal(fitCells(1000, 100, 5), 5);
+  assert.equal(fitCells(1000, 100, 3), 3); // tablet tối đa 3
+  assert.equal(fitCells(400, 100, 5), 3);
+  assert.equal(fitCells(200, 100, 5), 1);
+  assert.equal(fitCells(50, 100, 5), 1); // tối thiểu vẫn giữ bìa đang phát
 });
