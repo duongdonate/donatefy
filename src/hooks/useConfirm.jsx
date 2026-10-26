@@ -1,5 +1,6 @@
 // useConfirm.js
 import { useCallback } from "react";
+import { Button } from "../design";
 import usePopup from "./usePopup";
 
 export default function useConfirm() {
@@ -10,27 +11,22 @@ export default function useConfirm() {
       return new Promise((resolve) => {
         const handleResult = (result) => {
           resolve(result);
-          closePopup();
+          closePopup(); // onDismiss resolve(false) lần nữa: Promise đã chốt nên vô hại
         };
 
         openPopup(
-          <div className="flex flex-col gap-6">
-            <p className="text-md font-medium">{message}</p>
+          <div className="flex flex-col gap-6 pr-8">
+            <p className="text-base font-semibold">{message}</p>
             <div className="flex justify-end gap-2">
-              <button
-                className="px-4 py-2 rounded-lg bg-popover text-popover-foreground hover:scale-95 transition-transform"
-                onClick={() => handleResult(false)}
-              >
+              <Button variant="ghost" size="sm" autoFocus className="!text-[#eef3e6] hover:!bg-white/10" onClick={() => handleResult(false)}>
                 Hủy bỏ
-              </button>
-              <button
-                className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:scale-95 transition-transform"
-                onClick={() => handleResult(true)}
-              >
+              </Button>
+              <Button size="sm" className="!bg-[#b3261e] hover:!bg-[#9a1f18]" onClick={() => handleResult(true)}>
                 Xóa
-              </button>
+              </Button>
             </div>
-          </div>
+          </div>,
+          () => resolve(false)
         );
       });
     },
