@@ -4,7 +4,7 @@
 
 **Goal:** Bỏ header, rail và thanh kính phải. Thay bằng một notch điều hướng dính mép trên và một dock gộp. Làm bố cục mobile, tablet, desktop cho mọi trang trong app, kể cả hàng chờ. Trên mobile, nhập liệu không bị bàn phím che.
 
-**Architecture:** Ba cỡ máy dùng mốc Tailwind sẵn có: mặc định là mobile, `md:` (≥768) là tablet, `xl:` (≥1280) là desktop. Khung giữa làm bằng `mx-auto max-w-*`. Logic mới thuần JS (tính vị trí con trỏ ngang, phím tua) để trong `playerMath.js` kèm test. Phần còn lại là JSX/Tailwind, kiểm bằng preview và script đo tràn ngang.
+**Architecture:** Một lớp `DeviceContext` nhận biết thiết bị, trả về enum `DEVICE` gồm `MOBILE` (< 768), `TABLET` (768–1279), `DESKTOP` (≥ 1280). Component lấy giá trị bằng `useDevice()` rồi chia bố cục theo từng thiết bị bằng `switch` (người dùng chốt: code dài hơn nhưng đọc là biết nhánh nào cho máy nào). Khung giữa làm bằng `mx-auto max-w-*`. Logic thuần JS (`deviceFromWidth`, tính vị trí con trỏ ngang, phím tua) có test. Phần còn lại là JSX/Tailwind, kiểm bằng preview và script đo tràn ngang.
 
 **Tech Stack:** React 19 + Vite + Tailwind 3 + framer-motion, test `node --test`, ESLint.
 
@@ -13,8 +13,9 @@
 ## Global Constraints
 
 - Nhánh `v2/responsive` cắt từ `v2/main` (`d4d83da` hoặc mới hơn). Nếu thư mục chính đang có session khác thì làm trong worktree riêng. Không push, không merge khi người dùng chưa bảo.
-- Commit tiếng Việt (`Feat:`/`Refactor:`/`Fix:`), **không** thêm dòng `Co-Authored-By` (giữ như GĐ6; hỏi người dùng nếu muốn khác).
-- Mốc: mobile `< 768`, tablet `md` 768–1279, desktop `xl` ≥ 1280. Khung: `/playlists*` tối đa 1280px, `/listen` tối đa 1600px; lề mobile 16px, tablet 24px.
+- Commit tiếng Việt (`Feat:`/`Refactor:`/`Fix:`), **có** dòng `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>` ở cuối (người dùng chốt cho giai đoạn này).
+- **Chia thiết bị bằng `useDevice()` + `switch`**, không rải `md:`/`xl:` trong JSX. Khác biệt về bố cục (thứ tự khối, ẩn hay hiện, kích thước) viết thành nhánh riêng: `switch (device) { case DEVICE.MOBILE: … case DEVICE.TABLET: … case DEVICE.DESKTOP: … }`, hoặc một bảng `LAYOUT[device]` chứa class/kích thước. Nhánh nào dài thì tách thành component con, vd. `NowPlayingMobile`. Trong các task bên dưới, "mobile (`< md`)", "`md+`", "`xl`" nghĩa là các nhánh `DEVICE.MOBILE`, `TABLET`/`DESKTOP`, `DESKTOP`; class kiểu `hidden md:block` trong task chỉ để mô tả ý, khi viết code thì đổi thành nhánh `switch`.
+- Mốc: `MOBILE` < 768, `TABLET` 768–1279, `DESKTOP` ≥ 1280. Khung: `/playlists*` tối đa 1280px, `/listen` tối đa 1600px; lề mobile 16px, tablet 24px.
 - Notch: dính mép trên, giữa màn hình, chỉ bo hai góc dưới. Nền `rgba(10,14,8,.92)`, chữ `#eef3e6`, ở cả theme sáng lẫn tối. Nút tối thiểu 40px (mobile 44px). Không có logo, không có chữ thương hiệu.
 - Ô nhập trên mobile: chữ 16px. Chỉ trang hoặc hộp có ô nhập mới xử lý bàn phím.
 - Không sửa `src/app/**`, `src/App.css`, `src/index.css`, `public/` (trừ khi task ghi rõ), backend.
@@ -37,6 +38,9 @@
 
 | File | Việc |
 |---|---|
+| `src/utils/device.js`, `device.test.js` | Mới: `DEVICE` enum, `deviceFromWidth` |
+| `src/contexts/DeviceContext.jsx` | Mới: `DeviceProvider`, `useDevice()` |
+| `src/main.jsx` | Bọc `DeviceProvider` |
 | `src/features/player/playerMath.js`, `playerMath.test.js` | Thêm `ratioFromPointerX`, `seekKeyStep` |
 | `src/features/player/Dock.jsx` | Gộp Shuffle, Hàng chờ (trái) và âm lượng (phải); mobile chỉ còn bìa đang phát |
 | `src/features/player/VolumeSlider.jsx` | Đổi sang thanh ngang |
@@ -56,18 +60,29 @@
 
 ---
 
-### Task 1: Hàm thuần cho thanh ngang và phím tua
+### Task 1: Lớp nhận biết thiết bị, hàm thuần cho thanh ngang và phím tua
 
 **Files:**
-- Modify: `src/features/player/playerMath.js`
+- Create: `src/utils/device.js`, `src/utils/device.test.js`, `src/contexts/DeviceContext.jsx`
+- Modify: `src/main.jsx`, `src/features/player/playerMath.js`
 - Test: `src/features/player/playerMath.test.js`
 
 **Interfaces:**
+- Produces: `DEVICE = Object.freeze({ MOBILE: "mobile", TABLET: "tablet", DESKTOP: "desktop" })` và `deviceFromWidth(width: number) → DEVICE.*` (`< 768` → MOBILE, `< 1280` → TABLET, còn lại DESKTOP) trong `src/utils/device.js`. `DeviceProvider` (giá trị đầu lấy đồng bộ từ `window.innerWidth` để khỏi nháy; nghe `matchMedia("(min-width: 768px)")` và `(min-width: 1280px)` `change`) và `useDevice() → DEVICE.*` trong `src/contexts/DeviceContext.jsx`. `main.jsx` bọc `DeviceProvider` ngoài `App`.
 - Produces: `ratioFromPointerX(clientX: number, rect: {left, width}) → number` (0..1, kẹp hai đầu, làm tròn 0,001). `seekKeyStep(key: string, current: number, duration: number, step = 5) → number | null` (giây mới, kẹp `[0, duration]`; phím không liên quan thì trả `null`).
 
 - [ ] **Step 1: Viết test hỏng**
 
 ```js
+// src/utils/device.test.js
+test("deviceFromWidth", () => {
+  assert.equal(deviceFromWidth(375), DEVICE.MOBILE);
+  assert.equal(deviceFromWidth(767), DEVICE.MOBILE);
+  assert.equal(deviceFromWidth(768), DEVICE.TABLET);
+  assert.equal(deviceFromWidth(1279), DEVICE.TABLET);
+  assert.equal(deviceFromWidth(1280), DEVICE.DESKTOP);
+});
+// src/features/player/playerMath.test.js
 test("ratioFromPointerX kẹp 0..1", () => {
   const rect = { left: 100, width: 200 };
   assert.equal(ratioFromPointerX(100, rect), 0);
@@ -85,10 +100,11 @@ test("seekKeyStep", () => {
 });
 ```
 
-- [ ] **Step 2: `npm test`** → FAIL vì `ratioFromPointerX`, `seekKeyStep` chưa có.
-- [ ] **Step 3: Viết hai hàm trong `playerMath.js`.**
+- [ ] **Step 2: `npm test`** → FAIL vì `deviceFromWidth`, `ratioFromPointerX`, `seekKeyStep` chưa có.
+- [ ] **Step 3: Viết `device.js`, hai hàm trong `playerMath.js`, `DeviceContext.jsx`; bọc `DeviceProvider` trong `main.jsx`.**
 - [ ] **Step 4: `npm test`** → PASS.
-- [ ] **Step 5: Commit** `Feat: Hàm tính vị trí thanh ngang và phím tua`.
+- [ ] **Step 5: Kiểm `useDevice` trên preview**: đổi viewport 375 → 1024 → 1440, giá trị đổi đúng MOBILE → TABLET → DESKTOP (tạm `console.log` hoặc React DevTools, gỡ trước khi commit).
+- [ ] **Step 6: Commit** `Feat: Lớp nhận biết thiết bị và hàm tính thanh ngang, phím tua`.
 
 ### Task 2: Dock gộp, bỏ thanh kính phải
 
@@ -237,7 +253,7 @@ test("seekKeyStep", () => {
 - Modify: `index.html`, `src/layouts/AppShell.jsx`, `src/features/player/MusicLayer/MusicLayer.jsx`, `src/features/auth/{AuthPage,Field}.jsx`, `src/features/library/LibraryPage.jsx` (ô tên playlist), `src/features/playlist/SongDialog.jsx`
 
 **Interfaces:**
-- Produces: `useTyping() → boolean`: `true` khi `document.activeElement` là `input`/`textarea`/`[contenteditable]` (trừ checkbox/range/file) **và** `matchMedia("(max-width: 767px)")` khớp. Nghe `focusin`/`focusout` trên `document`. Khi focus vào ô thì gọi `scrollIntoView({ block: "center" })` sau `setTimeout(…, 300)`, chờ bàn phím mở xong.
+- Produces: `useTyping() → boolean`: `true` khi `document.activeElement` là `input`/`textarea`/`[contenteditable]` (trừ checkbox/range/file) **và** `useDevice() === DEVICE.MOBILE`. Nghe `focusin`/`focusout` trên `document`. Khi focus vào ô thì gọi `scrollIntoView({ block: "center" })` sau `setTimeout(…, 300)`, chờ bàn phím mở xong.
 
 - [ ] **Step 1: `index.html`**: thẻ viewport thêm `, interactive-widget=resizes-content`. `useTyping.js` theo Interfaces.
 - [ ] **Step 2: Ẩn phần nổi khi gõ.**

@@ -20,6 +20,8 @@ Bản thiết kế gốc hợp với cỡ tablet (~1024px). Đo thực tế ngà
 
 Mốc 1280 là **tui chọn** (bản mẫu gốc nhìn đúng ở 1024, lệch từ 1440).
 
+**Cách viết code (người dùng chốt):** một `DeviceContext` nhận biết thiết bị, trả enum `DEVICE.MOBILE | TABLET | DESKTOP`. Component lấy bằng `useDevice()` và chia bố cục theo thiết bị bằng `switch`, mỗi nhánh một thiết bị, nhánh dài tách component con. Ưu tiên dễ đọc, dễ kiểm soát hơn code ngắn. Không rải `md:`/`xl:` trong JSX.
+
 ## Đợt này làm gì (người dùng chốt)
 
 Chia hai đợt. **Đợt này (GĐ7)** làm:
