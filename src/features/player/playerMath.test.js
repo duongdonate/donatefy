@@ -1,7 +1,25 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep } from "./playerMath.js";
+
+test("ratioFromPointerX: kẹp 0..1", () => {
+  const rect = { left: 100, width: 200 };
+  assert.equal(ratioFromPointerX(100, rect), 0);
+  assert.equal(ratioFromPointerX(200, rect), 0.5);
+  assert.equal(ratioFromPointerX(50, rect), 0);
+  assert.equal(ratioFromPointerX(999, rect), 1);
+  assert.equal(ratioFromPointerX(150, { left: 0, width: 0 }), 0);
+});
+
+test("seekKeyStep: ← → 5 giây, Home/End, kẹp hai đầu", () => {
+  assert.equal(seekKeyStep("ArrowRight", 10, 100), 15);
+  assert.equal(seekKeyStep("ArrowLeft", 3, 100), 0);
+  assert.equal(seekKeyStep("ArrowRight", 98, 100), 100);
+  assert.equal(seekKeyStep("Home", 50, 100), 0);
+  assert.equal(seekKeyStep("End", 50, 100), 100);
+  assert.equal(seekKeyStep("a", 50, 100), null);
+});
 
 test("bài trước: quá 3 giây thì về đầu bài", () => {
   assert.equal(previousAction(3.5, 4, "off"), "restart");

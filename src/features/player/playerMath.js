@@ -36,6 +36,20 @@ export function valueFromPointer(clientY, rect, inset = 0.1) {
   return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100;
 }
 
+// Thanh ngang (trái = 0): vị trí con trỏ thành tỉ lệ 0..1
+export function ratioFromPointerX(clientX, rect) {
+  if (!rect.width) return 0;
+  const v = (clientX - rect.left) / rect.width;
+  return Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
+}
+
+// Phím trên thanh tiến trình → giây mới (null nếu không phải phím tua)
+export function seekKeyStep(key, current, duration, step = 5) {
+  const next = { ArrowLeft: current - step, ArrowRight: current + step, Home: 0, End: duration }[key];
+  if (next === undefined) return null;
+  return Math.min(duration, Math.max(0, next));
+}
+
 // Đổi chỗ phần tử với hàng xóm; vượt biên thì giữ nguyên mảng cũ
 export function moveItem(list, index, delta) {
   const to = index + delta;
