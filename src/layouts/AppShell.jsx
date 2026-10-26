@@ -14,7 +14,8 @@ export default function AppShell({ children }) {
   const [focusIn, setFocusIn] = useState(false);
   const [notchOpen, setNotchOpen] = useState(false);
   // Giữ notch khi chuột ở trên, focus bàn phím ở bên trong, hoặc notch đang mở
-  const idle = useIdle(2500, { hold: hover || focusIn || notchOpen });
+  // Điện thoại: notch (có thẻ nhạc mỏng) luôn hiện
+  const idle = useIdle(2500, { hold: device === DEVICE.MOBILE || hover || focusIn || notchOpen });
   // Mobile đang gõ: ẩn notch nhường chỗ cho bàn phím
   const typing = useTyping();
   const hidden = idle || typing;

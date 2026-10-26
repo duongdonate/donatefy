@@ -25,10 +25,11 @@ const tileCls = `flex min-h-32 flex-col items-center justify-center gap-2 rounde
 
 // Số liệu trang playlist theo thiết bị: lề, khung tối đa, số cột lưới bài, cỡ bìa đầu trang.
 // Mobile cuộn cả trang (khối tiêu đề cao), máy lớn chỉ cuộn lưới bài.
+// padTopPlaying: đệm trên khi có bài (điện thoại: notch kèm thẻ nhạc mỏng cao thêm 48px)
 const PLAYLIST = {
-  [DEVICE.MOBILE]: { padX: 16, padTop: 64, frame: Infinity, cols: 2, gap: 12, cover: 120, stacked: true, scrollWhole: true },
-  [DEVICE.TABLET]: { padX: 24, padTop: 64, frame: Infinity, cols: 3, gap: 16, cover: 144, stacked: false, scrollWhole: false },
-  [DEVICE.DESKTOP]: { padX: 32, padTop: 64, frame: 1280, cols: 4, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+  [DEVICE.MOBILE]: { padX: 16, padTop: 64, padTopPlaying: 112, frame: Infinity, cols: 2, gap: 12, cover: 120, stacked: true, scrollWhole: true },
+  [DEVICE.TABLET]: { padX: 24, padTop: 64, padTopPlaying: 64, frame: Infinity, cols: 3, gap: 16, cover: 144, stacked: false, scrollWhole: false },
+  [DEVICE.DESKTOP]: { padX: 32, padTop: 64, padTopPlaying: 64, frame: 1280, cols: 4, gap: 16, cover: 144, stacked: false, scrollWhole: false },
 };
 
 export default function PlaylistPage() {
@@ -144,7 +145,7 @@ export default function PlaylistPage() {
       <section
         aria-label={playlist.name}
         className={`absolute inset-0 text-[#eef3e6] [container-type:inline-size] ${layout.scrollWhole ? "overflow-y-auto overflow-x-hidden" : "overflow-clip"} pb-4`}
-        style={{ paddingLeft: layout.padX, paddingRight: layout.padX, paddingTop: layout.padTop, background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
+        style={{ paddingLeft: layout.padX, paddingRight: layout.padX, paddingTop: currentSong ? layout.padTopPlaying : layout.padTop, background: "radial-gradient(60cqw 40cqw at 22% 30%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.84)" }}
       >
         {/* Khung giữa: desktop tối đa 1280px */}
         <div className={`relative mx-auto flex w-full flex-col ${layout.scrollWhole ? "" : "h-full"}`} style={{ maxWidth: layout.frame }}>

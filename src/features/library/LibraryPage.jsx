@@ -36,6 +36,7 @@ const LIBRARY = {
   [DEVICE.MOBILE]: {
     padX: 16,
     padTop: 72,
+    padTopPlaying: 120, // notch kèm thẻ nhạc mỏng cao thêm 48px
     frame: Infinity,
     cover: "min(62cqw, 60cqh, 300px)",
     arrows: false,
@@ -45,6 +46,7 @@ const LIBRARY = {
   [DEVICE.TABLET]: {
     padX: 24,
     padTop: 80,
+    padTopPlaying: 80,
     frame: Infinity,
     cover: "min(30cqw, 68cqh, 320px)",
     arrows: true,
@@ -54,6 +56,7 @@ const LIBRARY = {
   [DEVICE.DESKTOP]: {
     padX: 32,
     padTop: 88,
+    padTopPlaying: 88,
     frame: 1280,
     cover: "min(24cqw, 68cqh, 340px)",
     arrows: true,
@@ -299,7 +302,7 @@ export default function LibraryPage() {
         style={{
           paddingLeft: layout.padX,
           paddingRight: layout.padX,
-          paddingTop: layout.padTop,
+          paddingTop: song ? layout.padTopPlaying : layout.padTop,
           background:
             "radial-gradient(60cqw 40cqw at 50% 45%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.82)",
         }}
