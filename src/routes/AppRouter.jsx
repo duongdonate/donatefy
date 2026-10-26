@@ -4,7 +4,6 @@ import AppShell from "../layouts/AppShell";
 import LibraryPage from "../features/library/LibraryPage";
 import PlaylistPage from "../features/playlist/PlaylistPage";
 import NowPlaying from "../features/player/NowPlaying";
-import GlassBar from "../features/player/GlassBar";
 import NotFound from "../pages/NotFound";
 // Music Layer tải sẵn (nhẹ, không kéo react-player): lazy riêng làm cả trang nháy loader khi rời /listen
 import MusicLayer from "../features/player/MusicLayer/MusicLayer";
@@ -48,7 +47,8 @@ function OldPlaylist() {
 function GuestOnly() {
   const { user, loading } = useAuth();
   const from = useLocation().state?.from;
-  if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/listen"} replace />;
+  // Đăng nhập xong vào Thư viện trước (người mới chưa có bài nào để nghe); có link cũ thì quay về đó
+  if (user) return <Navigate to={from ? `${from.pathname}${from.search}${from.hash}` : "/playlists"} replace />;
   if (loading) return <FullLoader />;
   return <Outlet />;
 }
@@ -107,7 +107,7 @@ export default function AppRouter() {
             <Route
               path="/listen"
               element={
-                <AppShell right={<GlassBar />}>
+                <AppShell>
                   <NowPlaying />
                 </AppShell>
               }

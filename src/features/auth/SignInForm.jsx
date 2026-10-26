@@ -30,6 +30,10 @@ export default function SignInForm({ username, setUsername, hasGoogle, setHasGoo
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Tên đăng nhập"
             autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
+            enterKeyHint="next"
             disabled={busy}
             error={errors.username}
           />
@@ -41,6 +45,7 @@ export default function SignInForm({ username, setUsername, hasGoogle, setHasGoo
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Mật khẩu"
             autoComplete="current-password"
+            enterKeyHint="go"
             disabled={busy}
             error={errors.password}
           />

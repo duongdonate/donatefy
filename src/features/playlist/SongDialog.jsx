@@ -1,20 +1,35 @@
 // Hộp thêm bài / sửa bài (playlist-detail-grid.html, phần "Thêm bài")
 import { X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import useToast from "../../hooks/useToast";
 import { Button, Glass, IconButton, Vinyl } from "../../components";
 import useDebounce from "../../hooks/useDebounce";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";
 import { fetchOembed, frameUrls, parseYouTubeId } from "../../utils/youtube";
+import { useDevice, useScreen } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
 
 const FOCUSABLE = 'button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 const OFFLINE = "Quán đang mất sóng một chút, bạn thử lại sau nhé.";
-const inputCls = "h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3 text-sm outline-none placeholder:text-[#eef3e6]/40 focus:border-matcha-1 focus:ring-2 focus:ring-matcha-1/20";
+const inputBase = "h-11 w-full rounded-xl border border-white/15 bg-white/10 px-3 outline-none placeholder:text-[#eef3e6]/40 focus:border-matcha-1 focus:ring-2 focus:ring-matcha-1/20";
+
+// Mobile: tấm trượt từ dưới lên, chữ ô nhập 16px (iOS không tự phóng to), hàng nút dính đáy tấm (luôn ngay trên bàn phím).
+// Máy lớn: hộp giữa màn như cũ.
+const DIALOG = {
+  [DEVICE.MOBILE]: { overlay: "flex items-end", sheet: "rounded-t-[28px] rounded-b-none", inputText: "text-base", columns: "1fr", stickyFooter: true },
+  [DEVICE.TABLET]: { overlay: "grid place-items-center p-4", sheet: "max-h-full max-w-3xl rounded-[28px]", inputText: "text-sm", columns: "1fr 200px", stickyFooter: false },
+  [DEVICE.DESKTOP]: { overlay: "grid place-items-center p-4", sheet: "max-h-full max-w-3xl rounded-[28px]", inputText: "text-sm", columns: "1fr 200px", stickyFooter: false },
+};
 const unwrap = (res) => (Array.isArray(res) ? res : res?.data ?? []);
 
 export default function SongDialog({ mode, playlistId, existingIds = [], song, onDone, onClose }) {
   const { showToast } = useToast();
+  const device = useDevice();
+  const screen = useScreen();
+  const layout = DIALOG[device];
+  const inputCls = `${inputBase} ${layout.inputText}`;
   const isAdd = mode === "add";
   const root = useRef(null);
   const first = useRef(null);
@@ -123,9 +138,12 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
     }
   };
 
-  return (
+  // Gắn ra body: nếu nằm trong khung trang (isolate) thì Music Layer z-40 ở ngoài sẽ đè lên đáy hộp
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 grid place-items-center bg-[rgba(5,8,4,.5)] p-4"
+      className={`fixed inset-0 z-50 bg-[rgba(5,8,4,.5)] ${layout.overlay}`}
+      // iOS: đẩy tấm lên trên bàn phím (Android đã co cửa sổ nên keyboard = 0)
+      style={device === DEVICE.MOBILE ? { paddingBottom: screen.keyboard } : undefined}
       onMouseDown={(e) => e.target === e.currentTarget && closeRef.current()}
     >
       <Glass
@@ -138,7 +156,9 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
         onSubmit={submit}
         onKeyDown={onKeyDown}
         blur={30}
-        className="max-h-full w-full max-w-3xl overflow-y-auto rounded-[28px] !border-white/15 !bg-[rgba(40,48,36,.72)] p-6 text-[#eef3e6]"
+        className={`w-full overflow-y-auto !border-white/15 !bg-[rgba(40,48,36,.72)] p-6 text-[#eef3e6] ${layout.sheet}`}
+        // Mobile: cao tối đa phần màn còn thấy (bàn phím mở thì innerHeight nhỏ lại)
+        style={device === DEVICE.MOBILE ? { maxHeight: screen.height - screen.keyboard - 16 } : undefined}
       >
         <div className="flex items-center gap-3">
           <h3 id="song-dlg-title" className="text-xl font-extrabold">{isAdd ? "Thêm bài" : "Sửa bài"}</h3>
@@ -147,7 +167,7 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
           </IconButton>
         </div>
 
-        <div className="mt-5 grid gap-6 md:grid-cols-[1fr_200px]">
+        <div className="mt-5 grid gap-6" style={{ gridTemplateColumns: layout.columns }}>
           <div className="space-y-4">
             {isAdd && (
               <div>
@@ -159,6 +179,12 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder="Dán link, vd. youtube.com/watch?v=wBXrNikQAI8"
                   autoComplete="off"
+                  type="url"
+                  inputMode="url"
+                  enterKeyHint="next"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck={false}
                   aria-invalid={!!problem}
                   aria-describedby="song-url-status"
                   className={`${inputCls} ${problem ? "!border-red-400" : ""}`}
@@ -171,11 +197,11 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
             <fieldset disabled={!videoId} className={`grid grid-cols-2 gap-3 ${videoId ? "" : "opacity-35"}`}>
               <div>
                 <label htmlFor="song-name" className="mb-1 block text-xs font-semibold opacity-70">Tên bài</label>
-                <input id="song-name" ref={isAdd ? undefined : first} value={name} onChange={(e) => setName(e.target.value)} placeholder="Tự điền sau khi dán link" className={inputCls} />
+                <input id="song-name" ref={isAdd ? undefined : first} value={name} onChange={(e) => setName(e.target.value)} placeholder="Tự điền sau khi dán link" enterKeyHint="next" className={inputCls} />
               </div>
               <div>
                 <label htmlFor="song-artist" className="mb-1 block text-xs font-semibold opacity-70">Ca sĩ / kênh</label>
-                <input id="song-artist" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Tự điền sau khi dán link" className={inputCls} />
+                <input id="song-artist" value={artist} onChange={(e) => setArtist(e.target.value)} placeholder="Tự điền sau khi dán link" enterKeyHint="done" className={inputCls} />
               </div>
             </fieldset>
             <div className={videoId ? "" : "pointer-events-none opacity-35"}>
@@ -220,12 +246,15 @@ export default function SongDialog({ mode, playlistId, existingIds = [], song, o
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-end gap-3">
+        <div
+          className={`mt-4 flex items-center justify-end gap-3 ${layout.stickyFooter ? "sticky -bottom-6 -mx-6 bg-[rgba(40,48,36,.96)] px-6 py-3" : ""}`}
+        >
           {serverErr && <p role="alert" className="mr-auto text-sm text-red-300">{serverErr}</p>}
           <Button variant="ghost" onClick={() => closeRef.current()} className="!text-[#eef3e6] hover:!bg-white/10">Huỷ</Button>
           <Button type="submit" disabled={!ready || sending}>{isAdd ? "Thêm vào playlist" : "Lưu"}</Button>
         </div>
       </Glass>
-    </div>
+    </div>,
+    document.body
   );
 }

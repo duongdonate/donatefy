@@ -19,6 +19,9 @@ import { playContext } from "../../app/slices/playerSlice";
 import useToast from "../../hooks/useToast";
 import { Button, IconButton } from "../../components";
 import useConfirm from "../../hooks/useConfirm";
+import { useDevice } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
+import { swipeDir } from "../landing/stepper";
 import Matcappa from "../../mascot/Matcappa";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";
@@ -28,7 +31,36 @@ import PlaylistMenu from "./PlaylistMenu";
 
 const CREATE = "__create";
 // Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
-const W = "min(24cqw, 68cqh, 340px)";
+// Số liệu thư viện theo thiết bị: lề, khung tối đa, cạnh bìa (đơn vị theo khung dải bìa), có mũi tên / chữ chìm không
+const LIBRARY = {
+  [DEVICE.MOBILE]: {
+    padX: 16,
+    padTop: 72,
+    frame: Infinity,
+    cover: "min(62cqw, 60cqh, 300px)",
+    arrows: false,
+    watermark: false,
+    stackedHeader: true,
+  },
+  [DEVICE.TABLET]: {
+    padX: 24,
+    padTop: 80,
+    frame: Infinity,
+    cover: "min(30cqw, 68cqh, 320px)",
+    arrows: true,
+    watermark: true,
+    stackedHeader: false,
+  },
+  [DEVICE.DESKTOP]: {
+    padX: 32,
+    padTop: 88,
+    frame: 1280,
+    cover: "min(24cqw, 68cqh, 340px)",
+    arrows: true,
+    watermark: true,
+    stackedHeader: false,
+  },
+};
 const unwrap = (res) => (Array.isArray(res) ? res : (res?.data ?? []));
 const WHEEL_REPEAT_MS = 250; // 20 cú lăn nhỏ trong ~200ms vẫn chỉ 1 bìa
 const CREATE_MIN_MS = 1200; // hiệu ứng chờ tối thiểu để thả đĩa không bị giật
@@ -60,6 +92,8 @@ export default function LibraryPage() {
   const playlists = useSelector(getAllPlaylists);
   const currentPlaylist = useSelector(getCurrentPlaylist);
   const song = useSelector(getCurrentSong);
+  const layout = LIBRARY[useDevice()];
+  const touchX = useRef(null); // vuốt ngang trên dải bìa (máy chạm)
   const playingId = song ? currentPlaylist?._id : null;
 
   const items = useMemo(
@@ -261,289 +295,315 @@ export default function LibraryPage() {
       {/* Phủ kín màn hình (main có pb-28 khi có nhạc, absolute inset-0 vẫn phủ cả phần đệm); đệm riêng để không chui dưới header/rail/Music Layer */}
       <section
         aria-label="Thư viện playlist"
-        className={`absolute inset-0 flex flex-col overflow-clip pl-24 pr-6 pt-24 text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
+        className={`absolute inset-0 overflow-clip text-[#eef3e6] [container-type:inline-size] ${song ? "pb-28" : "pb-4"}`}
         style={{
+          paddingLeft: layout.padX,
+          paddingRight: layout.padX,
+          paddingTop: layout.padTop,
           background:
             "radial-gradient(60cqw 40cqw at 50% 45%, rgba(73,115,0,.45), transparent 70%), rgba(10,16,9,.82)",
         }}
       >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-[3cqw] left-1/2 -translate-x-1/2 select-none whitespace-nowrap font-extrabold tracking-tighter text-transparent"
-          style={{
-            fontSize: "17cqw",
-            WebkitTextStroke: ".15cqw rgba(167,196,167,.12)",
-          }}
-        >
-          PLAYLISTS
-        </span>
-
-        <header className="relative z-10 flex items-baseline gap-3 px-8 pt-2">
-          <h1 className="text-3xl font-extrabold tracking-tight">
-            Playlist của bạn
-          </h1>
-          <span className="text-sm opacity-60">
-            {playlists.length} playlist
+        {layout.watermark && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-[3cqw] left-1/2 -translate-x-1/2 select-none whitespace-nowrap font-extrabold tracking-tighter text-transparent"
+            style={{
+              fontSize: "17cqw",
+              WebkitTextStroke: ".15cqw rgba(167,196,167,.12)",
+            }}
+          >
+            PLAYLISTS
           </span>
-        </header>
+        )}
 
+        {/* Khung giữa: desktop tối đa 1280px */}
         <div
-          ref={strip}
-          className="relative min-h-0 flex-1 overflow-clip [container-type:size]"
-          style={{ "--w": W }}
+          className="relative mx-auto flex h-full w-full flex-col"
+          style={{ maxWidth: layout.frame }}
         >
-          {playlists.length === 0 && (
-            <div className="absolute left-8 top-2 z-10 flex items-center gap-2 text-sm opacity-80">
-              <Matcappa pose="hug-knees" size={72} />
-              <p>Chưa có chồng đĩa nào, tạo cái đầu tiên nha ~</p>
-            </div>
-          )}
-          <IconButton
-            label="Playlist trước"
-            onClick={() => go(at - 1)}
-            disabled={at === 0}
-            className={`${arrow} left-4`}
+          <header
+            className={`relative z-10 px-2 pt-2 ${layout.stackedHeader ? "flex flex-col" : "flex items-baseline gap-3"}`}
           >
-            <ChevronLeft size={24} />
-          </IconButton>
-          <IconButton
-            label="Playlist sau"
-            onClick={() => go(at + 1)}
-            disabled={at === items.length - 1}
-            className={`${arrow} right-4`}
-          >
-            <ChevronRight size={24} />
-          </IconButton>
+            <h1 className="text-3xl font-extrabold tracking-tight">
+              Playlist của bạn
+            </h1>
+            <span className="text-sm opacity-60">
+              {playlists.length} playlist
+            </span>
+          </header>
 
           <div
-            className="absolute inset-0"
-            style={{ maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+            ref={strip}
+            className="relative min-h-0 flex-1 overflow-clip [container-type:size]"
+            style={{ "--w": layout.cover }}
+            onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+            onTouchEnd={(e) => {
+              if (touchX.current === null) return;
+              const dir = swipeDir(touchX.current, e.changedTouches[0].clientX);
+              touchX.current = null;
+              if (dir) go(atRef.current + dir);
+            }}
           >
-            {items.map((it, i) => {
-              const o = i - at,
-                a = Math.abs(o);
-              const centre = o === 0;
-              return (
-                <div
-                  key={it?._id ?? "create"}
-                  aria-hidden={a > 3}
-                  onClick={() => !centre && go(i)}
-                  className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[450ms] ease-matcha motion-reduce:transition-none"
-                  style={{
-                    width: "var(--w)",
-                    margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
-                    transform: fanTransform(o),
-                    zIndex: 20 - a,
-                    opacity: a > 3 ? 0 : 1,
-                    pointerEvents: a > 3 ? "none" : "auto",
-                    filter: centre ? "none" : "brightness(.7) saturate(.7)",
-                    cursor: centre ? "default" : "pointer",
-                  }}
+            {playlists.length === 0 && (
+              <div className="absolute left-8 top-2 z-10 flex items-center gap-2 text-sm opacity-80">
+                <Matcappa pose="hug-knees" size={72} />
+                <p>Chưa có chồng đĩa nào, tạo cái đầu tiên nha ~</p>
+              </div>
+            )}
+            {layout.arrows && (
+              <>
+                <IconButton
+                  label="Playlist trước"
+                  onClick={() => go(at - 1)}
+                  disabled={at === 0}
+                  className={`${arrow} left-4`}
                 >
-                  {it ? (
-                    <motion.div
-                      initial={
-                        it._id === justMade.current && !reduceMotion
-                          ? { y: "-160%", rotate: -12, opacity: 0 }
-                          : false
-                      }
-                      animate={{ y: 0, rotate: 0, opacity: 1 }}
-                      transition={{
-                        type: "spring",
-                        stiffness: 260,
-                        damping: 14,
-                        opacity: { duration: 0.15 },
-                      }}
-                      className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
-                      style={{
-                        boxShadow: centre
-                          ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)"
-                          : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
-                        outline: centre
-                          ? "1px solid rgba(238,243,230,.35)"
-                          : "none",
-                      }}
-                    >
-                      {it.cover && (
-                        <img
-                          src={it.cover}
-                          alt=""
-                          draggable={false}
-                          className="h-full w-full object-cover"
-                        />
-                      )}
-                      {!centre && <span className="sr-only">{it.name}</span>}
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key={shake}
-                      animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : false}
-                      transition={{ duration: 0.4 }}
-                      className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
-                    >
-                      {busy && !reduceMotion && (
-                        // Lớp lấp lánh quét ngang trong lúc chờ server
+                  <ChevronLeft size={24} />
+                </IconButton>
+                <IconButton
+                  label="Playlist sau"
+                  onClick={() => go(at + 1)}
+                  disabled={at === items.length - 1}
+                  className={`${arrow} right-4`}
+                >
+                  <ChevronRight size={24} />
+                </IconButton>
+              </>
+            )}
+
+            <div
+              className="absolute inset-0"
+              style={{ maskImage: edgeFade, WebkitMaskImage: edgeFade }}
+            >
+              {items.map((it, i) => {
+                const o = i - at,
+                  a = Math.abs(o);
+                const centre = o === 0;
+                return (
+                  <div
+                    key={it?._id ?? "create"}
+                    aria-hidden={a > 3}
+                    onClick={() => !centre && go(i)}
+                    className="absolute left-1/2 top-1/2 aspect-square transition-[transform,opacity,filter] duration-[450ms] ease-matcha motion-reduce:transition-none"
+                    style={{
+                      width: "var(--w)",
+                      margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
+                      transform: fanTransform(o),
+                      zIndex: 20 - a,
+                      opacity: a > 3 ? 0 : 1,
+                      pointerEvents: a > 3 ? "none" : "auto",
+                      filter: centre ? "none" : "brightness(.7) saturate(.7)",
+                      cursor: centre ? "default" : "pointer",
+                    }}
+                  >
+                    {it ? (
+                      <motion.div
+                        initial={
+                          it._id === justMade.current && !reduceMotion
+                            ? { y: "-160%", rotate: -12, opacity: 0 }
+                            : false
+                        }
+                        animate={{ y: 0, rotate: 0, opacity: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 14,
+                          opacity: { duration: 0.15 },
+                        }}
+                        className="absolute inset-0 overflow-hidden rounded-[1.2cqw] bg-matcha-4"
+                        style={{
+                          boxShadow: centre
+                            ? "0 2.4cqw 4cqw -1cqw rgba(0,0,0,.7)"
+                            : "0 1.2cqw 2cqw -1cqw rgba(0,0,0,.6)",
+                          outline: centre
+                            ? "1px solid rgba(238,243,230,.35)"
+                            : "none",
+                        }}
+                      >
+                        {it.cover && (
+                          <img
+                            src={it.cover}
+                            alt=""
+                            draggable={false}
+                            className="h-full w-full object-cover"
+                          />
+                        )}
+                        {!centre && <span className="sr-only">{it.name}</span>}
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key={shake}
+                        animate={shake ? { x: [0, -10, 10, -6, 6, 0] } : false}
+                        transition={{ duration: 0.4 }}
+                        className="absolute inset-0 flex flex-col items-center justify-center gap-3 overflow-hidden rounded-[1.2cqw] border-2 border-dashed border-[rgba(238,243,230,.4)] bg-white/[.06] p-4 text-center"
+                      >
+                        {busy && !reduceMotion && (
+                          // Lớp lấp lánh quét ngang trong lúc chờ server
+                          <motion.span
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
+                            initial={{ x: "-120%" }}
+                            animate={{ x: "220%" }}
+                            transition={{
+                              duration: 1,
+                              repeat: Infinity,
+                              ease: "linear",
+                            }}
+                          />
+                        )}
+                        <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
+                          <Plus size={28} aria-hidden="true" />
+                        </span>
+                        <b className="text-base">Tạo playlist</b>
+                      </motion.div>
+                    )}
+                    {it?._id === justMade.current &&
+                      !reduceMotion &&
+                      LEAVES.map((l, k) => (
+                        // Lá trà bung ra khi đĩa đáp xuống
                         <motion.span
+                          key={k}
                           aria-hidden="true"
-                          className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent"
-                          initial={{ x: "-120%" }}
-                          animate={{ x: "220%" }}
+                          className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-3 rounded-[8px_0] bg-matcha-1"
+                          initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
+                          animate={{
+                            x: l.x,
+                            y: l.y,
+                            rotate: 200,
+                            opacity: [0, 1, 0],
+                          }}
                           transition={{
-                            duration: 1,
-                            repeat: Infinity,
-                            ease: "linear",
+                            delay: 0.35,
+                            duration: 0.8,
+                            ease: "easeOut",
                           }}
                         />
-                      )}
-                      <span className="grid h-14 w-14 place-items-center rounded-full bg-[rgba(167,196,167,.18)] text-matcha-1">
-                        <Plus size={28} aria-hidden="true" />
-                      </span>
-                      <b className="text-base">Tạo playlist</b>
-                    </motion.div>
-                  )}
-                  {it?._id === justMade.current &&
-                    !reduceMotion &&
-                    LEAVES.map((l, k) => (
-                      // Lá trà bung ra khi đĩa đáp xuống
-                      <motion.span
-                        key={k}
-                        aria-hidden="true"
-                        className="pointer-events-none absolute left-1/2 top-1/2 h-2 w-3 rounded-[8px_0] bg-matcha-1"
-                        initial={{ x: 0, y: 0, rotate: 0, opacity: 0 }}
-                        animate={{
-                          x: l.x,
-                          y: l.y,
-                          rotate: 200,
-                          opacity: [0, 1, 0],
-                        }}
-                        transition={{
-                          delay: 0.35,
-                          duration: 0.8,
-                          ease: "easeOut",
-                        }}
-                      />
-                    ))}
-                </div>
-              );
-            })}
+                      ))}
+                  </div>
+                );
+              })}
+            </div>
           </div>
-        </div>
 
-        <div className="relative z-10 flex min-h-[7.5rem] flex-col items-center px-8 pb-5 text-center">
-          {p ? (
-            <>
-              {renaming ? (
-                <input
-                  autoFocus
-                  value={draft}
-                  maxLength={60}
-                  aria-label="Tên playlist"
-                  onChange={(e) => setDraft(e.target.value)}
-                  onBlur={() => setRenaming(false)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") saveName();
-                    if (e.key === "Escape") {
-                      e.stopPropagation();
-                      setRenaming(false);
-                    }
-                  }}
-                  className="h-10 w-72 max-w-full rounded-xl border border-matcha-1 bg-white/10 px-3 text-center text-xl font-extrabold outline-none"
-                />
-              ) : (
-                <h2 className="max-w-[80%] truncate text-2xl font-extrabold tracking-tight">
-                  {p.name}
-                </h2>
-              )}
-              <p className="mt-1 text-sm">
-                <span className="opacity-60">
-                  {count} bài
-                  {songs ? ` · ${minutes(totalDuration(songs))}` : ""}
-                </span>
-                {playingId === p._id && (
-                  <span className="ml-2 rounded-full bg-matcha-1/20 px-2 py-0.5 text-xs font-semibold text-matcha-1">
-                    Đang phát
-                  </span>
-                )}
-              </p>
-              <div className="mt-3 flex items-center gap-3">
-                <Button
-                  onClick={play}
-                  disabled={!count}
-                  title={count ? undefined : "Playlist chưa có bài"}
-                >
-                  <Play size={16} aria-hidden="true" /> Phát
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate(`/playlists/${p._id}`)}
-                  className="!text-[#eef3e6]"
-                >
-                  Mở
-                </Button>
-                <PlaylistMenu
-                  onRename={() => {
-                    setDraft(p.name);
-                    setRenaming(true);
-                  }}
-                  onDelete={remove}
-                />
-              </div>
-            </>
-          ) : (
-            <>
-              <form
-                onSubmit={create}
-                className="flex flex-col items-center gap-3"
-              >
-                <div className="w-72 max-w-full">
+          <div className="relative z-10 flex min-h-[7.5rem] flex-col items-center px-2 pb-5 text-center">
+            {p ? (
+              <>
+                {renaming ? (
                   <input
-                    name="name"
+                    autoFocus
+                    value={draft}
                     maxLength={60}
-                    value={newName}
-                    onChange={(e) => {
-                      setNewName(e.target.value);
-                      setCreateErr("");
+                    aria-label="Tên playlist"
+                    enterKeyHint="done"
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={() => setRenaming(false)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveName();
+                      if (e.key === "Escape") {
+                        e.stopPropagation();
+                        setRenaming(false);
+                      }
                     }}
-                    placeholder="Tên playlist"
-                    aria-label="Tên playlist mới"
-                    aria-describedby="new-playlist-count"
-                    autoComplete="off"
-                    className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
+                    className="h-10 w-72 max-w-full rounded-xl border border-matcha-1 bg-white/10 px-3 text-center text-xl font-extrabold outline-none"
                   />
-                  <p
-                    id="new-playlist-count"
-                    className="mt-1 pr-2 flex justify-between gap-2 text-xs"
-                  >
-                    <span className="text-red-400" aria-live="polite">
-                      {createErr ||
-                        (newName && !newName.trim()
-                          ? "Tên không được chỉ có khoảng trắng"
-                          : "")}
+                ) : (
+                  <h2 className="max-w-[80%] truncate text-2xl font-extrabold tracking-tight">
+                    {p.name}
+                  </h2>
+                )}
+                <p className="mt-1 text-sm">
+                  <span className="opacity-60">
+                    {count} bài
+                    {songs ? ` · ${minutes(totalDuration(songs))}` : ""}
+                  </span>
+                  {playingId === p._id && (
+                    <span className="ml-2 rounded-full bg-matcha-1/20 px-2 py-0.5 text-xs font-semibold text-matcha-1">
+                      Đang phát
                     </span>
-                    <span className="text-white/50">{newName.length}/60</span>
-                  </p>
-                </div>
-                <Button
-                  type="submit"
-                  disabled={busy || !newName.trim()}
-                  aria-busy={busy}
-                >
-                  {busy ? (
-                    <>
-                      <Loader2
-                        size={16}
-                        className="animate-spin motion-reduce:animate-none"
-                        aria-hidden="true"
-                      />
-                      Đang tạo…
-                    </>
-                  ) : (
-                    "Tạo"
                   )}
-                </Button>
-              </form>
-            </>
-          )}
+                </p>
+                <div className="mt-3 flex items-center gap-3">
+                  <Button
+                    onClick={play}
+                    disabled={!count}
+                    title={count ? undefined : "Playlist chưa có bài"}
+                  >
+                    <Play size={16} aria-hidden="true" /> Phát
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => navigate(`/playlists/${p._id}`)}
+                    className="!text-[#eef3e6]"
+                  >
+                    Mở
+                  </Button>
+                  <PlaylistMenu
+                    onRename={() => {
+                      setDraft(p.name);
+                      setRenaming(true);
+                    }}
+                    onDelete={remove}
+                  />
+                </div>
+              </>
+            ) : (
+              <>
+                <form
+                  onSubmit={create}
+                  className="flex flex-col items-center gap-3"
+                >
+                  <div className="w-72 max-w-full">
+                    <input
+                      name="name"
+                      maxLength={60}
+                      value={newName}
+                      onChange={(e) => {
+                        setNewName(e.target.value);
+                        setCreateErr("");
+                      }}
+                      placeholder="Tên playlist"
+                      aria-label="Tên playlist mới"
+                      aria-describedby="new-playlist-count"
+                      autoComplete="off"
+                      enterKeyHint="done"
+                      className="h-10 w-full rounded-xl border border-white/25 bg-white/10 px-3 text-center text-xl font-extrabold outline-none focus:border-matcha-1"
+                    />
+                    <p
+                      id="new-playlist-count"
+                      className="mt-1 pr-2 flex justify-between gap-2 text-xs"
+                    >
+                      <span className="text-red-400" aria-live="polite">
+                        {createErr ||
+                          (newName && !newName.trim()
+                            ? "Tên không được chỉ có khoảng trắng"
+                            : "")}
+                      </span>
+                      <span className="text-white/50">{newName.length}/60</span>
+                    </p>
+                  </div>
+                  <Button
+                    type="submit"
+                    disabled={busy || !newName.trim()}
+                    aria-busy={busy}
+                  >
+                    {busy ? (
+                      <>
+                        <Loader2
+                          size={16}
+                          className="animate-spin motion-reduce:animate-none"
+                          aria-hidden="true"
+                        />
+                        Đang tạo…
+                      </>
+                    ) : (
+                      "Tạo"
+                    )}
+                  </Button>
+                </form>
+              </>
+            )}
+          </div>
         </div>
       </section>
     </>

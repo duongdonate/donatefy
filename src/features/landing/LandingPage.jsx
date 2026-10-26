@@ -125,7 +125,7 @@ export default function LandingPage() {
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  const onStart = () => navigate(user ? "/listen" : "/login");
+  const onStart = () => navigate(user ? "/playlists" : "/login");
 
   return (
     <div className="ld text-ink" data-step={step}>

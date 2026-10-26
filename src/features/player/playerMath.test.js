@@ -1,7 +1,25 @@
 // Chạy: npm test
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { previousAction, parseSavedVolume, dockWindow, valueFromPointer, moveItem, hotkeyAction } from "./playerMath.js";
+import { previousAction, parseSavedVolume, dockWindow, moveItem, hotkeyAction, ratioFromPointerX, seekKeyStep, fitDisc, stripWidth, fitCells } from "./playerMath.js";
+
+test("ratioFromPointerX: kẹp 0..1", () => {
+  const rect = { left: 100, width: 200 };
+  assert.equal(ratioFromPointerX(100, rect), 0);
+  assert.equal(ratioFromPointerX(200, rect), 0.5);
+  assert.equal(ratioFromPointerX(50, rect), 0);
+  assert.equal(ratioFromPointerX(999, rect), 1);
+  assert.equal(ratioFromPointerX(150, { left: 0, width: 0 }), 0);
+});
+
+test("seekKeyStep: ← → 5 giây, Home/End, kẹp hai đầu", () => {
+  assert.equal(seekKeyStep("ArrowRight", 10, 100), 15);
+  assert.equal(seekKeyStep("ArrowLeft", 3, 100), 0);
+  assert.equal(seekKeyStep("ArrowRight", 98, 100), 100);
+  assert.equal(seekKeyStep("Home", 50, 100), 0);
+  assert.equal(seekKeyStep("End", 50, 100), 100);
+  assert.equal(seekKeyStep("a", 50, 100), null);
+});
 
 test("bài trước: quá 3 giây thì về đầu bài", () => {
   assert.equal(previousAction(3.5, 4, "off"), "restart");
@@ -26,14 +44,6 @@ test("dock 5 ô, sát hai đầu và hàng chờ ngắn", () => {
   assert.deepEqual(dockWindow(2, 1).map((d) => d.pos), [0, 1]);
   assert.deepEqual(dockWindow(3, 1, 3).map((d) => d.pos), [0, 1, 2]);
   assert.deepEqual(dockWindow(0, -1), []);
-});
-
-test("thanh trượt dọc", () => {
-  const rect = { top: 100, height: 200 };
-  assert.equal(valueFromPointer(300, rect), 0);
-  assert.equal(valueFromPointer(100, rect), 1);
-  assert.equal(valueFromPointer(200, rect), 0.5);
-  assert.equal(valueFromPointer(500, rect), 0);
 });
 
 test("đổi chỗ", () => {
@@ -66,3 +76,24 @@ test("phím tắt", () => {
   assert.equal(k("x"), null);
 });
 
+
+test("fitDisc: đủ chỗ thì lấy nhỏ nhất, thiếu chỗ thì ẩn đĩa (0) thay vì đè lên chữ", () => {
+  assert.equal(fitDisc(400, 300, 120), 300);
+  assert.equal(fitDisc(200, 300, 120), 200);
+  assert.equal(fitDisc(119, 300, 120), 0);
+  assert.equal(fitDisc(-40, 300, 120), 0);
+});
+
+test("stripWidth: bề ngang dải n bìa xoè (mỗi bìa lệch 0.82 bìa, chừa chỗ bìa giữa phóng 1.12)", () => {
+  assert.equal(stripWidth(100, 1), 130);
+  assert.equal(stripWidth(100, 3), 294);
+  assert.equal(stripWidth(100, 5), 458);
+});
+
+test("fitCells: số bìa lẻ lớn nhất vừa chỗ, bỏ đều hai bên, không quá mức của thiết bị", () => {
+  assert.equal(fitCells(1000, 100, 5), 5);
+  assert.equal(fitCells(1000, 100, 3), 3); // tablet tối đa 3
+  assert.equal(fitCells(400, 100, 5), 3);
+  assert.equal(fitCells(200, 100, 5), 1);
+  assert.equal(fitCells(50, 100, 5), 1); // tối thiểu vẫn giữ bìa đang phát
+});

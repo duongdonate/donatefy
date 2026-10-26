@@ -3,7 +3,7 @@ import { UserRoundCog } from "lucide-react";
 import defaultAvatar from "../assets/image/Tanjiro.jpg";
 import { useAuth } from "../contexts/AuthContext";
 
-const Avatar = ({ onClick }) => {
+const Avatar = ({ onClick, size = 48 }) => {
   const [avatar, setAvatar] = useState(null);
   const { user } = useAuth();
 
@@ -45,7 +45,7 @@ const Avatar = ({ onClick }) => {
   }, [user]);
 
   return (
-    <div className="relative w-12 h-12" onClick={onClick}>
+    <div className="relative shrink-0" style={{ width: size, height: size }} onClick={onClick}>
       <img
         src={avatar || defaultAvatar}
         alt="Avatar"

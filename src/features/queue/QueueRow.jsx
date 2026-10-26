@@ -5,7 +5,8 @@ import { useState } from "react";
 import Marquee from "../../components/Marquee";
 import formatDuration from "../../utils/formatDuration";
 
-function Body({ song, index, onPlay, onMove, grip }) {
+// gripSize: vùng chạm của tay nắm (mobile 44px để ngón tay bấm trúng)
+function Body({ song, index, onPlay, onMove, grip, gripSize = 20 }) {
   const [hover, setHover] = useState(false);
   return (
     <motion.div
@@ -14,9 +15,11 @@ function Body({ song, index, onPlay, onMove, grip }) {
       transition={{ duration: 0.35, delay: Math.min(index, 10) * 0.03, ease: [0.2, 0.8, 0.2, 1] }}
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
-      className="flex items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/[.07]"
+      className="flex min-h-14 items-center gap-3 rounded-xl px-2 py-1.5 transition-colors hover:bg-white/[.07]"
     >
-      <span className="flex w-5 shrink-0 justify-center">{grip}</span>
+      <span className="flex shrink-0 items-center justify-center" style={{ width: gripSize, height: gripSize }}>
+        {grip}
+      </span>
       <button
         type="button"
         onClick={onPlay}
@@ -45,12 +48,21 @@ function Body({ song, index, onPlay, onMove, grip }) {
 }
 
 // Dòng kéo được (Tiếp theo)
-export function DraggableRow({ queueIndex, ...props }) {
+// Chỉ tay nắm bắt đầu kéo; thân dòng để ngón tay cuộn dọc (touch-action: pan-y)
+export function DraggableRow({ queueIndex, gripSize, ...props }) {
   const drag = useDragControls();
   return (
-    <Reorder.Item value={queueIndex} dragListener={false} dragControls={drag} className="list-none select-none" data-qi={queueIndex}>
+    <Reorder.Item
+      value={queueIndex}
+      dragListener={false}
+      dragControls={drag}
+      className="list-none select-none"
+      style={{ touchAction: "pan-y" }}
+      data-qi={queueIndex}
+    >
       <Body
         {...props}
+        gripSize={gripSize}
         grip={
           <span
             aria-hidden="true"
@@ -58,7 +70,7 @@ export function DraggableRow({ queueIndex, ...props }) {
               e.preventDefault(); // không bôi đen chữ trên đường kéo
               drag.start(e);
             }}
-            className="cursor-grab touch-none opacity-45 hover:opacity-90 active:cursor-grabbing"
+            className="grid h-full w-full cursor-grab touch-none place-items-center opacity-45 hover:opacity-90 active:cursor-grabbing"
           >
             <GripVertical size={16} />
           </span>
@@ -69,10 +81,10 @@ export function DraggableRow({ queueIndex, ...props }) {
 }
 
 // Dòng tĩnh (Đã phát, phát lại từ đầu)
-export function StaticRow(props) {
+export function StaticRow({ gripSize, ...props }) {
   return (
     <li className="list-none">
-      <Body {...props} grip={null} />
+      <Body {...props} gripSize={gripSize} grip={null} />
     </li>
   );
 }

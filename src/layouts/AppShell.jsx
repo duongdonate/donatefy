@@ -1,24 +1,31 @@
-// Khung v2: nền quán + header/rail tự ẩn khi đứng yên; `right` (thanh kính C) luôn hiện
+// Khung v2: nền quán + notch điều hướng dính mép trên, tự ẩn khi đứng yên
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { getCurrentSong } from "../app/selectors";
+import { useDevice } from "../contexts/DeviceContext";
 import useIdle from "../hooks/useIdle";
-import Header from "./Header";
-import Rail from "./Rail";
+import useTyping from "../hooks/useTyping";
+import { DEVICE } from "../utils/device";
+import Notch from "./Notch";
 
 const chrome = "transition duration-400 ease-matcha motion-reduce:transition-none";
 
-export default function AppShell({ children, right }) {
+export default function AppShell({ children }) {
+  const device = useDevice();
   const [hover, setHover] = useState(false);
   const [focusIn, setFocusIn] = useState(false);
+  const [notchOpen, setNotchOpen] = useState(false);
   // Chừa đáy cho Music Layer (không hiện ở /listen)
   const { pathname } = useLocation();
   const pad = !!useSelector(getCurrentSong) && pathname !== "/listen";
-  const idle = useIdle(2500, { hold: hover || focusIn });
+  // Giữ notch khi chuột ở trên, focus bàn phím ở bên trong, hoặc notch đang mở
+  const idle = useIdle(2500, { hold: hover || focusIn || notchOpen });
+  // Mobile đang gõ: ẩn notch nhường chỗ cho bàn phím
+  const typing = useTyping();
+  const hidden = idle || typing;
 
-  // Giữ header/rail khi chuột đang ở trên hoặc focus bàn phím đang ở bên trong
-  // (bấm chuột cũng để lại focus trên nút, nếu tính thì header không bao giờ ẩn)
+  // Bấm chuột cũng để lại focus trên nút; chỉ tính focus bàn phím, nếu không notch không bao giờ ẩn
   const holdProps = {
     onMouseEnter: () => setHover(true),
     onMouseLeave: () => setHover(false),
@@ -29,28 +36,28 @@ export default function AppShell({ children, right }) {
   };
 
   return (
-    <div className="bg-cafe relative isolate h-screen w-screen overflow-hidden text-ink">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute left-[27%] top-[10%] h-[46vw] w-[46vw] rounded-full bg-matcha-2 opacity-45 blur-[8vw]" />
-        <div className="absolute -left-[4%] top-[4%] h-[24vw] w-[24vw] rounded-full bg-[#f2c9c9] opacity-40 blur-[8vw] dark:opacity-10" />
-        <div className="absolute -right-[6%] top-[24%] h-[26vw] w-[26vw] rounded-full bg-matcha-1 opacity-60 blur-[8vw] dark:opacity-25" />
-      </div>
+    <div className="bg-cafe relative isolate h-dvh w-screen overflow-hidden text-ink">
+      {device !== DEVICE.MOBILE && <Blobs />}
 
-      <div
-        {...holdProps}
-        className={`absolute inset-x-6 top-4 z-20 ${chrome} ${idle ? "-translate-y-[160%] opacity-0" : ""}`}
-      >
-        <Header />
-      </div>
-      <div
-        {...holdProps}
-        className={`absolute left-4 top-28 z-20 ${chrome} ${idle ? "-translate-x-[180%] opacity-0" : ""}`}
-      >
-        <Rail />
+      <div className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center ${chrome} ${hidden ? "-translate-y-[120%] opacity-0" : ""}`}>
+        {/* không bắt chuột: notch chỉ bật bắt chuột ở phần đang thấy (khung mở rộng to hơn phần thu gọn) */}
+        <div {...holdProps}>
+          <Notch open={notchOpen} onOpenChange={setNotchOpen} />
+        </div>
       </div>
 
       <main className={`relative h-full w-full ${pad ? "pb-28" : ""}`}>{children}</main>
-      {right && <div className="absolute right-4 top-28 z-20">{right}</div>}
+    </div>
+  );
+}
+
+// Đốm màu mờ trang trí (ẩn ở mobile cho gọn)
+function Blobs() {
+  return (
+    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
+      <div className="absolute left-[27%] top-[10%] h-[46vw] w-[46vw] rounded-full bg-matcha-2 opacity-45 blur-[8vw]" />
+      <div className="absolute -left-[4%] top-[4%] h-[24vw] w-[24vw] rounded-full bg-[#f2c9c9] opacity-40 blur-[8vw] dark:opacity-10" />
+      <div className="absolute -right-[6%] top-[24%] h-[26vw] w-[26vw] rounded-full bg-matcha-1 opacity-60 blur-[8vw] dark:opacity-25" />
     </div>
   );
 }

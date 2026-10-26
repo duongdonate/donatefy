@@ -5,6 +5,8 @@ import { useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Glass } from "../../components";
 import { PageLoader } from "../../components/Loader";
+import { useDevice } from "../../contexts/DeviceContext";
+import { DEVICE } from "../../utils/device";
 import FlyingMascot from "../../mascot/FlyingMascot";
 import { AUTH_LINES } from "../../mascot/lines";
 import SignInForm from "./SignInForm";
@@ -16,7 +18,11 @@ const TEXT = {
   register: { title: "Tạo tài khoản", busy: "Đang pha chén đầu tiên…" },
 };
 
+// Mobile bỏ mascot bay (dễ che form khi bàn phím hiện)
+const SHOW_MASCOT = { [DEVICE.MOBILE]: false, [DEVICE.TABLET]: true, [DEVICE.DESKTOP]: true };
+
 export default function AuthPage({ mode }) {
+  const device = useDevice();
   const navigate = useNavigate();
   const location = useLocation();
   const t = TEXT[mode];
@@ -32,7 +38,7 @@ export default function AuthPage({ mode }) {
   const Form = mode === "login" ? SignInForm : SignUpForm;
 
   return (
-    <main className="bg-cafe relative grid min-h-screen place-items-center overflow-hidden px-4 py-16 text-ink">
+    <main className="bg-cafe relative grid min-h-dvh place-items-center overflow-hidden px-4 py-16 text-ink">
       <div aria-hidden="true" className="pointer-events-none absolute -left-40 -top-32 h-[520px] w-[520px] rounded-full bg-matcha-1 opacity-70 blur-[90px]" />
       <div aria-hidden="true" className="pointer-events-none absolute -bottom-32 -right-36 h-[420px] w-[420px] rounded-full bg-[#f2c9c9] opacity-45 blur-[90px] dark:opacity-10" />
 
@@ -57,7 +63,7 @@ export default function AuthPage({ mode }) {
         )}
       </Glass>
 
-      <FlyingMascot target={spot} pose={busy ? "hug-vinyl" : "stand"} lines={AUTH_LINES} />
+      {SHOW_MASCOT[device] && <FlyingMascot target={spot} pose={busy ? "hug-vinyl" : "stand"} lines={AUTH_LINES} />}
     </main>
   );
 }

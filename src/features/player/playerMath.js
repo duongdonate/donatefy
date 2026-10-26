@@ -29,11 +29,18 @@ export function dockWindow(orderLength, position, size = 5) {
   return out;
 }
 
-// Thanh trượt dọc (dưới = 0), bỏ `inset` hai đầu như bản mẫu
-export function valueFromPointer(clientY, rect, inset = 0.1) {
-  const bottom = rect.top + rect.height;
-  const v = (bottom - clientY - rect.height * inset) / (rect.height * (1 - 2 * inset));
-  return Math.round(Math.min(1, Math.max(0, v)) * 100) / 100;
+// Thanh ngang (trái = 0): vị trí con trỏ thành tỉ lệ 0..1
+export function ratioFromPointerX(clientX, rect) {
+  if (!rect.width) return 0;
+  const v = (clientX - rect.left) / rect.width;
+  return Math.round(Math.min(1, Math.max(0, v)) * 1000) / 1000;
+}
+
+// Phím trên thanh tiến trình → giây mới (null nếu không phải phím tua)
+export function seekKeyStep(key, current, duration, step = 5) {
+  const next = { ArrowLeft: current - step, ArrowRight: current + step, Home: 0, End: duration }[key];
+  if (next === undefined) return null;
+  return Math.min(duration, Math.max(0, next));
 }
 
 // Đổi chỗ phần tử với hàng xóm; vượt biên thì giữ nguyên mảng cũ
@@ -60,3 +67,23 @@ export function hotkeyAction(e) {
   return KEYS[e.key] ?? null;
 }
 
+
+// Cỡ đĩa: không quá `limit`; chỗ theo chiều cao không đủ `min` thì ẩn đĩa (0) thay vì ép to đè lên chữ
+export function fitDisc(byHeight, limit, min) {
+  if (byHeight < min) return 0;
+  return Math.min(limit, byHeight);
+}
+
+// Dải bìa dock: n bìa xoè, bìa cạnh nhau lệch 0.82 bìa; cộng 0.3 bìa cho bìa giữa phóng to 1.12 và bóng
+const COVER_STEP = 0.82;
+export function stripWidth(cover, cells) {
+  return Math.round(cover * (1 + (cells - 1) * COVER_STEP + 0.3));
+}
+
+// Số bìa lẻ lớn nhất (5 → 3 → 1) vừa `budget` px, bỏ đều hai bên; luôn giữ ít nhất bìa đang phát
+export function fitCells(budget, cover, maxCells) {
+  for (const n of [5, 3]) {
+    if (n <= maxCells && stripWidth(cover, n) <= budget) return n;
+  }
+  return 1;
+}
