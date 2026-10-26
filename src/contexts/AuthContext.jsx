@@ -2,8 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import axiosClient, { refreshAccessToken } from "../services/axiosClient";
 import axiosUpload from "../services/axiosUpload";
 import { setAccessToken, onSessionExpired, retryStartup } from "../services/authSession";
-import SignInForm from "../components/SignInForm";
-import SignUpForm from "../components/SignUpForm";
 
 const AuthContext = createContext();
 
@@ -150,15 +148,5 @@ export const AuthProvider = ({ children }) => {
     <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, loading, waking }}>
       {children}
     </AuthContext.Provider>
-  );
-};
-
-export const AuthFlow = () => {
-  const [isLogin, setIsLogin] = useState(true);
-
-  return isLogin ? (
-    <SignInForm onToggle={() => setIsLogin(false)} />
-  ) : (
-    <SignUpForm onToggle={() => setIsLogin(true)} />
   );
 };

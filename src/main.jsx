@@ -1,6 +1,5 @@
 import { createRoot } from "react-dom/client";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { MusicProvider } from "./contexts/MusicPlayerContext";
 import { PopupProvider } from "./contexts/PopupContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ToastProvider } from "./contexts/ToastContext";
@@ -17,9 +16,7 @@ createRoot(document.getElementById("root")).render(
       <ThemeProvider>
         <ToastProvider>
           <PopupProvider>
-            <MusicProvider>
-              <App />
-            </MusicProvider>
+            <App />
           </PopupProvider>
         </ToastProvider>
       </ThemeProvider>
