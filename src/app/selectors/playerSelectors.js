@@ -5,6 +5,7 @@ export const getCurrentSong = (state) => {
 };
 export const getIsPlaying = (state) => state.player.isPlaying;
 export const getIsShowQueue = (state) => state.player.showQueue;
+export const getAnnounce = (state) => state.player.announce;
 export const getIsShowLyrics = (state) => state.player.showLyrics;
 export const getQueue = (state) => state.player.queue;
 export const getIsShuffle = (state) => state.player.shuffle;

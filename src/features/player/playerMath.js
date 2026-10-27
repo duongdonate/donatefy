@@ -1,5 +1,6 @@
 // Logic thuần của trình phát (không đụng React / Redux) để test bằng node
 export const VOLUME_KEY = "donatefy.volume";
+export const REPEAT_LABEL = { off: "Lặp: tắt", all: "Lặp: tất cả", one: "Lặp: một bài" };
 
 // Giống Spotify: đã nghe > 3s (hoặc đang ở bài đầu mà không lặp tất cả) thì về đầu bài
 export function previousAction(played, position, repeat) {

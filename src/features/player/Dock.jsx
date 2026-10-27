@@ -1,4 +1,4 @@
-// Dock: băng chuyền bìa quanh bài đang phát (visual-direction-v3.html), hai bên là Shuffle/Hàng chờ và âm lượng
+// Dock: băng chuyền bìa quanh bài đang phát (visual-direction-v3.html), hai bên là Lặp/Hàng chờ và âm lượng
 import { motion } from "framer-motion";
 import { Pause, Play, SkipBack, SkipForward } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +8,7 @@ import { Glass, IconButton } from "../../components";
 import { useDevice, useScreen } from "../../contexts/DeviceContext";
 import { DEVICE } from "../../utils/device";
 import {
-  ShuffleQueueButtons,
+  RepeatQueueButtons,
   VolumeInline,
   VolumePopover,
 } from "./DockControls";
@@ -118,15 +118,15 @@ export default function Dock({ width: dockWidth }) {
 
   switch (device) {
     case DEVICE.MOBILE:
-      // Điện thoại: trái chỉ Hàng chờ, phải nút loa (cân hai bên); Trộn bài có trong lớp phủ Hàng chờ
+      // Điện thoại: trái chỉ Hàng chờ, phải nút loa (cân hai bên); Trộn / Lặp có trong lớp phủ Hàng chờ
       return shell(
-        <ShuffleQueueButtons size={layout.sideSize} showShuffle={false} />,
+        <RepeatQueueButtons size={layout.sideSize} showRepeat={false} />,
         <VolumePopover size={layout.sideSize} />,
       );
     case DEVICE.TABLET:
     case DEVICE.DESKTOP:
       return shell(
-        <ShuffleQueueButtons size={layout.sideSize} />,
+        <RepeatQueueButtons size={layout.sideSize} />,
         <VolumeInline sliderWidth={layout.sliderWidth} />,
       );
   }

@@ -26,10 +26,18 @@ import Matcappa from "../../mascot/Matcappa";
 import playlistService from "../../services/api/playlistService";
 import songService from "../../services/api/songService";
 import { accumulateWheel, clampStep } from "../landing/stepper";
-import { fanTransform, libraryOrder, totalDuration } from "./libraryMath";
+import {
+  DEAL,
+  dealTransform,
+  libraryOrder,
+  totalDuration,
+} from "./libraryMath";
 import PlaylistMenu from "./PlaylistMenu";
 
 const CREATE = "__create";
+// Lần đầu tải: xoè chậm hơn lúc lướt bìa (450ms), mỗi vòng bìa ra trễ thêm một nhịp
+const FAN_MS = 1100;
+const FAN_STAGGER_MS = 40;
 // Cỡ bìa theo hộp của dải (container-type: size), co được xuống dưới 170px khi thấp
 // Số liệu thư viện theo thiết bị: lề, khung tối đa, cạnh bìa (đơn vị theo khung dải bìa), có mũi tên / chữ chìm không
 const LIBRARY = {
@@ -117,6 +125,10 @@ export default function LibraryPage() {
   const [createErr, setCreateErr] = useState("");
   const [shake, setShake] = useState(0);
   const reduceMotion = useReducedMotion();
+  // Lần đầu tải (kho chưa có playlist): bìa chờ dưới mép, tải xong gom bó bay lên rồi xoè. Quay lại trang thì không chạy lại
+  const [deal, setDeal] = useState(() =>
+    playlists.length || reduceMotion ? DEAL.DONE : DEAL.BELOW,
+  );
   const strip = useRef(null);
   const atRef = useRef(0);
   const itemsRef = useRef(items);
@@ -129,12 +141,35 @@ export default function LibraryPage() {
     let alive = true;
     playlistService
       .getAll()
-      .then((res) => alive && dispatch(setAllPlaylists(unwrap(res))))
-      .catch(() => showToast("Không tải được thư viện, thử lại sau nha"));
+      .then((res) => {
+        if (!alive) return;
+        dispatch(setAllPlaylists(unwrap(res)));
+        // chờ hai khung hình để bìa mới kịp gắn ở dưới mép rồi mới bay lên
+        requestAnimationFrame(() =>
+          requestAnimationFrame(
+            () => alive && setDeal((d) => (d === DEAL.BELOW ? DEAL.STACK : d)),
+          ),
+        );
+      })
+      .catch(() => {
+        setDeal(DEAL.DONE);
+        showToast("Không tải được thư viện, thử lại sau nha");
+      });
     return () => {
       alive = false;
     };
   }, [dispatch, showToast]);
+
+  // Bó trồi lên (STACK) → xoè chậm (FAN) → xong thì mới hiện thông tin playlist
+  useEffect(() => {
+    const step = {
+      [DEAL.STACK]: [DEAL.FAN, 750],
+      [DEAL.FAN]: [DEAL.DONE, FAN_MS + 3 * FAN_STAGGER_MS],
+    }[deal];
+    if (!step) return;
+    const t = setTimeout(() => setDeal(step[0]), step[1]);
+    return () => clearTimeout(t);
+  }, [deal]);
 
   // Không khoá theo thời gian: bấm/phím nhanh bao nhiêu lần thì lướt bấy nhiêu bìa, transition tự nối tiếp
   const go = useCallback((n) => {
@@ -348,7 +383,7 @@ export default function LibraryPage() {
               if (dir) go(atRef.current + dir);
             }}
           >
-            {playlists.length === 0 && (
+            {playlists.length === 0 && deal === DEAL.DONE && (
               <div className="absolute left-8 top-2 z-10 flex items-center gap-2 text-sm opacity-80">
                 <Matcappa pose="hug-knees" size={72} />
                 <p>Chưa có chồng đĩa nào, tạo cái đầu tiên nha ~</p>
@@ -392,7 +427,15 @@ export default function LibraryPage() {
                     style={{
                       width: "var(--w)",
                       margin: "calc(var(--w) / -2) 0 0 calc(var(--w) / -2)",
-                      transform: fanTransform(o),
+                      transform: dealTransform(deal, o),
+                      transition:
+                        deal === DEAL.BELOW
+                          ? "none"
+                          : deal === DEAL.STACK
+                            ? `transform 600ms cubic-bezier(.34,1.3,.64,1) ${a * 30}ms`
+                            : deal === DEAL.FAN
+                              ? `transform ${FAN_MS}ms cubic-bezier(.2,.8,.2,1) ${Math.min(a, 3) * FAN_STAGGER_MS}ms`
+                              : undefined,
                       zIndex: 20 - a,
                       opacity: a > 3 ? 0 : 1,
                       pointerEvents: a > 3 ? "none" : "auto",
@@ -489,7 +532,11 @@ export default function LibraryPage() {
             </div>
           </div>
 
-          <div className="relative z-10 flex min-h-[7.5rem] flex-col items-center px-2 pb-5 text-center">
+          {/* lần đầu tải: chờ bìa xoè xong mới hiện */}
+          <div
+            inert={deal !== DEAL.DONE}
+            className={`relative z-10 flex min-h-[7.5rem] flex-col items-center px-2 pb-5 text-center transition duration-500 ease-matcha motion-reduce:transition-none ${deal === DEAL.DONE ? "" : "translate-y-2 opacity-0"}`}
+          >
             {p ? (
               <>
                 {renaming ? (

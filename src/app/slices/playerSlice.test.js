@@ -29,6 +29,9 @@ assert.equal(run(togglePlay()).isPlaying, false);
 let s = run(playContext({ songs, startIndex: 2 }));
 assert.equal(current(s), "m2");
 assert.equal(s.isPlaying, true);
+assert.equal(s.announce, 1);
+// Danh sách rỗng: không phát, không báo notch
+assert.equal(reducer(s, playContext({ songs: [] })).announce, 1);
 
 // Next tới cuối rồi hết queue thì dừng
 s = reducer(s, next());

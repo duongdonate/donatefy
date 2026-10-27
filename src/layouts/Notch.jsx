@@ -1,12 +1,12 @@
 // Notch: khối tối dính mép trên, giữa màn hình (theo mẫu notch app desktop người dùng gửi).
 // Thu gọn: Trang chủ, Thư viện | theme, avatar. Mở rộng: thẻ tài khoản có Đăng xuất.
-// Đợt sau sẽ thêm thẻ "bài đang phát" vào phần mở rộng.
-import { motion } from "framer-motion";
+// Thẻ "bài đang phát" trong phần mở rộng; vừa bật nhạc thì tự mở báo rồi thu lại.
+import { motion, useAnimate } from "framer-motion";
 import { Library, LogOut, Moon, Sun } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { NavLink, useLocation } from "react-router-dom";
-import { getCurrentSong } from "../app/selectors";
+import { getAnnounce, getCurrentSong } from "../app/selectors";
 import { swipeDir } from "../features/landing/stepper";
 import { IconButton } from "../components";
 import Avatar from "../components/Avatar";
@@ -21,7 +21,14 @@ import MiniPlayer from "./notch/MiniPlayer";
 import NotchDots from "./notch/NotchDots";
 import NotchWave from "./notch/NotchWave";
 import NowPlayingCard from "./notch/NowPlayingCard";
-import { CARD, cardsFor, openCard, restingCard, stepCard, visibleCard } from "./notchCards";
+import {
+  CARD,
+  cardsFor,
+  openCard,
+  restingCard,
+  stepCard,
+  visibleCard,
+} from "./notchCards";
 
 // also: tiền tố đường dẫn con cũng làm mục này sáng
 const LINKS = [
@@ -31,9 +38,24 @@ const LINKS = [
 
 // Số liệu notch theo thiết bị: cỡ nút, bề ngang khung mở (cũng là bề ngang viên thu gọn ở điện thoại), mở bằng rê chuột không
 const NOTCH = {
-  [DEVICE.MOBILE]: { button: 44, openWidth: (w) => Math.min(w - 32, 384), fullPill: true, hoverOpen: false },
-  [DEVICE.TABLET]: { button: 40, openWidth: () => 440, fullPill: false, hoverOpen: true },
-  [DEVICE.DESKTOP]: { button: 40, openWidth: () => 460, fullPill: false, hoverOpen: true },
+  [DEVICE.MOBILE]: {
+    button: 44,
+    openWidth: (w) => Math.min(w - 32, 384),
+    fullPill: true,
+    hoverOpen: false,
+  },
+  [DEVICE.TABLET]: {
+    button: 40,
+    openWidth: () => 440,
+    fullPill: false,
+    hoverOpen: true,
+  },
+  [DEVICE.DESKTOP]: {
+    button: 40,
+    openWidth: () => 460,
+    fullPill: false,
+    hoverOpen: true,
+  },
 };
 
 // Kiểu "giọt chất lỏng" (mẫu D): nền là viên nhỏ + giọt lớn qua bộ lọc goo (làm nhoè rồi cắt ngưỡng → hai mép dính liền khi giãn).
@@ -42,17 +64,36 @@ const GOO_ID = "notch-goo";
 const BG = "rgb(10,14,8)"; // phải đục hẳn: bộ lọc goo cắt theo độ trong suốt
 const OVERHANG = 30; // nền nhô lên quá mép trên để bộ lọc không bo mất cạnh trên
 const DROP = {
-  open: { y: "0%", scaleX: 1, scaleY: 1, transition: { type: "spring", stiffness: 220, damping: 22 } },
-  closed: { y: "-80%", scaleX: 0.5, scaleY: 0.6, transition: { duration: 0.46, ease: [0.65, 0, 0.35, 1], delay: 0.04 } },
+  open: {
+    y: "0%",
+    scaleX: 1,
+    scaleY: 1,
+    transition: { type: "spring", stiffness: 220, damping: 22 },
+  },
+  closed: {
+    y: "-80%",
+    scaleX: 0.5,
+    scaleY: 0.6,
+    transition: { duration: 0.46, ease: [0.65, 0, 0.35, 1], delay: 0.04 },
+  },
 };
 const PANEL_FX = {
-  open: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1], delay: 0.15 } },
-  closed: { opacity: 0, scale: 0.9, transition: { duration: 0.12, ease: "easeIn" } },
+  open: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.3, ease: [0.2, 0.8, 0.2, 1], delay: 0.15 },
+  },
+  closed: {
+    opacity: 0,
+    scale: 0.9,
+    transition: { duration: 0.12, ease: "easeIn" },
+  },
 };
 // Chuyển thẻ: thẻ mới trượt vào từ phía lướt, thẻ cũ chỉ mờ đi nhanh (không trượt ngược) cho đỡ chồng hình giật
 const SLIDE = 24; // px
 const SWITCH_IN = { duration: 0.28, ease: [0.2, 0.8, 0.2, 1] };
 const SWITCH_OUT = { duration: 0.14, ease: "easeOut" };
+const ANNOUNCE_MS = 2500; // thẻ đang phát mở bao lâu sau khi vừa bật nhạc
 
 const canHover = () => window.matchMedia?.("(hover: hover)").matches;
 const onDark = "!text-[#eef3e6] hover:!bg-white/10";
@@ -69,6 +110,10 @@ export default function Notch({ open, onOpenChange }) {
   const head = useRef(null);
   const avatarBtn = useRef(null);
   const openedByHover = useRef(false);
+  const hovering = useRef(false);
+  const announce = useSelector(getAnnounce);
+  const firstAnnounce = useRef(announce); // giá trị lúc notch mới gắn: không phải vừa bật nhạc
+  const [miniScope, animateMini] = useAnimate();
   const swipeStart = useRef(null);
   const cardEls = useRef({});
   const [pill, setPill] = useState({ width: 0, height: 0 });
@@ -89,7 +134,8 @@ export default function Notch({ open, onOpenChange }) {
   // Viên nền thu gọn ôm đúng hàng icon (+ thẻ nhạc mỏng ở điện thoại)
   useLayoutEffect(() => {
     const el = head.current;
-    const measure = () => setPill({ width: el.offsetWidth, height: el.offsetHeight });
+    const measure = () =>
+      setPill({ width: el.offsetWidth, height: el.offsetHeight });
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
@@ -99,7 +145,10 @@ export default function Notch({ open, onOpenChange }) {
   // Chiều cao từng thẻ để khung mở co giãn theo thẻ đang chọn (giọt nền bám theo khung)
   useLayoutEffect(() => {
     const els = Object.entries(cardEls.current).filter(([, el]) => el);
-    const measure = () => setCardHeights(Object.fromEntries(els.map(([k, el]) => [k, el.offsetHeight])));
+    const measure = () =>
+      setCardHeights(
+        Object.fromEntries(els.map(([k, el]) => [k, el.offsetHeight])),
+      );
     measure();
     const ro = new ResizeObserver(measure);
     els.forEach(([, el]) => ro.observe(el));
@@ -125,6 +174,29 @@ export default function Notch({ open, onOpenChange }) {
     if (shown) setCard(shown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [shown]);
+
+  // Vừa bật một danh sách (Phát / Trộn / bấm bài): mở thẻ đang phát như rê chuột rồi tự thu lại;
+  // chuột đang ở trên notch thì chờ rời chuột mới đóng. Điện thoại thẻ nhạc đã ở viên nên chỉ nảy nhẹ
+  useEffect(() => {
+    if (announce === firstAnnounce.current) return;
+    if (resting) {
+      animateMini(
+        miniScope.current,
+        { scale: [1, 1.06, 1] },
+        { duration: 0.4 },
+      );
+      return;
+    }
+    if (!panelCards.includes(CARD.NOW)) return;
+    setCard(CARD.NOW);
+    setOpen(true, true);
+    const t = setTimeout(
+      () => openedByHover.current && !hovering.current && setOpen(false),
+      ANNOUNCE_MS,
+    );
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [announce]);
 
   // Đóng bằng Esc (trả focus về avatar) hoặc bấm ra ngoài
   useEffect(() => {
@@ -178,13 +250,22 @@ export default function Notch({ open, onOpenChange }) {
       ref={root}
       className="pointer-events-none relative text-[#eef3e6]"
       style={{ width }}
+      onMouseEnter={() => (hovering.current = true)}
       // đang giữ chuột (kéo thanh tiến trình ra ngoài) thì chưa đóng
-      onMouseLeave={(e) => openedByHover.current && e.buttons === 0 && setOpen(false)}
+      onMouseLeave={(e) => {
+        hovering.current = false;
+        if (openedByHover.current && e.buttons === 0) setOpen(false);
+      }}
     >
       <svg width="0" height="0" className="absolute" aria-hidden="true">
         <filter id={GOO_ID}>
           <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
-          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9" result="goo" />
+          <feColorMatrix
+            in="blur"
+            mode="matrix"
+            values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"
+            result="goo"
+          />
           <feComposite in="SourceGraphic" in2="goo" operator="atop" />
         </filter>
       </svg>
@@ -193,11 +274,18 @@ export default function Notch({ open, onOpenChange }) {
       <div
         aria-hidden="true"
         className="absolute inset-x-0 bottom-0"
-        style={{ top: -OVERHANG, filter: `url(#${GOO_ID}) drop-shadow(0 18px 28px rgba(0,0,0,${expanded ? 0.6 : 0.4}))` }}
+        style={{
+          top: -OVERHANG,
+          filter: `url(#${GOO_ID}) drop-shadow(0 18px 28px rgba(0,0,0,${expanded ? 0.6 : 0.4}))`,
+        }}
       >
         <div
           className="absolute left-1/2 top-0 -translate-x-1/2 rounded-b-[22px]"
-          style={{ width: layout.fullPill ? width : pill.width, height: pill.height + OVERHANG, background: BG }}
+          style={{
+            width: layout.fullPill ? width : pill.width,
+            height: pill.height + OVERHANG,
+            background: BG,
+          }}
         />
         <motion.div
           className="absolute inset-0 rounded-b-[30px]"
@@ -210,17 +298,34 @@ export default function Notch({ open, onOpenChange }) {
 
       {/* Lớp nội dung; "dark" để thanh tiến trình và chữ phụ lấy màu cho nền tối */}
       <div className="dark relative flex flex-col items-center px-3 pb-3">
-        <div ref={head} className="pointer-events-auto" style={{ width: layout.fullPill ? "100%" : undefined }}>
-          <nav aria-label="Điều hướng" className="flex items-center justify-between gap-1 px-3 py-2" onMouseEnter={onHoverEnter}>
+        <div
+          ref={head}
+          className="pointer-events-auto"
+          style={{ width: layout.fullPill ? "100%" : undefined }}
+        >
+          <nav
+            aria-label="Điều hướng"
+            className="flex items-center justify-between gap-1 px-3 py-2"
+            onMouseEnter={onHoverEnter}
+          >
             <div className="flex items-center gap-1">
               {LINKS.map((link) => (
                 <NotchLink key={link.to} {...link} size={layout.button} />
               ))}
             </div>
-            {hasSong ? <NotchWave /> : <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />}
+            {hasSong ? (
+              <NotchWave />
+            ) : (
+              <span aria-hidden="true" className="mx-1 h-5 w-px bg-white/15" />
+            )}
             <div className="flex items-center gap-1">
-              <IconButton size={layout.button} label={isDark ? "Chuyển sang sáng" : "Chuyển sang tối"} onClick={toggleTheme} className={onDark}>
-                {isDark ? <Sun size={20} /> : <Moon size={20} />}
+              <IconButton
+                size={layout.button}
+                label={isDark ? "Chuyển sang sáng" : "Chuyển sang tối"}
+                onClick={toggleTheme}
+                className={onDark}
+              >
+                {isDark ? <Moon size={20} /> : <Sun size={20} />}
               </IconButton>
               {user && (
                 <button
@@ -239,7 +344,7 @@ export default function Notch({ open, onOpenChange }) {
             </div>
           </nav>
           {resting && (
-            <div className="px-1 pb-1">
+            <div ref={miniScope} className="px-1 pb-1">
               <MiniPlayer />
             </div>
           )}
@@ -257,7 +362,12 @@ export default function Notch({ open, onOpenChange }) {
             onPointerUp={onSwipeUp}
             style={{ touchAction: "pan-y" }}
           >
-            <motion.div className="relative overflow-hidden" initial={false} animate={{ height: cardHeights[shown] ?? "auto" }} transition={SWITCH_IN}>
+            <motion.div
+              className="relative overflow-hidden"
+              initial={false}
+              animate={{ height: cardHeights[shown] ?? "auto" }}
+              transition={SWITCH_IN}
+            >
               {panelCards.map((c, i) => (
                 <motion.div
                   key={c}
@@ -268,15 +378,34 @@ export default function Notch({ open, onOpenChange }) {
                   inert={c !== shown}
                   initial={false}
                   style={{ willChange: "transform, opacity" }}
-                  animate={c === shown ? { opacity: 1, x: 0 } : { opacity: 0, x: i < selIndex ? -SLIDE : SLIDE }}
-                  transition={c === shown ? SWITCH_IN : { opacity: SWITCH_OUT, x: { duration: 0, delay: SWITCH_OUT.duration } }} // mờ xong mới đặt sẵn sang bên cho lần trượt vào sau
+                  animate={
+                    c === shown
+                      ? { opacity: 1, x: 0 }
+                      : { opacity: 0, x: i < selIndex ? -SLIDE : SLIDE }
+                  }
+                  transition={
+                    c === shown
+                      ? SWITCH_IN
+                      : {
+                          opacity: SWITCH_OUT,
+                          x: { duration: 0, delay: SWITCH_OUT.duration },
+                        }
+                  } // mờ xong mới đặt sẵn sang bên cho lần trượt vào sau
                 >
-                  {c === CARD.NOW ? <NowPlayingCard /> : <AccountCard user={user} onLogout={logout} />}
+                  {c === CARD.NOW ? (
+                    <NowPlayingCard />
+                  ) : (
+                    <AccountCard user={user} onLogout={logout} />
+                  )}
                 </motion.div>
               ))}
             </motion.div>
             {/* chỉ chấm cho thẻ trong khung mở: điện thoại thẻ nhạc đã luôn hiện ở viên nên chỉ còn 1 thẻ → không chấm */}
-            <NotchDots cards={panelCards} current={shown ?? card} onPick={pick} />
+            <NotchDots
+              cards={panelCards}
+              current={shown ?? card}
+              onPick={pick}
+            />
           </motion.div>
         )}
       </div>

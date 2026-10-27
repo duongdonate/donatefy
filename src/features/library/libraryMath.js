@@ -13,4 +13,13 @@ export function fanTransform(o) {
   return `translateX(${o * 15}cqw) translateY(${Math.round(a * 1.6 * 100) / 100}cqw) rotate(${o * 5}deg) scale(${scale})`;
 }
 
+// Bìa xuất hiện lần đầu (mẫu A1): "below" nằm dưới mép dải, "stack" gom thành bó ở giữa,
+// "fan" đang xoè chậm, "done" xoè xong (hiện thông tin playlist)
+export const DEAL = { BELOW: "below", STACK: "stack", FAN: "fan", DONE: "done" };
+export function dealTransform(phase, o) {
+  if (phase === DEAL.BELOW) return "translateY(70cqh) scale(0.9)";
+  if (phase === DEAL.STACK) return `translateY(${Math.round(Math.min(Math.abs(o), 3) * 4) / 10}cqw) rotate(${o * 1.5}deg)`;
+  return fanTransform(o);
+}
+
 export const totalDuration = (songs) => songs.reduce((s, x) => s + (x.duration || 0), 0);

@@ -76,6 +76,11 @@ module.exports = {
           "0%, 100%": { transform: "scaleY(.25)" },
           "50%": { transform: "scaleY(1)" },
         },
+        // khung chờ: vệt sáng lướt từ trái qua phải
+        shimmer: {
+          from: { transform: "translateX(-100%)" },
+          to: { transform: "translateX(100%)" },
+        },
         "accordion-down": {
           from: {
             height: "0",
@@ -95,6 +100,7 @@ module.exports = {
       },
       animation: {
         wave: "wave 0.9s ease-in-out infinite",
+        shimmer: "shimmer 1.3s ease-in-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
       },
