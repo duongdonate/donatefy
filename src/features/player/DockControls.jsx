@@ -1,22 +1,23 @@
-// Hai cụm nút hai bên dock (trước đây ở thanh kính phải): Shuffle + Hàng chờ, và âm lượng
-import { ListMusic, Shuffle, Volume1, Volume2, VolumeX } from "lucide-react";
+// Hai cụm nút hai bên dock (trước đây ở thanh kính phải): Lặp + Hàng chờ, và âm lượng
+import { ListMusic, Repeat, Repeat1, Volume1, Volume2, VolumeX } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getIsMuted, getIsShowQueue, getIsShuffle, getVolume } from "../../app/selectors";
-import { setVolume, toggleMute, toggleQueue, toggleShuffle } from "../../app/slices/playerSlice";
+import { getIsMuted, getIsShowQueue, getRepeat, getVolume } from "../../app/selectors";
+import { cycleRepeat, setVolume, toggleMute, toggleQueue } from "../../app/slices/playerSlice";
 import { Glass, IconButton } from "../../components";
+import { REPEAT_LABEL } from "./playerMath";
 import VolumeSlider from "./VolumeSlider";
 
-// showShuffle=false: điện thoại chỉ giữ Hàng chờ cho hai bên dock cân nhau
-export function ShuffleQueueButtons({ size = 40, showShuffle = true }) {
+// showRepeat=false: điện thoại chỉ giữ Hàng chờ cho hai bên dock cân nhau
+export function RepeatQueueButtons({ size = 40, showRepeat = true }) {
   const dispatch = useDispatch();
-  const shuffle = useSelector(getIsShuffle);
+  const repeat = useSelector(getRepeat);
   const showQueue = useSelector(getIsShowQueue);
   return (
     <div className="flex shrink-0 items-center gap-1">
-      {showShuffle && (
-        <IconButton size={size} label="Trộn bài" pressed={shuffle} onClick={() => dispatch(toggleShuffle())}>
-          <Shuffle size={20} />
+      {showRepeat && (
+        <IconButton size={size} label={REPEAT_LABEL[repeat]} pressed={repeat !== "off"} onClick={() => dispatch(cycleRepeat())}>
+          {repeat === "one" ? <Repeat1 size={20} /> : <Repeat size={20} />}
         </IconButton>
       )}
       <IconButton

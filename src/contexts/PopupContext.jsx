@@ -10,20 +10,22 @@ export const PopupProvider = ({ children }) => {
   const [popup, setPopup] = useState({
     isOpen: false,
     content: null,
+    bare: false,
+    overlayClass: "",
   });
   const dismissRef = useRef(null);
 
-  // onDismiss: gọi khi popup đóng (X, Esc, bấm ra nền); useConfirm coi là Hủy
-  const openPopup = useCallback((content, onDismiss = null) => {
+  // onDismiss: gọi khi popup đóng (X, Esc, bấm ra nền); useConfirm coi là Hủy; trả false = chưa cho đóng (vd. đang gửi)
+  // bare: nội dung tự vẽ khung (Glass, nút Đóng, bề ngang); overlayClass: cách đặt hộp trên nền (vd. tấm đáy ở mobile)
+  const openPopup = useCallback((content, onDismiss = null, { bare = false, overlayClass = "grid place-items-center p-4" } = {}) => {
     dismissRef.current = onDismiss;
-    setPopup({ isOpen: true, content });
+    setPopup({ isOpen: true, content, bare, overlayClass });
   }, []);
 
   const closePopup = useCallback(() => {
-    const onDismiss = dismissRef.current;
+    if (dismissRef.current?.() === false) return;
     dismissRef.current = null;
-    onDismiss?.();
-    setPopup({ isOpen: false, content: null });
+    setPopup((p) => ({ ...p, isOpen: false, content: null }));
   }, []);
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export const PopupProvider = ({ children }) => {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 grid place-items-center bg-[rgba(5,8,4,.5)] p-4"
+            className={`fixed inset-0 z-50 bg-[rgba(5,8,4,.5)] ${popup.overlayClass}`}
             onMouseDown={(e) => e.target === e.currentTarget && closePopup()}
           >
             <motion.div
@@ -53,9 +55,9 @@ export const PopupProvider = ({ children }) => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="w-full max-w-md"
+              className={popup.bare ? "flex max-h-full w-full flex-col items-center" : "w-full max-w-md"}
             >
-              <Glass
+              {popup.bare ? popup.content : <Glass
                 role="dialog"
                 aria-modal="true"
                 blur={30}
@@ -65,7 +67,7 @@ export const PopupProvider = ({ children }) => {
                 <IconButton label="Đóng" onClick={closePopup} className="absolute right-3 top-3 !text-[#eef3e6] hover:!bg-white/10">
                   <X size={18} />
                 </IconButton>
-              </Glass>
+              </Glass>}
             </motion.div>
           </motion.div>
         )}

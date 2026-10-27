@@ -15,6 +15,7 @@ const initialState = {
   errorStreak: 0, // số bài lỗi liên tiếp, để không skip vô hạn
   showLyrics: false,
   showQueue: false,
+  announce: 0, // tăng mỗi lần người dùng bật một danh sách: notch mở ra báo "đã bật nhạc"
 };
 
 // Bài `first` luôn đứng đầu, các bài còn lại được xáo (Fisher–Yates)
@@ -42,6 +43,7 @@ const playerSlice = createSlice({
       state.position = state.shuffle ? 0 : startIndex;
       state.isPlaying = true;
       state.errorStreak = 0;
+      state.announce += 1;
     },
 
     togglePlay(state) {

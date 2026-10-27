@@ -52,6 +52,14 @@ export default function ProgressBar({
 
   return (
     <div className={className}>
+      {!compact && (
+        <div className="flex justify-between text-xs tabular-nums text-ink-soft">
+          <span>
+            {formatDuration(drag !== null ? drag * duration : currentTime)}
+          </span>
+          <span>{formatDuration(duration)}</span>
+        </div>
+      )}
       <div
         role="slider"
         tabIndex={0}
@@ -67,7 +75,7 @@ export default function ProgressBar({
         onLostPointerCapture={finish}
         onPointerLeave={() => setHover(null)}
         onKeyDown={onKeyDown}
-        className={`relative flex ${compact ? "h-4" : "h-11"} cursor-pointer touch-none items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-matcha-4`}
+        className={`relative flex ${compact ? "h-2" : "h-4"} cursor-pointer touch-none items-center rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-matcha-4`}
       >
         {/* Thanh 6px, phình 10px khi rê / kéo */}
         <div
@@ -94,14 +102,6 @@ export default function ProgressBar({
           </span>
         )}
       </div>
-      {!compact && (
-        <div className="flex justify-between text-xs tabular-nums text-ink-soft">
-          <span>
-            {formatDuration(drag !== null ? drag * duration : currentTime)}
-          </span>
-          <span>{formatDuration(duration)}</span>
-        </div>
-      )}
     </div>
   );
 }

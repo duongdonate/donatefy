@@ -1,7 +1,6 @@
-// Khung v2: nền quán + notch điều hướng dính mép trên, tự ẩn khi đứng yên
+// Khung v2: nền quán + notch điều hướng dính mép trên, luôn hiện
 import { useState } from "react";
 import { useDevice } from "../contexts/DeviceContext";
-import useIdle from "../hooks/useIdle";
 import useTyping from "../hooks/useTyping";
 import { DEVICE } from "../utils/device";
 import Notch from "./Notch";
@@ -10,25 +9,9 @@ const chrome = "transition duration-400 ease-matcha motion-reduce:transition-non
 
 export default function AppShell({ children }) {
   const device = useDevice();
-  const [hover, setHover] = useState(false);
-  const [focusIn, setFocusIn] = useState(false);
   const [notchOpen, setNotchOpen] = useState(false);
-  // Giữ notch khi chuột ở trên, focus bàn phím ở bên trong, hoặc notch đang mở
-  // Điện thoại: notch (có thẻ nhạc mỏng) luôn hiện
-  const idle = useIdle(2500, { hold: device === DEVICE.MOBILE || hover || focusIn || notchOpen });
   // Mobile đang gõ: ẩn notch nhường chỗ cho bàn phím
-  const typing = useTyping();
-  const hidden = idle || typing;
-
-  // Bấm chuột cũng để lại focus trên nút; chỉ tính focus bàn phím, nếu không notch không bao giờ ẩn
-  const holdProps = {
-    onMouseEnter: () => setHover(true),
-    onMouseLeave: () => setHover(false),
-    onFocus: (e) => setFocusIn(e.target.matches(":focus-visible")),
-    onBlur: (e) => {
-      if (!e.currentTarget.contains(e.relatedTarget)) setFocusIn(false);
-    },
-  };
+  const hidden = useTyping();
 
   return (
     <div className="bg-cafe relative isolate h-dvh w-screen overflow-hidden text-ink">
@@ -36,9 +19,7 @@ export default function AppShell({ children }) {
 
       <div className={`pointer-events-none fixed inset-x-0 top-0 z-30 flex justify-center ${chrome} ${hidden ? "-translate-y-[120%] opacity-0" : ""}`}>
         {/* không bắt chuột: notch chỉ bật bắt chuột ở phần đang thấy (khung mở rộng to hơn phần thu gọn) */}
-        <div {...holdProps}>
-          <Notch open={notchOpen} onOpenChange={setNotchOpen} />
-        </div>
+        <Notch open={notchOpen} onOpenChange={setNotchOpen} />
       </div>
 
       <main className="relative h-full w-full">{children}</main>

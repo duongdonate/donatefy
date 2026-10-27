@@ -11,11 +11,10 @@ import Marquee from "../../components/Marquee";
 import { useDevice, useScreen } from "../../contexts/DeviceContext";
 import { DEVICE } from "../../utils/device";
 import { usePlaybackTime } from "../player/PlaybackTime";
-import { moveItem } from "../player/playerMath";
+import { REPEAT_LABEL, moveItem } from "../player/playerMath";
 import { DraggableRow, StaticRow } from "./QueueRow";
 
 const EASE = [0.2, 0.8, 0.2, 1];
-const REPEAT_LABEL = { off: "Lặp: tắt", all: "Lặp: tất cả", one: "Lặp: một bài" };
 const FOCUSABLE = 'button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])';
 const clamp = (min, v, max) => Math.min(max, Math.max(min, v));
 
