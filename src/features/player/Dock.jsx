@@ -7,7 +7,11 @@ import { playAt } from "../../app/slices/playerSlice";
 import { Glass, IconButton } from "../../components";
 import { useDevice, useScreen } from "../../contexts/DeviceContext";
 import { DEVICE } from "../../utils/device";
-import { ShuffleQueueButtons, VolumeInline, VolumePopover } from "./DockControls";
+import {
+  ShuffleQueueButtons,
+  VolumeInline,
+  VolumePopover,
+} from "./DockControls";
 import { usePlaybackTime } from "./PlaybackTime";
 import { dockWindow, fitCells, stripWidth } from "./playerMath";
 
@@ -20,9 +24,39 @@ const clamp = (min, v, max) => Math.min(max, Math.max(min, v));
 // - sideWidth: bề ngang chừa cho MỖI cột bên (lấy cột rộng hơn) để 2 cột bên bằng nhau, cột giữa luôn đúng tâm
 // - sliderWidth: thanh âm lượng ngang (null = dạng nút bung ở điện thoại)
 const DOCK = {
-  [DEVICE.MOBILE]: { maxCells: 1, cover: () => 56, heightRatio: 1.45, navSize: 44, sideSize: 40, padX: 8, gap: 6, sideWidth: 40, sliderWidth: null },
-  [DEVICE.TABLET]: { maxCells: 3, cover: (w) => clamp(64, w * 0.08, 96), heightRatio: 1.7, navSize: 48, sideSize: 40, padX: 16, gap: 12, sideWidth: 172, sliderWidth: 80 },
-  [DEVICE.DESKTOP]: { maxCells: 5, cover: (w) => clamp(80, w * 0.065, 110), heightRatio: 1.7, navSize: 48, sideSize: 40, padX: 16, gap: 12, sideWidth: 212, sliderWidth: 120 },
+  [DEVICE.MOBILE]: {
+    maxCells: 1,
+    cover: () => 56,
+    heightRatio: 1.45,
+    navSize: 44,
+    sideSize: 40,
+    padX: 8,
+    gap: 6,
+    sideWidth: 40,
+    sliderWidth: null,
+  },
+  [DEVICE.TABLET]: {
+    maxCells: 3,
+    cover: (w) => clamp(60, w * 0.05, 70),
+    heightRatio: 1.6,
+    navSize: 48,
+    sideSize: 40,
+    padX: 16,
+    gap: 12,
+    sideWidth: 172,
+    sliderWidth: 80,
+  },
+  [DEVICE.DESKTOP]: {
+    maxCells: 5,
+    cover: (w) => clamp(60, w * 0.05, 70),
+    heightRatio: 1.6,
+    navSize: 48,
+    sideSize: 40,
+    padX: 16,
+    gap: 12,
+    sideWidth: 212,
+    sliderWidth: 120,
+  },
 };
 
 // Chiều cao dock (px) để trang tính chỗ còn lại cho đĩa
@@ -41,9 +75,23 @@ export default function Dock({ width: dockWidth }) {
   const layout = DOCK[device];
   const cover = layout.cover(screenWidth);
   // Chỗ còn cho dải bìa = dock − lề − 2 cột bên − 2 khe cột − 2 nút ‹ › − 2 khe quanh dải
-  const budget = dockWidth - layout.padX * 2 - layout.sideWidth * 2 - layout.gap * 2 - layout.navSize * 2 - layout.gap * 2;
+  const budget =
+    dockWidth -
+    layout.padX * 2 -
+    layout.sideWidth * 2 -
+    layout.gap * 2 -
+    layout.navSize * 2 -
+    layout.gap * 2;
   const cells = fitCells(budget, cover, layout.maxCells);
-  const center = <CoverStrip cells={cells} cover={cover} navSize={layout.navSize} stripWidth={stripWidth(cover, cells)} gap={layout.gap} />;
+  const center = (
+    <CoverStrip
+      cells={cells}
+      cover={cover}
+      navSize={layout.navSize}
+      stripWidth={stripWidth(cover, cells)}
+      gap={layout.gap}
+    />
+  );
 
   // Hai cột bên cùng bề ngang (minmax(sideWidth, 1fr)) nên cột giữa (‹ bìa ›) luôn đúng tâm dock = thẳng hàng với đĩa
   const shell = (left, right) => (
@@ -58,7 +106,10 @@ export default function Dock({ width: dockWidth }) {
       }}
     >
       <div className="justify-self-start">{left}</div>
-      <div className="flex h-full items-center" style={{ columnGap: layout.gap }}>
+      <div
+        className="flex h-full items-center"
+        style={{ columnGap: layout.gap }}
+      >
         {center}
       </div>
       <div className="justify-self-end">{right}</div>
@@ -68,10 +119,16 @@ export default function Dock({ width: dockWidth }) {
   switch (device) {
     case DEVICE.MOBILE:
       // Điện thoại: trái chỉ Hàng chờ, phải nút loa (cân hai bên); Trộn bài có trong lớp phủ Hàng chờ
-      return shell(<ShuffleQueueButtons size={layout.sideSize} showShuffle={false} />, <VolumePopover size={layout.sideSize} />);
+      return shell(
+        <ShuffleQueueButtons size={layout.sideSize} showShuffle={false} />,
+        <VolumePopover size={layout.sideSize} />,
+      );
     case DEVICE.TABLET:
     case DEVICE.DESKTOP:
-      return shell(<ShuffleQueueButtons size={layout.sideSize} />, <VolumeInline sliderWidth={layout.sliderWidth} />);
+      return shell(
+        <ShuffleQueueButtons size={layout.sideSize} />,
+        <VolumeInline sliderWidth={layout.sliderWidth} />,
+      );
   }
 }
 
@@ -86,19 +143,37 @@ function CoverStrip({ cells: size, cover: C, navSize, stripWidth }) {
 
   const cells = dockWindow(order.length, position, size);
   const atEnd = position === order.length - 1 && repeat !== "all";
-  const navCls = "shrink-0 bg-white/50 shadow-[0_6px_14px_-6px_rgba(0,0,0,.3)] dark:bg-white/10";
+  const navCls =
+    "shrink-0 bg-white/50 shadow-[0_6px_14px_-6px_rgba(0,0,0,.3)] dark:bg-white/10";
   // Chỉ một bìa thì không cần làm mờ hai mép
-  const fade = size > 1 ? "linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent)" : undefined;
+  const fade =
+    size > 1
+      ? "linear-gradient(to right, transparent 0, #000 16%, #000 84%, transparent)"
+      : undefined;
 
   return (
     <>
-      <IconButton size={navSize} label="Bài trước" onClick={previous} className={navCls}>
+      <IconButton
+        size={navSize}
+        label="Bài trước"
+        onClick={previous}
+        className={navCls}
+      >
         <SkipBack size={22} fill="currentColor" />
       </IconButton>
-      <div className="relative h-full shrink-0" style={{ width: stripWidth, perspective: C * 5.5, maskImage: fade, WebkitMaskImage: fade }}>
+      <div
+        className="relative h-full shrink-0"
+        style={{
+          width: stripWidth,
+          perspective: C * 5.5,
+          maskImage: fade,
+          WebkitMaskImage: fade,
+        }}
+      >
         {cells.map(({ pos, offset }) => {
           const song = queue[order[pos]];
-          const a = Math.abs(offset), now = offset === 0;
+          const a = Math.abs(offset),
+            now = offset === 0;
           return (
             <button
               key={pos}
@@ -116,7 +191,8 @@ function CoverStrip({ cells: size, cover: C, navSize, stripWidth }) {
                 marginTop: -C / 2,
                 zIndex: 10 - a,
                 transform: `translateX(${C * offset * 0.82}px) translateZ(${C * (now ? 0.33 : -a * 0.28)}px) rotateY(${-Math.sign(offset) * Math.min(a, 1) * 40}deg) scale(${now ? 1.12 : 1})`,
-                filter: offset < 0 ? "saturate(.45) brightness(.92)" : undefined,
+                filter:
+                  offset < 0 ? "saturate(.45) brightness(.92)" : undefined,
               }}
             >
               <motion.span
@@ -124,10 +200,14 @@ function CoverStrip({ cells: size, cover: C, navSize, stripWidth }) {
                 layoutId={now && !showQueue ? "now-cover" : undefined}
                 transition={{ duration: 0.65, ease: [0.2, 0.8, 0.2, 1] }}
                 className={`block h-full w-full rounded-[10px] bg-cover bg-center ${
-                  now ? "shadow-[0_0_0_3px_rgb(var(--matcha-4)),0_20px_30px_-10px_rgba(0,0,0,.55)]" : "shadow-[0_16px_24px_-10px_rgba(0,0,0,.5)]"
+                  now
+                    ? "shadow-[0_0_0_3px_rgb(var(--matcha-4)),0_20px_30px_-10px_rgba(0,0,0,.55)]"
+                    : "shadow-[0_16px_24px_-10px_rgba(0,0,0,.5)]"
                 }`}
                 style={{
-                  backgroundImage: song.thumbnail ? `url(${song.thumbnail})` : undefined,
+                  backgroundImage: song.thumbnail
+                    ? `url(${song.thumbnail})`
+                    : undefined,
                   opacity: now && showQueue ? 0 : 1,
                 }}
               />
@@ -140,10 +220,20 @@ function CoverStrip({ cells: size, cover: C, navSize, stripWidth }) {
           aria-label={isPlaying ? "Tạm dừng" : "Phát"}
           className="absolute left-1/2 top-1/2 z-20 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-matcha-4/85 text-white shadow-[0_8px_16px_-4px_rgba(73,115,0,.8)] backdrop-blur transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
-          {isPlaying ? <Pause size={20} fill="currentColor" /> : <Play size={20} fill="currentColor" className="ml-0.5" />}
+          {isPlaying ? (
+            <Pause size={20} fill="currentColor" />
+          ) : (
+            <Play size={20} fill="currentColor" className="ml-0.5" />
+          )}
         </button>
       </div>
-      <IconButton size={navSize} label="Bài sau" onClick={next} disabled={atEnd} className={navCls}>
+      <IconButton
+        size={navSize}
+        label="Bài sau"
+        onClick={next}
+        disabled={atEnd}
+        className={navCls}
+      >
         <SkipForward size={22} fill="currentColor" />
       </IconButton>
     </>

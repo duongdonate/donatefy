@@ -40,7 +40,7 @@ export const ToastProvider = ({ children }) => {
       <div
         role="status"
         aria-live="polite"
-        className="pointer-events-none fixed bottom-24 left-1/2 right-0 z-[100] flex -translate-x-1/2 flex-col items-center gap-2"
+        className="pointer-events-none fixed top-16 left-1/2 right-0 z-[100] flex -translate-x-1/2 flex-col items-center gap-2"
       >
         <AnimatePresence initial={false}>
           {toasts.map((t) => (
