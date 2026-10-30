@@ -4,13 +4,17 @@ const playlistService = {
   getById: (id) => axiosClient.get(`/api/playlists/${id}`),
   getAll: () => axiosClient.get("/api/playlists"),
   create: (data) => axiosClient.post("/api/playlists", data),
+  // Trả { playlist, added, skipped, truncated }; lỗi trả { error, videoId? (Mix), playlistId? (409) }
+  importFromYoutube: (url, name) => axiosClient.post("/api/playlists/import", { url, name }),
+  // Chỉ playlist có `source`; trả { playlist, added }
+  sync: (id) => axiosClient.post(`/api/playlists/${id}/sync`),
   update: (id, data) => axiosClient.put(`/api/playlists/${id}`, data),
   delete: (id) => axiosClient.delete(`/api/playlists/${id}`),
   // name/artist/thumbnail tuỳ chọn; backend chỉ nhận thumbnail i.ytimg.com của đúng videoId
   addSong: (id, { videoId, name, artist, thumbnail }) =>
     axiosClient.post(`/api/playlists/${id}/add-song`, { videoIds: [videoId], name, artist, thumbnail }),
   removeSong: (playlistId, dataSong) =>
-    axiosClient.post(`/api/playlists/${playlistId}/remove-song/`, dataSong),
+    axiosClient.post(`/api/playlists/${playlistId}/remove-song`, dataSong),
   rename: (id, name) => axiosClient.patch(`/api/playlists/${id}`, { name }),
   // `song` thay cả mục meta: luôn gửi đủ id, name, artist, thumbnail
   editSong: (id, song) => axiosClient.patch(`/api/playlists/${id}`, { song }),

@@ -1,6 +1,13 @@
 // Thư viện "Xoè bìa" (playlists-options.html phần A), không có đĩa trượt ra
 import { motion, useReducedMotion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Loader2, Play, Plus } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Import,
+  Loader2,
+  Play,
+  Plus,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -17,8 +24,9 @@ import {
 } from "../../app/slices/playlistSlice";
 import { playContext } from "../../app/slices/playerSlice";
 import useToast from "../../hooks/useToast";
-import { Button, IconButton } from "../../components";
+import { Button, IconButton, YoutubeTag } from "../../components";
 import useConfirm from "../../hooks/useConfirm";
+import usePopup from "../../hooks/usePopup";
 import { useDevice } from "../../contexts/DeviceContext";
 import { DEVICE } from "../../utils/device";
 import { swipeDir } from "../landing/stepper";
@@ -33,6 +41,8 @@ import {
   totalDuration,
 } from "./libraryMath";
 import PlaylistMenu from "./PlaylistMenu";
+import ImportPlaylistDialog from "./ImportPlaylistDialog";
+import { songDialogOverlay } from "../playlist/SongDialog";
 
 const CREATE = "__create";
 // Lần đầu tải: xoè chậm hơn lúc lướt bìa (450ms), mỗi vòng bìa ra trễ thêm một nhịp
@@ -103,7 +113,10 @@ export default function LibraryPage() {
   const playlists = useSelector(getAllPlaylists);
   const currentPlaylist = useSelector(getCurrentPlaylist);
   const song = useSelector(getCurrentSong);
-  const layout = LIBRARY[useDevice()];
+  const { openPopup, closePopup } = usePopup();
+  const device = useDevice();
+  const layout = LIBRARY[device];
+  const importBusy = useRef(false); // popup nhập đang gửi: chưa cho đóng
   const touchX = useRef(null); // vuốt ngang trên dải bìa (máy chạm)
   const playingId = song ? currentPlaylist?._id : null;
 
@@ -259,6 +272,26 @@ export default function LibraryPage() {
     }
   };
 
+  // Playlist vừa lưu: tải lại danh sách + ảnh bìa để thả đĩa là có hình ngay; quá 2s thì thôi (playlist đã lưu rồi)
+  const land = async (made, start) => {
+    const fresh = await Promise.race([
+      Promise.all([
+        playlistService.getAll().then(unwrap),
+        preload(made.thumbnail),
+      ]).then(([list]) => list),
+      wait(2000).then(() => null),
+    ]).catch(() => null);
+    await wait(CREATE_MIN_MS - (Date.now() - start));
+    justMade.current = made._id;
+    dispatch(
+      fresh?.some((x) => x._id === made._id)
+        ? setAllPlaylists(fresh)
+        : addPlaylist({ ...made, cover: made.cover ?? made.thumbnail }), // POST không trả `cover`
+    );
+    setSelId(made._id);
+    setNewName("");
+  };
+
   const create = async (e) => {
     e.preventDefault();
     const name = newName.trim();
@@ -268,23 +301,7 @@ export default function LibraryPage() {
     const start = Date.now();
     try {
       const made = await playlistService.create({ name });
-      // Tải lại danh sách + ảnh bìa để thả đĩa là có hình ngay; quá 2s thì thôi (playlist đã lưu rồi)
-      const fresh = await Promise.race([
-        Promise.all([
-          playlistService.getAll().then(unwrap),
-          preload(made.thumbnail),
-        ]).then(([list]) => list),
-        wait(2000).then(() => null),
-      ]).catch(() => null);
-      await wait(CREATE_MIN_MS - (Date.now() - start));
-      justMade.current = made._id;
-      dispatch(
-        fresh?.some((x) => x._id === made._id)
-          ? setAllPlaylists(fresh)
-          : addPlaylist({ ...made, cover: made.cover ?? made.thumbnail }), // POST không trả `cover`
-      );
-      setSelId(made._id);
-      setNewName("");
+      await land(made, start);
       showToast(`Đã tạo playlist "${made.name}"`);
     } catch {
       setCreateErr("Chưa tạo được, thử lại nha ~");
@@ -292,6 +309,36 @@ export default function LibraryPage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  // Popup nhập playlist YouTube: mở từ nút góc trên và từ thẻ Tạo
+  const openImport = () => {
+    openPopup(
+      <ImportPlaylistDialog
+        busyRef={importBusy}
+        onDone={(r) => {
+          closePopup();
+          land(r.playlist, 0); // request đã tốn thời gian rồi: thả đĩa ngay
+          showToast(
+            `Đã nhập "${r.playlist.name}": ${r.added} bài` +
+              (r.skipped
+                ? `, bỏ qua ${r.skipped} bài không còn trên YouTube`
+                : "") +
+              (r.truncated ? " (chỉ lấy 500 bài đầu)" : ""),
+          );
+        }}
+        onExisting={(id) => {
+          closePopup();
+          setSelId(id); // đã nhập rồi: lướt tới bìa cũ
+          showToast("Bạn đã nhập playlist này rồi nha ~");
+        }}
+        onClose={closePopup}
+      />,
+      () => {
+        if (importBusy.current) return false;
+      },
+      { bare: true, overlayClass: songDialogOverlay(device) },
+    );
   };
 
   const saveName = async () => {
@@ -369,6 +416,15 @@ export default function LibraryPage() {
             <span className="text-sm opacity-60">
               {playlists.length} playlist
             </span>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={openImport}
+              // mobile: tiêu đề xếp dọc, nút nằm dưới để không đè chữ
+              className={`!text-[#eef3e6] ${layout.stackedHeader ? "mt-2 self-start" : "absolute right-2 top-2"}`}
+            >
+              <Import size={16} aria-hidden="true" /> Nhập từ YouTube
+            </Button>
           </header>
 
           <div
@@ -475,6 +531,7 @@ export default function LibraryPage() {
                             className="h-full w-full object-cover"
                           />
                         )}
+                        {it.source && <YoutubeTag className="bottom-[6%] left-[6%]" />}
                         {!centre && <span className="sr-only">{it.name}</span>}
                       </motion.div>
                     ) : (
@@ -632,24 +689,26 @@ export default function LibraryPage() {
                       <span className="text-white/50">{newName.length}/60</span>
                     </p>
                   </div>
-                  <Button
-                    type="submit"
-                    disabled={busy || !newName.trim()}
-                    aria-busy={busy}
-                  >
-                    {busy ? (
-                      <>
-                        <Loader2
-                          size={16}
-                          className="animate-spin motion-reduce:animate-none"
-                          aria-hidden="true"
-                        />
-                        Đang tạo…
-                      </>
-                    ) : (
-                      "Tạo"
-                    )}
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="submit"
+                      disabled={busy || !newName.trim()}
+                      aria-busy={busy}
+                    >
+                      {busy ? (
+                        <>
+                          <Loader2
+                            size={16}
+                            className="animate-spin motion-reduce:animate-none"
+                            aria-hidden="true"
+                          />
+                          Đang tạo…
+                        </>
+                      ) : (
+                        "Tạo"
+                      )}
+                    </Button>
+                  </div>
                 </form>
               </>
             )}
