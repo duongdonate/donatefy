@@ -10,7 +10,7 @@ const playlistService = {
   addSong: (id, { videoId, name, artist, thumbnail }) =>
     axiosClient.post(`/api/playlists/${id}/add-song`, { videoIds: [videoId], name, artist, thumbnail }),
   removeSong: (playlistId, dataSong) =>
-    axiosClient.post(`/api/playlists/${playlistId}/remove-song/`, dataSong),
+    axiosClient.post(`/api/playlists/${playlistId}/remove-song`, dataSong),
   rename: (id, name) => axiosClient.patch(`/api/playlists/${id}`, { name }),
   // `song` thay cả mục meta: luôn gửi đủ id, name, artist, thumbnail
   editSong: (id, song) => axiosClient.patch(`/api/playlists/${id}`, { song }),
