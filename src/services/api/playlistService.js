@@ -4,6 +4,10 @@ const playlistService = {
   getById: (id) => axiosClient.get(`/api/playlists/${id}`),
   getAll: () => axiosClient.get("/api/playlists"),
   create: (data) => axiosClient.post("/api/playlists", data),
+  // Trả { playlist, added, skipped, truncated }; lỗi trả { error, videoId? (Mix), playlistId? (409) }
+  importFromYoutube: (url, name) => axiosClient.post("/api/playlists/import", { url, name }),
+  // Chỉ playlist có `source`; trả { playlist, added }
+  sync: (id) => axiosClient.post(`/api/playlists/${id}/sync`),
   update: (id, data) => axiosClient.put(`/api/playlists/${id}`, data),
   delete: (id) => axiosClient.delete(`/api/playlists/${id}`),
   // name/artist/thumbnail tuỳ chọn; backend chỉ nhận thumbnail i.ytimg.com của đúng videoId

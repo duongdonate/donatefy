@@ -82,6 +82,7 @@ export default function PlaylistPage() {
   const [songs, setSongs] = useState([]); // Task 7/8 cập nhật qua setSongs
   const [state, setState] = useState("loading"); // loading | ok | missing (server trả lỗi) | error (mạng)
   const [attempt, setAttempt] = useState(0);
+  const [syncing, setSyncing] = useState(false);
 
   const pending = useRef(null); // { song, index, playlistId, timer, toastId }
   const songDlgOpen = useRef(false); // hộp thêm / sửa bài đang mở trong popup
@@ -97,7 +98,7 @@ export default function PlaylistPage() {
     clearTimeout(p.timer);
     pending.current = null;
     dismiss(p.toastId);
-    playlistService
+    return playlistService
       .removeSong(p.playlistId, { videoId: p.song.id })
       .catch(() => {
         if (idRef.current === p.playlistId)
@@ -183,6 +184,21 @@ export default function PlaylistPage() {
     );
   };
   const onAdd = () => openSongDialog({ mode: "add" });
+  // Playlist nhập từ YouTube: thêm bài mới của playlist nguồn (không xoá, không đổi thứ tự)
+  const onSync = async () => {
+    setSyncing(true);
+    try {
+      await flush(); // bài đang chờ gỡ phải tới server trước, để sync không thêm lại
+      const r = await playlistService.sync(playlist._id);
+      setPlaylist((pl) => ({ ...pl, ...r.playlist }));
+      if (r.added) setSongs(unwrap(await songService.getSongs(playlist._id)));
+      showToast(r.added ? `Đã thêm ${r.added} bài mới` : "Chưa có bài mới nha ~");
+    } catch (err) {
+      showToast(err?.error || "Lấy bài mới thất bại, thử lại sau nha");
+    } finally {
+      setSyncing(false);
+    }
+  };
   const onEdit = (song) => openSongDialog({ mode: "edit", song });
   const onRemove = (song) => {
     flush(); // bài gỡ trước đó còn chờ thì gửi luôn
@@ -252,6 +268,8 @@ export default function PlaylistPage() {
               onPlay={() => playFrom(0)}
               onShuffle={onShuffle}
               onAdd={onAdd}
+              onSync={playlist.source ? onSync : undefined}
+              syncing={syncing}
               cover={layout.cover}
               stacked={layout.stacked}
             />
